@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    
+    <title>「翻译」如何组织大型 Python 项目 | 小白维基</title>
+    
+    
+        <meta name="keywords" content="翻译">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="原文：Kraken Technologies: How we organise our very large Python monolith作者：David Seddon from Kraken Technologies翻译：RyomaHan | 小白提示：本文是原作者以第一人称书写，翻译时未做更改  TLDR(AI-Claude)本文来自一位 Python 开发者对一个庞大的 Python 项">
+<meta property="og:type" content="article">
+<meta property="og:title" content="「翻译」如何组织大型 Python 项目">
+<meta property="og:url" content="https://wiki.blanc.site/archives/d644d904.html">
+<meta property="og:site_name" content="小白维基">
+<meta property="og:description" content="原文：Kraken Technologies: How we organise our very large Python monolith作者：David Seddon from Kraken Technologies翻译：RyomaHan | 小白提示：本文是原作者以第一人称书写，翻译时未做更改  TLDR(AI-Claude)本文来自一位 Python 开发者对一个庞大的 Python 项">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202307302224.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202308040136122.png">
+<meta property="article:published_time" content="2023-08-04T00:00:00.000Z">
+<meta property="article:modified_time" content="2024-11-10T15:39:52.936Z">
+<meta property="article:author" content="ryomahan">
+<meta property="article:tag" content="翻译">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.blanc.site/wiki/img/202307302224.png">
+    
+
+    
+        <link rel="alternate" href="/atom.xml" title="小白维基" type="application/atom+xml">
+    
+    
+        <link rel="icon" href="/favicon.ico">
+    
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/libs/open-sans/styles.css">
+
+    
+<link rel="stylesheet" href="/libs/source-code-pro/styles.css">
+
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<script src="/libs/jquery/2.1.3/jquery.min.js"></script>
+
+    
+<script src="/libs/jquery/plugins/cookie/1.4.1/jquery.cookie.js"></script>
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/lightgallery/css/lightgallery.min.css">
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/justified-gallery/justifiedGallery.min.css">
+
+    
+    
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110100486-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-110100486-1');
+</script>
+    
+    
+        <meta name="google-site-verification" content="D9ld5oQABBxIwNpgD_WN61p51-ZcABZ6Olt4HKcxlWw">
+    
+    
+        <script>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?fac7e69191f0847b886888aa7c794fa7";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+    
+
+
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- 字体引入 -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Noto+Serif+SC:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+<meta name="generator" content="Hexo 4.2.1"></head>
+</html>
+<body>
+    <div id="container">
+        <header id="header">
+    <div id="header-main" class="header-inner">
+        <div class="outer">
+            <a href="/" id="logo">
+                <i class="logo"></i>
+                <span class="site-title">小白维基</span>
+            </a>
+            <nav id="main-nav">
+                
+                    <a class="main-nav-link" href="/">首页</a>
+                
+                    <a class="main-nav-link" href="/archives">归档</a>
+                
+                    <a class="main-nav-link" href="/categories">分类</a>
+                
+                    <a class="main-nav-link" href="/tags">标签</a>
+                
+                    <a class="main-nav-link" href="/about">关于</a>
+                
+            </nav>
+            
+                
+                <nav id="sub-nav">
+                    <div class="profile" id="profile-nav">
+                        <a id="profile-anchor" href="javascript:;">
+                            <img class="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df">
+                            <i class="fa fa-caret-down"></i>
+                        </a>
+                    </div>
+                </nav>
+            
+            <div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="想要查找什么...">
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div>
+        </div>
+    </div>
+    <div id="main-nav-mobile" class="header-sub header-inner">
+        <table class="menu outer">
+            <tr>
+                
+                    <td><a class="main-nav-link" href="/">首页</a></td>
+                
+                    <td><a class="main-nav-link" href="/archives">归档</a></td>
+                
+                    <td><a class="main-nav-link" href="/categories">分类</a></td>
+                
+                    <td><a class="main-nav-link" href="/tags">标签</a></td>
+                
+                    <td><a class="main-nav-link" href="/about">关于</a></td>
+                
+                <td>
+                    
+    <div class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+    </div>
+
+                </td>
+            </tr>
+        </table>
+    </div>
+</header>
+
+        <div class="outer">
+            
+                
+
+<aside id="profile">
+    <div class="inner profile-inner">
+        <div class="base-info profile-block">
+            <img id="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df?s=128">
+            <h2 id="name">Ryoma</h2>
+            <h3 id="title">毕己一生，依依东望。</h3>
+            <span id="location"><i class="fa fa-map-marker"></i>Jinan, China</span>
+            <a id="follow" target="_blank" href="https://github.com/ryomahan/" rel="external nofollow noopener noreferrer">关注我</a>
+        </div>
+        <div class="article-info profile-block">
+            <div class="article-info-block">
+                25
+                <span>文章</span>
+            </div>
+            <div class="article-info-block">
+                12
+                <span>标签</span>
+            </div>
+        </div>
+        
+        <div class="profile-block social-links">
+            <table>
+                <tr>
+                    
+                    
+                    <td>
+                        <a href="https://blog.blanc.site" target="_blank" title="wordpress" class="tooltip">
+                            <i class="fa fa-wordpress"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://twitter.com/ryomahan1996" target="_blank" title="twitter" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-twitter"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://weibo.com/xiaobaidh" target="_blank" title="weibo" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-weibo"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://github.com/ryomahan" target="_blank" title="github" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-github"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="/atom.xml" target="_blank" title="rss" class="tooltip">
+                            <i class="fa fa-rss"></i>
+                        </a>
+                    </td>
+                    
+                </tr>
+            </table>
+        </div>
+        
+    </div>
+
+    
+        <div class="widget-wrap widget-list">
+            <h3 class="widget-title"><span>友情链接</span></h3>
+            <div class="widget">
+                <ul>
+                    
+                        <li>
+                            <a href="https://pythonhunter.org/" target="_blank" rel="external nofollow noopener noreferrer">捕蛇者说</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://laike9m.com/" target="_blank" rel="external nofollow noopener noreferrer">laike9m</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://www.kawabangga.com/" target="_blank" rel="external nofollow noopener noreferrer">卡瓦邦噶</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://manjusaka.itscoder.com/" target="_blank" rel="external nofollow noopener noreferrer">Manjusaka</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.evo.moe/" target="_blank" rel="external nofollow noopener noreferrer">Sparta_EN</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.blanc.site" target="_blank">一只小白</a>
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    
+</aside>
+
+            
+            
+                <aside id="sidebar">
+   
+        
+    <div class="widget-wrap" id="categories">
+        <h3 class="widget-title">
+            <span>分类</span>
+            &nbsp;
+            <a id="allExpand" href="#">
+                <i class="fa fa-angle-double-down fa-2x"></i>
+            </a>
+        </h3>
+        
+        
+        
+         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            1-网络笔记
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/e5187cf6.html">同步到腾讯云社区</a></li>  <li class="file"><a href="/archives/4940711f.html">8086 处理器寻址方式</a></li>  <li class="file"><a href="/archives/5c113e93.html">SSH overview</a></li>  <li class="file"><a href="/archives/c57afff6.html">记一次失败的 AI 辅助编程全历程</a></li>  <li class="file active"><a href="/archives/d644d904.html">「翻译」如何组织大型 Python 项目</a></li>  <li class="file"><a href="/archives/ed42c0e4.html">「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            2-软件使用
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Chrome
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/decc86d5.html">「转载」解析谷歌 Chrome 各分支版本</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Django
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/b641d3ac.html">Django 笔记-2-源码理解-urls 篇</a></li>  <li class="file"><a href="/archives/ab18c3c3.html">Django 笔记-3-文档阅读-关于 Django 文档</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Vue
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/793400e.html">解决 Vue CSS 样式重复载入，为 Vue 添加全局 less 或 sass 基础样式库</a></li>  <li class="file"><a href="/archives/341c107a.html">Vue Router 实现动态路由和常见问题解决方案</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            3-计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-理论计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-数据结构和算法
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/f3c5e08e.html">数据结构笔记1-概论</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            4-编程语言和编译器
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Python
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/7a294715.html">所谓 WSGI</a></li>  <li class="file"><a href="/archives/ffe3a081.html">Python MRO</a></li>  <li class="file"><a href="/archives/2accc063.html">WeeklyPEP-0-overview</a></li>  <li class="file"><a href="/archives/f5b4f56.html">所谓 ASGI</a></li>  <li class="file"><a href="/archives/5823d5df.html">WeeklyPEP-2-PEP 343-with 语句-overview</a></li>  <li class="file"><a href="/archives/291be77c.html">解剖 Python 类</a></li>  <li class="file"><a href="/archives/c29b4f3b.html">WeeklyPEP-3-PEP 318-函数装饰器-overview</a></li>  <li class="file"><a href="/archives/7eaf0f5f.html">WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Shell
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/8f9d5c85.html">Shell 获取当前脚本的绝对路径</a></li>  <li class="file"><a href="/archives/dbac95ae.html">实现 echo 不换行输出</a></li>  <li class="file"><a href="/archives/b422aa7d.html">Shell 区分不同 Unix 系统</a></li>  <li class="file"><a href="/archives/3beb222a.html">Shell 基础语法</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            汇编语言
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/90a7f914.html">NASM Overview</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+    </div>
+    <script>
+        $(document).ready(function() {
+            var iconFolderOpenClass  = 'fa-folder-open';
+            var iconFolderCloseClass = 'fa-folder';
+            var iconAllExpandClass = 'fa-angle-double-down';
+            var iconAllPackClass = 'fa-angle-double-up';
+            // Handle directory-tree expansion:
+            // 左键单独展开目录
+            $(document).on('click', '#categories a[data-role="directory"]', function (event) {
+                event.preventDefault();
+
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var subtree = $(this).siblings('ul');
+                icon.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if (expanded) {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideUp({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderCloseClass);
+                } else {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideDown({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderOpenClass);
+                }
+            });
+            // 右键展开下属所有目录
+            $('#categories a[data-role="directory"]').bind("contextmenu", function(event){
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var listNode = $(this).siblings('ul');
+                var subtrees = $.merge(listNode.find('li ul'), listNode);
+                var icons = $.merge(listNode.find('.fa'), icon);
+                icons.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if(expanded) {
+                    subtrees.slideUp({ duration: 100 });
+                    icons.addClass(iconFolderCloseClass);
+                } else {
+                    subtrees.slideDown({ duration: 100 });
+                    icons.addClass(iconFolderOpenClass);
+                }
+            })
+            // 展开关闭所有目录按钮
+            $(document).on('click', '#allExpand', function (event) {
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconAllExpandClass);
+                icon.removeClass(iconAllExpandClass).removeClass(iconAllPackClass);
+                if(expanded) {
+                    $('#sidebar .fa.fa-folder').removeClass('fa-folder').addClass('fa-folder-open')
+                    $('#categories li ul').slideDown({ duration: 100 });
+                    icon.addClass(iconAllPackClass);
+                } else {
+                    $('#sidebar .fa.fa-folder-open').removeClass('fa-folder-open').addClass('fa-folder')
+                    $('#categories li ul').slideUp({ duration: 100 });
+                    icon.addClass(iconAllExpandClass);
+                }
+            });  
+        });
+    </script>
+
+    
+        
+  <div class="toc-flag"></div>
+  <div class="toc-wrap">
+      <h3>
+          <span>文章目录</span>
+      </h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#TLDR-AI-Claude"><span class="toc-number">1.</span> <span class="toc-text">TLDR(AI-Claude)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">2.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分层架构"><span class="toc-number">3.</span> <span class="toc-text">分层架构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#如何在-Python-项目中应用分层架构"><span class="toc-number">4.</span> <span class="toc-text">如何在 Python 项目中应用分层架构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#我们是如何在-Kraken-的项目中实践分层架构的"><span class="toc-number">5.</span> <span class="toc-text">我们是如何在 Kraken 的项目中实践分层架构的</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#通过-Import-Linter-确保项目中的分层实现"><span class="toc-number">6.</span> <span class="toc-text">通过 Import Linter 确保项目中的分层实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#消除技术债"><span class="toc-number">7.</span> <span class="toc-text">消除技术债</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#没有银弹，谈谈分层架构的缺点"><span class="toc-number">8.</span> <span class="toc-text">没有银弹，谈谈分层架构的缺点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#复杂现实"><span class="toc-number">8.1.</span> <span class="toc-text">复杂现实</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#结构中高层代码过多"><span class="toc-number">8.2.</span> <span class="toc-text">结构中高层代码过多</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#目前为止我们仍未完全完成"><span class="toc-number">8.3.</span> <span class="toc-text">目前为止我们仍未完全完成</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">9.</span> <span class="toc-text">总结</span></a></li></ol>
+  </div>
+
+    
+    <div id="toTop" class="fa fa-angle-up"></div>
+</aside>
+            
+            <section id="main"><article id="post-1-网络笔记/「翻译」如何组织大型 Python 项目" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+                    <div class="article-meta">
+                        
+    <div class="article-category">
+    	<i class="fa fa-folder"></i>
+        <a class="article-category-link" href="/categories/1-%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/">1-网络笔记</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag">翻译</a>
+    </div>
+
+                        
+    <div class="article-date">
+        <i class="fa fa-calendar"></i>
+        <a href="/archives/d644d904.html">
+            <time datetime="2023-08-04T00:00:00.000Z" itemprop="datePublished">2023-08-04</time>
+        </a>
+    </div>
+
+
+                        
+                            <i class="fa fa-bar-chart"></i>
+                            <span id="busuanzi_container_site_pv"><span id="busuanzi_value_page_pv"></span></span>    
+                        
+                        
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/raw/main/source/_posts/1-网络笔记/「翻译」如何组织大型 Python 项目.md" target="_blank" rel="external nofollow noopener noreferrer"> Source </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/edit/main/source/_posts/1-网络笔记/「翻译」如何组织大型 Python 项目.md" target="_blank" rel="external nofollow noopener noreferrer"> Edit </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/commits/main/source/_posts/1-网络笔记/「翻译」如何组织大型 Python 项目.md" target="_blank" rel="external nofollow noopener noreferrer"> History </a>
+                            </div>
+                        
+                    </div>
+                
+                
+    
+        <h1 class="article-title" itemprop="name">
+            「翻译」如何组织大型 Python 项目
+        </h1>
+    
+
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+        
+        
+            <!-- 内容失效提醒 -->
+            
+    <!-- 如果文章创建超过一年或最后一次更新时间超过一个月(默认)则提示文章过期 -->
+    
+        <div class="aging">
+            <i class="fa fa-exclamation-circle aging-icon" aria-hidden="true"></i>
+            <span class="aging-content">请注意：本文编写于 <span class="aging-content-date">2023-08-04</span>，其中某些信息可能已经失去时效性。</span>
+        </div>
+    
+
+            <blockquote>
+<p>原文：<a href="https://blog.europython.eu/kraken-technologies-how-we-organize-our-very-large-pythonmonolith/" target="_blank" rel="external nofollow noopener noreferrer">Kraken Technologies: How we organise our very large Python monolith</a><br>作者：David Seddon from Kraken Technologies<br>翻译：<a href="https://github.com/ryomahan" target="_blank" rel="external nofollow noopener noreferrer">RyomaHan | 小白</a><br>提示：本文是原作者以第一人称书写，翻译时未做更改</p>
+</blockquote>
+<h2 id="TLDR-AI-Claude"><a href="#TLDR-AI-Claude" class="headerlink" title="TLDR(AI-Claude)"></a>TLDR(AI-Claude)</h2><p>本文来自一位 Python 开发者对一个庞大的 Python 项目的代码组织结构的总结。</p>
+<p>该项目包含近 3万个 Python 文件,由全球 400 多名开发者共同维护。为了应对代码日益增长的复杂性,项目采用了分层架构的设计。即将代码库划分为多个层级,并限制不同层级之间的依赖关系,依赖只能从上层流向下层。</p>
+<p>文章详细介绍了该项目的分层结构,以及如何利用 Import Linter 工具来强制执行分层规则。通过追踪被忽略的非法 import 语句数量,可以衡量分层结构实现的进度。</p>
+<p>分层架构确实能够有效降低大型项目的复杂度,方便独立开发。但也存在一些缺点,比如容易在高层产生过多代码,完全实施分层需要花费时间等。总体来说,尽早引入分层架构,能够减少后期的重构工作量,是管理大型 Python 项目的一个有效方式。</p>
+<p>本文通过一个真实的大规模 Python 项目案例,生动地介绍了分层架构的实施过程、优势和不足,对于管理大型项目很有借鉴作用。</p>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>大家好，我是来自 Kraken Technologies 的 Python 开发者， David。我在的 Kraken 工作是维护一个Python 应用，根据最新统计它拥有 27637 个模块的 。是的，你没看错，这个项目拥有近 28K 独立的 Python 文件（不包括测试代码）。我与全球其他 400 名开发人员一同维护这个庞然大物，不断地为它合并新的代码。任何人只需要在 Github 上获得一位同事的批准，就能修改代码文件，并启动软件的部署，该软件在 17 家不同的能源和公用事业公司运行着，拥有数百万的客户群体。</p>
+<p>看到上面的描述，你大概率会下意识地认为这个项目的代码肯定无比的混乱。坦白讲，我也会这么想。但事实是，至少在我工作的领域，大量的开发人员可以在一个大型的 Python 项目上高效地工作。实现这个目标的要素有很多，其中许多要素来自文化与规则而非技术，在本篇博文中，我想着重讲一下我们是如何通过<strong>优化代码组织结构</strong>来实现这一目标的。</p>
+<h2 id="分层架构"><a href="#分层架构" class="headerlink" title="分层架构"></a>分层架构</h2><p>如果你已经负责维护某个应用的代码仓库一段时间，肯定会感受到随着时间的推移代码复杂度越来越高。在不断开发与维护的过程中，应用中各部分的逻辑代码混合在一起，独立地分析应用中的某个模块变得越来越困难。这也是我们早期维护代码仓库时遇到的问题，经过研究后我们决定采用<strong>分层架构</strong>（即<strong>将代码库划分成多个组件（也就是层级，后面不再注释），并限制各组件间的引用关系</strong>）来应对这一问题。</p>
+<p>分层（Layering）是一种较为常见的软件架构模式，在这种模式下不同的组件（即层级，后面不在重复注释）会被以（概念上）栈的形式组织起来。在这个栈中，下层组件不能依赖（引入）其上层组件。</p>
+<p><img src="https://img.blanc.site/wiki/img/202307302224.png" alt="依赖向下关系流动的分层架构"></p>
+<p>例如，在上图中，C 可以依赖 B 和 A，但不能依赖 D。</p>
+<p>分层架构的应用很宽泛，你可以自由地定义组件。例如：你可以将多个可独立部署的服务视作多个组件，也可以直接将项目中不同部分的源码文件视作不同的组件。</p>
+<p>依赖关系的定义也很宽泛。通常，只要两个组件间存在直接交叉（即使只发生在概念层级上），我们就认为它们之间存在依赖关系。间接交叉（例如通过配置传递）通常不被视为依赖关系。</p>
+<h2 id="如何在-Python-项目中应用分层架构"><a href="#如何在-Python-项目中应用分层架构" class="headerlink" title="如何在 Python 项目中应用分层架构"></a>如何在 Python 项目中应用分层架构</h2><p>分层架构在 Python 项目中的最佳实践是：<strong>将 Python 模块作为分层依据，将导入语句视为依赖依据</strong>。</p>
+<p>以如下项目仓库目录举例：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">myproject</span><br><span class="line">	__init__.py</span><br><span class="line">	payments&#x2F;</span><br><span class="line">		__init__.py</span><br><span class="line">		api.py</span><br><span class="line">		vendor.py</span><br><span class="line">	products.py</span><br><span class="line">	shopping_cart.py</span><br></pre></td></tr></table></figure>
+
+<p>目录中模块之间的嵌套关系是分层的最佳依据。假设，我们决定按照一下顺序进行分层：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># 依赖关系向下流动（即上层可以依赖下层）</span><br><span class="line">shopping_cart</span><br><span class="line">payments</span><br><span class="line">products</span><br></pre></td></tr></table></figure>
+
+<p>为了满足上述架构的要求，我们需要禁止 <code>payments</code> 中的模块从 <code>shopping_cart</code> 模块中引入内容，但可以从 <code>products</code> 模块中引入内容（参考图 1）。</p>
+<p>分层也可以嵌套，因此我们可以在 payments 模块中继续分层，例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">api</span><br><span class="line">vendor</span><br></pre></td></tr></table></figure>
+
+<p>设置多少分层以及以什么顺序进行排列没有唯一正确的答案，需要我们不断的在实践中总结。但是合理的运用分层架构确实能够有效地降低项目结构的复杂度，使其能够更易于理解和修改。</p>
+<h2 id="我们是如何在-Kraken-的项目中实践分层架构的"><a href="#我们是如何在-Kraken-的项目中实践分层架构的" class="headerlink" title="我们是如何在 Kraken 的项目中实践分层架构的"></a>我们是如何在 Kraken 的项目中实践分层架构的</h2><p>在我编写这边文章的时候，已经有 17 家不同的能源和公共事业相关的企业购买了 Kraken 的许可证。我们在内部称呼这些企业为 client，并为每一家企业都运行了一个独立的实例。也正因如此，Kraken 的不同实例间形成了一种「同根不同枝」的特点。通俗地讲就是不同实例间的很多行为其实是共享的，但是每个 client 也都有属于自己的定制代码，以满足他们特定的需求。从地域层面来讲也如此，在英国运行的所有 client 之间存在一定的共性（他们属于同类的能源行业），而日本的 Octopus Energy 则不共享这些的共性。</p>
+<p>随着 Kraken 平台的成长，我们也在不断地优化着我们的分成架构，来帮助我们更好地满足不同客户的需求。目前的分层的顶层结构大致如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"># 依赖关系向下流动（即上层可以依赖下层）</span><br><span class="line">kraken&#x2F;</span><br><span class="line">    __init__.py</span><br><span class="line">    </span><br><span class="line">    client&#x2F;</span><br><span class="line">        __init__.py</span><br><span class="line">        oede&#x2F;</span><br><span class="line">        oegb&#x2F;</span><br><span class="line">        oejp&#x2F;</span><br><span class="line">        ...</span><br><span class="line">    </span><br><span class="line">    territories&#x2F;</span><br><span class="line">        __init__.py</span><br><span class="line">        deu&#x2F;</span><br><span class="line">        gbr&#x2F;</span><br><span class="line">        jpn&#x2F;</span><br><span class="line">        ...</span><br><span class="line">    </span><br><span class="line">    core&#x2F;</span><br></pre></td></tr></table></figure>
+
+<p>client 组件在结构的顶部。每一个 client 在该层都有一个专属的子包（例如，oede 对应 Octopus Energy Germany）。在此之下的是 territories 组件，用于满足不用国家所需的特定行为，同样为不同地区设置了不同的子包。最底层是 core 组件，包含了所用 client 都会用到的通用代码。我们还制定了一个特别的规则：client 组件下的子包必须是独立的（即不能被其他 client 引用），territories 组件下的子包也是如此。</p>
+<p>将 Kraken 以这种分层结构构建之后，我们可以在有限的区域内（例如一个组件的子包）便捷地进行代码的更新和维护。由于 client 组件位于结构的顶部，因此不会有任何其他组件会直接依赖于它，这样我们就能更方便地更改特定 client 有关的内容，而且不必但因会影响到其他 client 的行为。同样，只更改 territories 组件内的一个子包也不会影响到其他的子包。这样，我们就可以快速、独立地进行跨团队开发，尤其是当我们进行的更改只影响少量 Kraken 实例的时候。</p>
+<h2 id="通过-Import-Linter-确保项目中的分层实现"><a href="#通过-Import-Linter-确保项目中的分层实现" class="headerlink" title="通过 Import Linter 确保项目中的分层实现"></a>通过 Import Linter 确保项目中的分层实现</h2><p>虽然引入了分层结构，但我们很快发现，仅仅在理论上论述分层是不够的。开发人员经常会不小心进行分层间的违规引入。我们需要以某种方式确保分层结构的理论能够在代码结构中被遵循，为了达到此目的我们在项目中引入了第三方库 <a href="https://import-linter.readthedocs.io/" target="_blank" rel="external nofollow noopener noreferrer">Import Linter</a>。</p>
+<p>Import Linter 是一款开源工具，用于检查项目中的引用逻辑是否遵循了指定的结构。首先，我们需要在一个 INI 文件中定义一个描述目标需求的配置，类似这样：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[importlinter:contract:top-level]</span></span><br><span class="line"></span><br><span class="line"><span class="attr">name</span> = Top level layers</span><br><span class="line"><span class="attr">type</span> = layers</span><br><span class="line"><span class="attr">layers</span> =</span><br><span class="line">    kraken.clients</span><br><span class="line">    kraken.territories</span><br><span class="line">    Kraken.core</span><br></pre></td></tr></table></figure>
+
+<p>我们还可以使用另外两个配置文件强制不同的 clients、territories 之间相互独立。类似这样：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 文件 1</span></span><br><span class="line"><span class="section">[importlinter:contract:client-independence]</span></span><br><span class="line"><span class="attr">name</span> = Client independence</span><br><span class="line"><span class="attr">type</span> = independence</span><br><span class="line"><span class="attr">layers</span> =</span><br><span class="line">    kraken.clients.oede</span><br><span class="line">    kraken.clients.oegb</span><br><span class="line">    kraken.clients.oejp</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line"><span class="comment"># 文件 2</span></span><br><span class="line"><span class="section">[importlinter:contract:territory-independence]</span></span><br><span class="line"><span class="attr">name</span> = Territory independence</span><br><span class="line"><span class="attr">type</span> = independence</span><br><span class="line"><span class="attr">layers</span> =</span><br><span class="line">    kraken.territories.deu</span><br><span class="line">    kraken.territories.gbr</span><br><span class="line">    kraken.territories.jpn</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>然后，你可以在命令行运行 <code>lint-import</code>，它会告诉你项目中是否有任何导入行为违反了我们配置中的要求。我们会在每次拉取代码的时候运行此功能，因此如果有人使用了不合规的导入，检查就会失败，代码也就不会被合并。</p>
+<p>上面展示的并不是我们项目全部的配置文件。团队成员可以在应用程序的更深处添加自己的分层，例如：kranken.ritories.jpn 本身就是分层。我们目前拥有超过 40 个配置文件用于规定我们的分层结构。</p>
+<h2 id="消除技术债"><a href="#消除技术债" class="headerlink" title="消除技术债"></a>消除技术债</h2><p>我们没有办法在确定是由分层架构的第一时间就使整个项目符合架构需求。因此，我们使用了 Import Linter 中的一项特性，该功能允许您在检查非法导入之前忽略对某些导入的检查。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[importlinter:contract:my-layers-contract]</span></span><br><span class="line"><span class="attr">name</span> = My contract</span><br><span class="line"><span class="attr">type</span> = layers</span><br><span class="line"><span class="attr">layers</span> =</span><br><span class="line">    kraken.clients</span><br><span class="line">    kraken.territories</span><br><span class="line">    kraken.core</span><br><span class="line"><span class="attr">ignore_imports</span> =</span><br><span class="line">    kraken.core.customers -&gt;</span><br><span class="line">    kraken.territories.gbr.customers.views</span><br><span class="line">    kraken.territories.jpn.payments -&gt; kraken.utils.urls</span><br><span class="line">    (and so on...)</span><br></pre></td></tr></table></figure>
+
+<p>此后，我们使用项目构建时被 Import Linter 忽略的导入语句的数量作为跟踪技术债完成度的指标。这样，我们就能观察到随着时间的推移技术债的情况是否有所改善，以及改善的速度如何。</p>
+<p><img src="https://img.blanc.site/wiki/img/202308040136122.png" alt="Ignored imports since 1 May 2022"></p>
+<p>上图是我们过去一年多的时间里被我们忽略的有问题的引入语句数量的变化。我会定期分享这张图，想大家展示我们最新的工作进度，并鼓励我们的开发者努力做到完全遵守分层结构的约定。我们对其他几个技术债也使用了这种燃尽图的方法去展示。</p>
+<h2 id="没有银弹，谈谈分层架构的缺点"><a href="#没有银弹，谈谈分层架构的缺点" class="headerlink" title="没有银弹，谈谈分层架构的缺点"></a>没有银弹，谈谈分层架构的缺点</h2><h3 id="复杂现实"><a href="#复杂现实" class="headerlink" title="复杂现实"></a>复杂现实</h3><p>现实世界无比的复杂，依赖关系遍布在项目的各个角落。在采用分层架构后，你会经常遇到想要打破现有层级关系的情况，会经常在不经意间从低层级的组件中调用高层级的组件。</p>
+<p>幸运的是，总有办法解决这类问题，那就是所谓的 <a href="https://seddonym.me/2019/04/15/inversion-of-control/" target="_blank" rel="external nofollow noopener noreferrer">控制反转（Ioc）</a>，在 Python 中你可以很容易地做到这一点，只是需要转换一下思维方式。不过使用这个方法会增加「局部复杂性」，但为了让项目整体变得更加简单，这点代价还是值得的。</p>
+<h3 id="结构中高层代码过多"><a href="#结构中高层代码过多" class="headerlink" title="结构中高层代码过多"></a>结构中高层代码过多</h3><p>在分层结构中，层数越高的组件天然地越容易更改。正因如此，我们特地简化了修改特定 clinents 或 territories 的代码流程。另一方面，core 是一切其他代码的基础，修改它就成为了一件高成本、高风险的事情。</p>
+<p>高成本、高风险的底层代码修改行为让我们望而却步，促使我们编写更多针对特定客户或地区的高层级代码。最终的结果就是，高层的代码比我们想象中要多的多的多。我们仍在学习如何解决这个问题。</p>
+<h3 id="目前为止我们仍未完全完成"><a href="#目前为止我们仍未完全完成" class="headerlink" title="目前为止我们仍未完全完成"></a>目前为止我们仍未完全完成</h3><p>还记得之前提到过的被设置在 Import Linter 特殊配置文件中被忽略的 import 吗？多年过去了，它仍未被全部解决，根据统计还有最少 15 个。最后的这几个 import 也是最顽固、最难以被优化的。</p>
+<p>我们需要付出很多的时间才能重构完一个现有项目，所以，越早分层需要面对的麻烦就越少。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Kraken 的分层结构使我们在如此庞大的代码体量下仍旧保持着健康的开发和维护，而且操作难度相对较小，特别是在考虑到它的规模的情况下。如果不对数以万计的模块之间的依赖关系加以限制，我们的项目仓库很可能会像揉乱的线团一样复杂。但是我们选择的代码架构顺利的帮助我们在单一的 Python 代码库中进行大量工作。看似不可能，但这就是事实。</p>
+<p>如果你正在开发一个大型的 Python 项目，或者哪怕是一个相对较小的项目，不发试试分层结构，还是那句话：越早分层需要面对的麻烦就越少。</p>
+
+        
+        <footer class="article-footer">
+        </footer>
+    </div>
+</div></article>
+
+
+    
+<nav id="article-nav">
+    
+        <a href="/archives/b641d3ac.html" id="article-nav-newer" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">上一篇</strong>
+            <div class="article-nav-title">
+                
+                    Django 笔记-2-源码理解-urls 篇
+                
+            </div>
+        </a>
+    
+    
+        <a href="/archives/c57afff6.html" id="article-nav-older" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">下一篇</strong>
+            <div class="article-nav-title">记一次失败的 AI 辅助编程全历程</div>
+        </a>
+    
+</nav>
+
+
+
+
+
+    
+    
+        <section id="comments"> <div id="vcomments"></div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        appId: 'sz7ny95XiYWkxht3H3YDs2GX-gzGzoHsz',
+        appKey: 'T8JJugDkbqtFLONIIzcPWW76',
+        placeholder: '不要吝啬赞美的语句ヾﾉ≧∀≦)o!',
+        avatar: 'mp',
+        meta: ['nick','mail','link'],
+        pageSize: 10,
+        visitor: true,
+        notify: true,
+        verify: true
+    })
+    let info = document.querySelectorAll('#vcomments>.info')[0]
+    if (info) { info.style.display = 'none' }
+</script> </section>
+    
+
+
+
+
+<!-- baidu url auto push script -->
+<script type="text/javascript">
+    !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=window.location.href,o=document.referrer;if(!e.test(r)){var n="//api.share.baidu.com/s.gif";o?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var t=new Image;t.src=n}}(window);
+</script>     
+</section>
+        </div>
+        <footer id="footer">
+    <div class="outer">
+        <div id="footer-info" class="inner">
+            ryomahan &copy; 2024 
+            <a rel="external nofollow noopener noreferrer" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png"></a>
+            <br> Powered by <a href="http://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. Comment By <a href="https://valine.js.org/" target="_blank" rel="external nofollow noopener noreferrer">valine</a>. Theme - <a href="https://github.com/zthxxx/hexo-theme-Wikitten" target="_blank" rel="external nofollow noopener noreferrer">wikitten</a>
+            
+                <br>
+                <span id="busuanzi_container_site_pv"><i class="fa fa-eye"></i> <span id="busuanzi_value_site_pv"></span></span>
+                &nbsp;|&nbsp;
+                <span id="busuanzi_container_site_pv"><i class="fa fa-user"></i> <span id="busuanzi_value_site_uv"></span></span>
+            
+        </div>
+    </div>
+</footer>
+
+        
+    
+        
+<script src="/libs/lightgallery/js/lightgallery.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-thumbnail.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-pager.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-autoplay.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-fullscreen.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-zoom.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-hash.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-share.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-video.min.js"></script>
+
+    
+    
+        
+<script src="/libs/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+    
+    
+        <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true,
+            TeX: {
+                equationNumbers: {
+                  autoNumber: 'AMS'
+                }
+            }
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+
+
+<!-- Custom Scripts -->
+
+<script src="/js/main.js"></script>
+
+
+    </div>
+</body>

@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    
+    <title>Python MRO | 小白维基</title>
+    
+    
+        <meta name="keywords" content="Python">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="前言注：本文中给出的所有案例结果都经过实际代码验证可放心食用。 什么是 MRO方法解析顺序（Method Resolution Order MRO），指的是在多继承编程语言中查找类的某个方法来自哪个基类的搜索顺序。 Python MRO 历史   周期 类存在形式和对应算法    Python 2.1 经典类 -&gt; DFS   Python 2.2 经典类 -&gt; DFS | 新式类 -">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python MRO">
+<meta property="og:url" content="https://wiki.blanc.site/archives/ffe3a081.html">
+<meta property="og:site_name" content="小白维基">
+<meta property="og:description" content="前言注：本文中给出的所有案例结果都经过实际代码验证可放心食用。 什么是 MRO方法解析顺序（Method Resolution Order MRO），指的是在多继承编程语言中查找类的某个方法来自哪个基类的搜索顺序。 Python MRO 历史   周期 类存在形式和对应算法    Python 2.1 经典类 -&gt; DFS   Python 2.2 经典类 -&gt; DFS | 新式类 -">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.blanc.site//wiki/img/20210726105026.png">
+<meta property="og:image" content="https://img.blanc.site//wiki/img/20210726112350.png">
+<meta property="og:image" content="https://img.blanc.site//wiki/img/20210726232113.png">
+<meta property="og:image" content="https://img.blanc.site//wiki/img/20210726235106.jpeg">
+<meta property="article:published_time" content="2021-07-25T00:00:00.000Z">
+<meta property="article:modified_time" content="2024-11-10T15:39:52.936Z">
+<meta property="article:author" content="ryomahan">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.blanc.site//wiki/img/20210726105026.png">
+    
+
+    
+        <link rel="alternate" href="/atom.xml" title="小白维基" type="application/atom+xml">
+    
+    
+        <link rel="icon" href="/favicon.ico">
+    
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/libs/open-sans/styles.css">
+
+    
+<link rel="stylesheet" href="/libs/source-code-pro/styles.css">
+
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<script src="/libs/jquery/2.1.3/jquery.min.js"></script>
+
+    
+<script src="/libs/jquery/plugins/cookie/1.4.1/jquery.cookie.js"></script>
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/lightgallery/css/lightgallery.min.css">
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/justified-gallery/justifiedGallery.min.css">
+
+    
+    
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110100486-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-110100486-1');
+</script>
+    
+    
+        <meta name="google-site-verification" content="D9ld5oQABBxIwNpgD_WN61p51-ZcABZ6Olt4HKcxlWw">
+    
+    
+        <script>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?fac7e69191f0847b886888aa7c794fa7";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+    
+
+
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- 字体引入 -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Noto+Serif+SC:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+<meta name="generator" content="Hexo 4.2.1"></head>
+</html>
+<body>
+    <div id="container">
+        <header id="header">
+    <div id="header-main" class="header-inner">
+        <div class="outer">
+            <a href="/" id="logo">
+                <i class="logo"></i>
+                <span class="site-title">小白维基</span>
+            </a>
+            <nav id="main-nav">
+                
+                    <a class="main-nav-link" href="/">首页</a>
+                
+                    <a class="main-nav-link" href="/archives">归档</a>
+                
+                    <a class="main-nav-link" href="/categories">分类</a>
+                
+                    <a class="main-nav-link" href="/tags">标签</a>
+                
+                    <a class="main-nav-link" href="/about">关于</a>
+                
+            </nav>
+            
+                
+                <nav id="sub-nav">
+                    <div class="profile" id="profile-nav">
+                        <a id="profile-anchor" href="javascript:;">
+                            <img class="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df">
+                            <i class="fa fa-caret-down"></i>
+                        </a>
+                    </div>
+                </nav>
+            
+            <div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="想要查找什么...">
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div>
+        </div>
+    </div>
+    <div id="main-nav-mobile" class="header-sub header-inner">
+        <table class="menu outer">
+            <tr>
+                
+                    <td><a class="main-nav-link" href="/">首页</a></td>
+                
+                    <td><a class="main-nav-link" href="/archives">归档</a></td>
+                
+                    <td><a class="main-nav-link" href="/categories">分类</a></td>
+                
+                    <td><a class="main-nav-link" href="/tags">标签</a></td>
+                
+                    <td><a class="main-nav-link" href="/about">关于</a></td>
+                
+                <td>
+                    
+    <div class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+    </div>
+
+                </td>
+            </tr>
+        </table>
+    </div>
+</header>
+
+        <div class="outer">
+            
+                
+
+<aside id="profile">
+    <div class="inner profile-inner">
+        <div class="base-info profile-block">
+            <img id="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df?s=128">
+            <h2 id="name">Ryoma</h2>
+            <h3 id="title">毕己一生，依依东望。</h3>
+            <span id="location"><i class="fa fa-map-marker"></i>Jinan, China</span>
+            <a id="follow" target="_blank" href="https://github.com/ryomahan/" rel="external nofollow noopener noreferrer">关注我</a>
+        </div>
+        <div class="article-info profile-block">
+            <div class="article-info-block">
+                25
+                <span>文章</span>
+            </div>
+            <div class="article-info-block">
+                12
+                <span>标签</span>
+            </div>
+        </div>
+        
+        <div class="profile-block social-links">
+            <table>
+                <tr>
+                    
+                    
+                    <td>
+                        <a href="https://blog.blanc.site" target="_blank" title="wordpress" class="tooltip">
+                            <i class="fa fa-wordpress"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://twitter.com/ryomahan1996" target="_blank" title="twitter" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-twitter"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://weibo.com/xiaobaidh" target="_blank" title="weibo" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-weibo"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://github.com/ryomahan" target="_blank" title="github" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-github"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="/atom.xml" target="_blank" title="rss" class="tooltip">
+                            <i class="fa fa-rss"></i>
+                        </a>
+                    </td>
+                    
+                </tr>
+            </table>
+        </div>
+        
+    </div>
+
+    
+        <div class="widget-wrap widget-list">
+            <h3 class="widget-title"><span>友情链接</span></h3>
+            <div class="widget">
+                <ul>
+                    
+                        <li>
+                            <a href="https://pythonhunter.org/" target="_blank" rel="external nofollow noopener noreferrer">捕蛇者说</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://laike9m.com/" target="_blank" rel="external nofollow noopener noreferrer">laike9m</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://www.kawabangga.com/" target="_blank" rel="external nofollow noopener noreferrer">卡瓦邦噶</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://manjusaka.itscoder.com/" target="_blank" rel="external nofollow noopener noreferrer">Manjusaka</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.evo.moe/" target="_blank" rel="external nofollow noopener noreferrer">Sparta_EN</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.blanc.site" target="_blank">一只小白</a>
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    
+</aside>
+
+            
+            
+                <aside id="sidebar">
+   
+        
+    <div class="widget-wrap" id="categories">
+        <h3 class="widget-title">
+            <span>分类</span>
+            &nbsp;
+            <a id="allExpand" href="#">
+                <i class="fa fa-angle-double-down fa-2x"></i>
+            </a>
+        </h3>
+        
+        
+        
+         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-网络笔记
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/e5187cf6.html">同步到腾讯云社区</a></li>  <li class="file"><a href="/archives/4940711f.html">8086 处理器寻址方式</a></li>  <li class="file"><a href="/archives/5c113e93.html">SSH overview</a></li>  <li class="file"><a href="/archives/c57afff6.html">记一次失败的 AI 辅助编程全历程</a></li>  <li class="file"><a href="/archives/d644d904.html">「翻译」如何组织大型 Python 项目</a></li>  <li class="file"><a href="/archives/ed42c0e4.html">「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            2-软件使用
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Chrome
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/decc86d5.html">「转载」解析谷歌 Chrome 各分支版本</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Django
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/b641d3ac.html">Django 笔记-2-源码理解-urls 篇</a></li>  <li class="file"><a href="/archives/ab18c3c3.html">Django 笔记-3-文档阅读-关于 Django 文档</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Vue
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/793400e.html">解决 Vue CSS 样式重复载入，为 Vue 添加全局 less 或 sass 基础样式库</a></li>  <li class="file"><a href="/archives/341c107a.html">Vue Router 实现动态路由和常见问题解决方案</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                    
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            3-计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            1-理论计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-数据结构和算法
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/f3c5e08e.html">数据结构笔记1-概论</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            4-编程语言和编译器
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            Python
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/7a294715.html">所谓 WSGI</a></li>  <li class="file active"><a href="/archives/ffe3a081.html">Python MRO</a></li>  <li class="file"><a href="/archives/2accc063.html">WeeklyPEP-0-overview</a></li>  <li class="file"><a href="/archives/f5b4f56.html">所谓 ASGI</a></li>  <li class="file"><a href="/archives/5823d5df.html">WeeklyPEP-2-PEP 343-with 语句-overview</a></li>  <li class="file"><a href="/archives/291be77c.html">解剖 Python 类</a></li>  <li class="file"><a href="/archives/c29b4f3b.html">WeeklyPEP-3-PEP 318-函数装饰器-overview</a></li>  <li class="file"><a href="/archives/7eaf0f5f.html">WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Shell
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/8f9d5c85.html">Shell 获取当前脚本的绝对路径</a></li>  <li class="file"><a href="/archives/dbac95ae.html">实现 echo 不换行输出</a></li>  <li class="file"><a href="/archives/b422aa7d.html">Shell 区分不同 Unix 系统</a></li>  <li class="file"><a href="/archives/3beb222a.html">Shell 基础语法</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            汇编语言
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/90a7f914.html">NASM Overview</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+    </div>
+    <script>
+        $(document).ready(function() {
+            var iconFolderOpenClass  = 'fa-folder-open';
+            var iconFolderCloseClass = 'fa-folder';
+            var iconAllExpandClass = 'fa-angle-double-down';
+            var iconAllPackClass = 'fa-angle-double-up';
+            // Handle directory-tree expansion:
+            // 左键单独展开目录
+            $(document).on('click', '#categories a[data-role="directory"]', function (event) {
+                event.preventDefault();
+
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var subtree = $(this).siblings('ul');
+                icon.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if (expanded) {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideUp({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderCloseClass);
+                } else {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideDown({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderOpenClass);
+                }
+            });
+            // 右键展开下属所有目录
+            $('#categories a[data-role="directory"]').bind("contextmenu", function(event){
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var listNode = $(this).siblings('ul');
+                var subtrees = $.merge(listNode.find('li ul'), listNode);
+                var icons = $.merge(listNode.find('.fa'), icon);
+                icons.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if(expanded) {
+                    subtrees.slideUp({ duration: 100 });
+                    icons.addClass(iconFolderCloseClass);
+                } else {
+                    subtrees.slideDown({ duration: 100 });
+                    icons.addClass(iconFolderOpenClass);
+                }
+            })
+            // 展开关闭所有目录按钮
+            $(document).on('click', '#allExpand', function (event) {
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconAllExpandClass);
+                icon.removeClass(iconAllExpandClass).removeClass(iconAllPackClass);
+                if(expanded) {
+                    $('#sidebar .fa.fa-folder').removeClass('fa-folder').addClass('fa-folder-open')
+                    $('#categories li ul').slideDown({ duration: 100 });
+                    icon.addClass(iconAllPackClass);
+                } else {
+                    $('#sidebar .fa.fa-folder-open').removeClass('fa-folder-open').addClass('fa-folder')
+                    $('#categories li ul').slideUp({ duration: 100 });
+                    icon.addClass(iconAllExpandClass);
+                }
+            });  
+        });
+    </script>
+
+    
+        
+  <div class="toc-flag"></div>
+  <div class="toc-wrap">
+      <h3>
+          <span>文章目录</span>
+      </h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#什么是-MRO"><span class="toc-number">2.</span> <span class="toc-text">什么是 MRO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Python-MRO-历史"><span class="toc-number">3.</span> <span class="toc-text">Python MRO 历史</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#经典类和新式类"><span class="toc-number">3.1.</span> <span class="toc-text">经典类和新式类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DFS-深度优先搜索"><span class="toc-number">4.</span> <span class="toc-text">DFS 深度优先搜索</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#DFS-搜索流程"><span class="toc-number">4.1.</span> <span class="toc-text">DFS 搜索流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#案例分析"><span class="toc-number">4.2.</span> <span class="toc-text">案例分析</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#BFS-广度优先搜索"><span class="toc-number">5.</span> <span class="toc-text">BFS 广度优先搜索</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#BFS-搜索流程"><span class="toc-number">5.1.</span> <span class="toc-text">BFS 搜索流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BFS-案例分析"><span class="toc-number">5.2.</span> <span class="toc-text">BFS 案例分析</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#为什么放弃-DFS-和-BFS"><span class="toc-number">6.</span> <span class="toc-text">为什么放弃 DFS 和 BFS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#局部优先"><span class="toc-number">6.1.</span> <span class="toc-text">局部优先</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#单调性"><span class="toc-number">6.2.</span> <span class="toc-text">单调性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考案例"><span class="toc-number">6.3.</span> <span class="toc-text">参考案例</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#DFS-不满足单调性案例"><span class="toc-number">6.3.1.</span> <span class="toc-text">DFS 不满足单调性案例</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#BFS-不满足局部优先性案例"><span class="toc-number">6.3.2.</span> <span class="toc-text">BFS 不满足局部优先性案例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#疑惑"><span class="toc-number">6.4.</span> <span class="toc-text">疑惑</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#C3-线性化算法"><span class="toc-number">7.</span> <span class="toc-text">C3 线性化算法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#概念梳理"><span class="toc-number">7.1.</span> <span class="toc-text">概念梳理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#搜索流程"><span class="toc-number">7.2.</span> <span class="toc-text">搜索流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#案例分析-1"><span class="toc-number">7.3.</span> <span class="toc-text">案例分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#BFS-和-DFS-失败案例演示"><span class="toc-number">7.3.1.</span> <span class="toc-text">BFS 和 DFS 失败案例演示</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#DFS-失败案例在-C3-算法下的输出结果"><span class="toc-number">7.3.1.1.</span> <span class="toc-text">DFS 失败案例在 C3 算法下的输出结果</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#BFS-失败案例在-C3-算法下的输出结果"><span class="toc-number">7.3.1.2.</span> <span class="toc-text">BFS 失败案例在 C3 算法下的输出结果</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#复杂案例演示"><span class="toc-number">7.3.2.</span> <span class="toc-text">复杂案例演示</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#小技巧"><span class="toc-number">7.4.</span> <span class="toc-text">小技巧</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">8.</span> <span class="toc-text">参考</span></a></li></ol>
+  </div>
+
+    
+    <div id="toTop" class="fa fa-angle-up"></div>
+</aside>
+            
+            <section id="main"><article id="post-3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/Python MRO" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+                    <div class="article-meta">
+                        
+    <div class="article-category">
+    	<i class="fa fa-folder"></i>
+        <a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/">3-计算机科学</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/">1-理论计算机科学</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/4-%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E7%BC%96%E8%AF%91%E5%99%A8/">4-编程语言和编译器</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/4-%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E7%BC%96%E8%AF%91%E5%99%A8/Python/">Python</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>
+    </div>
+
+                        
+    <div class="article-date">
+        <i class="fa fa-calendar"></i>
+        <a href="/archives/ffe3a081.html">
+            <time datetime="2021-07-25T00:00:00.000Z" itemprop="datePublished">2021-07-25</time>
+        </a>
+    </div>
+
+
+                        
+                            <i class="fa fa-bar-chart"></i>
+                            <span id="busuanzi_container_site_pv"><span id="busuanzi_value_page_pv"></span></span>    
+                        
+                        
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/raw/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/Python MRO.md" target="_blank" rel="external nofollow noopener noreferrer"> Source </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/edit/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/Python MRO.md" target="_blank" rel="external nofollow noopener noreferrer"> Edit </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/commits/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/Python MRO.md" target="_blank" rel="external nofollow noopener noreferrer"> History </a>
+                            </div>
+                        
+                    </div>
+                
+                
+    
+        <h1 class="article-title" itemprop="name">
+            Python MRO
+        </h1>
+    
+
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+        
+        
+            <!-- 内容失效提醒 -->
+            
+    <!-- 如果文章创建超过一年或最后一次更新时间超过一个月(默认)则提示文章过期 -->
+    
+        <div class="aging">
+            <i class="fa fa-exclamation-circle aging-icon" aria-hidden="true"></i>
+            <span class="aging-content">请注意：本文编写于 <span class="aging-content-date">2021-07-25</span>，其中某些信息可能已经失去时效性。</span>
+        </div>
+    
+
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><strong>注：本文中给出的所有案例结果都经过实际代码验证可放心食用。</strong></p>
+<h2 id="什么是-MRO"><a href="#什么是-MRO" class="headerlink" title="什么是 MRO"></a>什么是 MRO</h2><p>方法解析顺序（Method Resolution Order MRO），指的是在多继承编程语言中查找类的某个方法来自哪个基类的搜索顺序。</p>
+<h2 id="Python-MRO-历史"><a href="#Python-MRO-历史" class="headerlink" title="Python MRO 历史"></a>Python MRO 历史</h2><table>
+<thead>
+<tr>
+<th align="center">周期</th>
+<th align="center">类存在形式和对应算法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Python 2.1</td>
+<td align="center">经典类 -&gt; DFS</td>
+</tr>
+<tr>
+<td align="center">Python 2.2</td>
+<td align="center">经典类 -&gt; DFS | 新式类 -&gt; BFS</td>
+</tr>
+<tr>
+<td align="center">Python 2.3-2.7</td>
+<td align="center">经典类 -&gt; DFS | 新式类 -&gt; C3</td>
+</tr>
+<tr>
+<td align="center">Python 3</td>
+<td align="center">新式类 -&gt; C3</td>
+</tr>
+</tbody></table>
+<h3 id="经典类和新式类"><a href="#经典类和新式类" class="headerlink" title="经典类和新式类"></a>经典类和新式类</h3><p>在 Python 2.1 及以前，定义一个类的形式如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span>:</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<p>在 Python 2.2 中引入了一种新的类的定义方式：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<p>为了保持向上兼容，Python 2.2 及以后的版本同时保留这两种定义方式而两种方式产生的类及其实例具有不同的特性，为了区分两种定义方式将 Python 2.1 及以前版本的书写方式产生的类称为经典类（Old-style Class）将 Python 2.2 及以后版本的书写方式产生的类称为新式类（New-style Class）。</p>
+<p>伴随着 Python3 的推出经典类已经被完全废弃，因为在 Python3 中无论以何种方式定义产生的都是新式类。</p>
+<h2 id="DFS-深度优先搜索"><a href="#DFS-深度优先搜索" class="headerlink" title="DFS 深度优先搜索"></a>DFS 深度优先搜索</h2><h3 id="DFS-搜索流程"><a href="#DFS-搜索流程" class="headerlink" title="DFS 搜索流程"></a>DFS 搜索流程</h3><ol>
+<li>检查当前类是否有目标函数，如果有则直接调用，如果没有则进入下一步；</li>
+<li>按照从左至右的方向将当前类的第一个父类赋值为当前类并重复步骤一，若前类无父类则进入下一步；</li>
+<li>向上回溯一层并按照步骤二规定的方向将当前类的下一个父类赋值为当前类并重复步骤一，直至无法继续回溯；</li>
+</ol>
+<h3 id="案例分析"><a href="#案例分析" class="headerlink" title="案例分析"></a>案例分析</h3><p><img src="https://img.blanc.site//wiki/img/20210726105026.png" alt="DFS 案例分析"></p>
+<p>参考 [DFS 搜索流程](#DFS 搜索流程)，搜索顺序为：A -&gt; B -&gt; D -&gt; H -&gt; E -&gt; C -&gt; F -&gt; G</p>
+<h2 id="BFS-广度优先搜索"><a href="#BFS-广度优先搜索" class="headerlink" title="BFS 广度优先搜索"></a>BFS 广度优先搜索</h2><h3 id="BFS-搜索流程"><a href="#BFS-搜索流程" class="headerlink" title="BFS 搜索流程"></a>BFS 搜索流程</h3><ol>
+<li>检查当前类是否有目标函数，如果有则直接调用，如果没有则进入下一步；</li>
+<li>按照从左至右的方向依次检查当前类的一级父类是否有目标函数，如果有则直接调用，否则依旧按照当前方向检查当前类的下一级父类是否有目标函数直至检查完当前类的最高级父类；</li>
+</ol>
+<h3 id="BFS-案例分析"><a href="#BFS-案例分析" class="headerlink" title="BFS 案例分析"></a>BFS 案例分析</h3><p>由于未能在本地下载 Python 2.2 因此无法验证复杂的案例，故这里给出网上反复论证过的案例。</p>
+<p><img src="https://img.blanc.site//wiki/img/20210726112350.png" alt="BFS 案例分析"></p>
+<p>参考 [BFS 搜索流程](#BFS 广度优先搜索)，搜索顺序为：A -&gt; B -&gt; C -&gt; D</p>
+<h2 id="为什么放弃-DFS-和-BFS"><a href="#为什么放弃-DFS-和-BFS" class="headerlink" title="为什么放弃 DFS 和 BFS"></a>为什么放弃 DFS 和 BFS</h2><p>从 [Python MRO 历史](#Python MRO 历史) 可以看出无论是 DFS 还是 BFS 最终都被 C3 算法代替了，原因是 DFS 和 BFS 在处理复杂继承关系时会出现无法满足局部优先或单调性的问题。</p>
+<h3 id="局部优先"><a href="#局部优先" class="headerlink" title="局部优先"></a>局部优先</h3><p>查找过程应该按照子类声明时给定的父类顺序进行查找（从左向右）。</p>
+<h3 id="单调性"><a href="#单调性" class="headerlink" title="单调性"></a>单调性</h3><p>在多继承关系中，假设类 C 的 MRO 结果给出类 A 排在类 B 前面，则在类 C 的所有子类中也需要满足同样的先后顺序；</p>
+<h3 id="参考案例"><a href="#参考案例" class="headerlink" title="参考案例"></a>参考案例</h3><h4 id="DFS-不满足单调性案例"><a href="#DFS-不满足单调性案例" class="headerlink" title="DFS 不满足单调性案例"></a>DFS 不满足单调性案例</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> inspect</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">D</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span><span class="params">(D)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span><span class="params">(D)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span><span class="params">(B, C)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line">print(inspect.getmro(A))</span><br><span class="line"><span class="comment"># 以下是结果（被我按行分割了）</span></span><br><span class="line"><span class="comment"># &lt;class __main__.A at 0x10719d3d0&gt;</span></span><br><span class="line"><span class="comment"># &lt;class __main__.B at 0x10717fd00&gt;</span></span><br><span class="line"><span class="comment"># &lt;class __main__.D at 0x10717fc20&gt;</span></span><br><span class="line"><span class="comment"># &lt;class __main__.C at 0x10719d130&gt;</span></span><br><span class="line"></span><br><span class="line">print(inspect.getmro(B))</span><br><span class="line"><span class="comment"># &lt;class __main__.B at 0x10717fd00&gt;</span></span><br><span class="line"><span class="comment"># &lt;class __main__.D at 0x10717fc20&gt;</span></span><br><span class="line"></span><br><span class="line">print(inspect.getmro(C))</span><br><span class="line"><span class="comment"># &lt;class __main__.C at 0x10719d130&gt;</span></span><br><span class="line"><span class="comment"># &lt;class __main__.D at 0x10717fc20&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>从结果来看，在类 C 的 MRO 中类 D 在类 C 之后，而在类 A 的 MRO 中类 D 在类 C 之前。</p>
+<h4 id="BFS-不满足局部优先性案例"><a href="#BFS-不满足局部优先性案例" class="headerlink" title="BFS 不满足局部优先性案例"></a>BFS 不满足局部优先性案例</h4><p>由于未能在本地部署 Python 2.2 环境，本案例取自 <a href="https://xubiubiu.com/python-mro/" target="_blank" rel="external nofollow noopener noreferrer">参考文章-1</a>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span><span class="params">(object)</span>:</span> <span class="keyword">pass</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span><span class="params">(A)</span>:</span> <span class="keyword">pass</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span><span class="params">(A, B)</span>:</span> <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> A.__mro__</span><br><span class="line"><span class="comment"># &lt;class '__main__.A'&gt;, &lt;type 'object'&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> B.__mro__</span><br><span class="line"><span class="comment"># &lt;class '__main__.B'&gt; </span></span><br><span class="line"><span class="comment"># &lt;class '__main__.A'&gt;, &lt;type 'object'&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">print</span> C.__mro__</span><br><span class="line"><span class="comment"># &lt;class '__main__.C'&gt;</span></span><br><span class="line"><span class="comment"># &lt;class '__main__.B'&gt;</span></span><br><span class="line"><span class="comment"># &lt;class '__main__.A'&gt;</span></span><br><span class="line"><span class="comment"># &lt;type 'object'&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>从结果来看，类 C 的 MRO 类 B 在类 A 之前，而在类 C 的声明中类 B 在类 A 之后。</p>
+<h3 id="疑惑"><a href="#疑惑" class="headerlink" title="疑惑"></a>疑惑</h3><p>在了解了单调性和局部优先原则以及两个算法的反例之后我又产生了一个疑惑，为什么不满足单调性和局部优先的原则就无法使用，不满足这两个原则所带来的弊端有哪些？</p>
+<p>经过简单的思考和搜索我并没有得出答案，以后如果有机会能够实际解除此类问题我会再回来补充。</p>
+<h2 id="C3-线性化算法"><a href="#C3-线性化算法" class="headerlink" title="C3 线性化算法"></a>C3 线性化算法</h2><h3 id="概念梳理"><a href="#概念梳理" class="headerlink" title="概念梳理"></a>概念梳理</h3><p>假设有类 C 继承自类 B1 到 类 BN，则记类 C 的 MRO 为 L[C]（L 代表 linearization，线性化），假设 L[C] 最终的结果是一个特殊的 Python list；</p>
+<p>对于 L[C] = [B1, B2, B3, … BN]，设 [B1] 为 L[C] 的头部，[B2, B3, …, BN] 为 L[C] 的尾部；</p>
+<p>所有类都会继承 object，且 L[object] = object, 以下 object 简写为 o；</p>
+<h3 id="搜索流程"><a href="#搜索流程" class="headerlink" title="搜索流程"></a>搜索流程</h3><p>定义 L[C(B1, B2, …, BN)] = [C] + merge(L[B1], L[B2], …, L[BN], L[o], [B1, B2, …, BN, o])</p>
+<p>通过定义可知，整个搜索流程即是 merge 方法运算的流程（假设被搜索的被是类 C）：</p>
+<ol>
+<li>merge 会从左至右依次解析参数中的 list：<ol>
+<li>选取 list 中的头部，检查头部是否在 merge 参数中其他列表的尾部中里出现：<ol>
+<li>如果未出现，则将头部代表的类加入到类 C 的 MRO 中并将此头部代表的类从所有列表中删除，此后重复步骤 1.1；</li>
+<li>如果出现，跳出对本 list 的检查重复步骤 1，直至 merge 中所有参数 list 都被检查完毕；</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>如果 merge 的所有参数列表都被清空，则输出 MRO，否则抛出异常。</li>
+</ol>
+<p>注意几个点：</p>
+<ol>
+<li>在步骤 1.1 中检查是否在其他列表的尾部中出现时也会检查公式中 [B1, B2, …, BN, o] 这一部分；</li>
+<li>MRO 也可以看做是一个 list，插入的时候采用的是尾部插入；</li>
+</ol>
+<h3 id="案例分析-1"><a href="#案例分析-1" class="headerlink" title="案例分析"></a>案例分析</h3><h4 id="BFS-和-DFS-失败案例演示"><a href="#BFS-和-DFS-失败案例演示" class="headerlink" title="BFS 和 DFS 失败案例演示"></a>BFS 和 DFS 失败案例演示</h4><p>先来看一下前面给出的两个失败案例在 C3 算法下的输出结果：</p>
+<h5 id="DFS-失败案例在-C3-算法下的输出结果"><a href="#DFS-失败案例在-C3-算法下的输出结果" class="headerlink" title="DFS 失败案例在 C3 算法下的输出结果"></a>DFS 失败案例在 C3 算法下的输出结果</h5><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">D</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span><span class="params">(D)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line">    </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span><span class="params">(D)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span><span class="params">(B, C)</span>:</span></span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line">print(A.__mro__)</span><br><span class="line"><span class="comment"># &lt;class '__main__.A'&gt;</span></span><br><span class="line"><span class="comment"># &lt;class '__main__.B'&gt;</span></span><br><span class="line"><span class="comment"># &lt;class '__main__.C'&gt;</span></span><br><span class="line"><span class="comment"># &lt;class '__main__.D'&gt; &lt;class 'object'&gt;</span></span><br><span class="line"></span><br><span class="line">print(B.__mro__)</span><br><span class="line"><span class="comment"># &lt;class '__main__.B'&gt;</span></span><br><span class="line"><span class="comment"># &lt;class '__main__.D'&gt;, &lt;class 'object'&gt;</span></span><br><span class="line"></span><br><span class="line">print(C.__mro__)</span><br><span class="line"><span class="comment"># &lt;class '__main__.C'&gt;</span></span><br><span class="line"><span class="comment"># &lt;class '__main__.D'&gt;, &lt;class 'object'&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>C3 执行结果：<br>A: A -&gt; B -&gt; C -&gt; D -&gt; o<br>B: B -&gt; D -&gt; o<br>C: C -&gt; D -&gt; o</p>
+<p>DFS 执行结果：<br>A: A -&gt; B -&gt; D -&gt; C<br>B: B -&gt; D<br>C: C -&gt; D</p>
+<p>从结果对比来看 C3 算法输出的结果解决了 DFS 算法在此案例中无法满足单调性原则的问题。</p>
+<p>下面我们来看一下 C3 算法是如何输出这样的结果的，重点看类 A 的 MRO 生成过程：</p>
+<p>注：在展示 merge 方法执行流程时使用加粗的 <strong>[]</strong> 代表当前列表，使用被 <code>代码块</code> 包裹的类代表待检测类</p>
+<ol>
+<li>根据公式：L[A] = [A] + merge(L[B], L[C], L[o], [B, C, o])</li>
+<li>L[B] = [B] + merge(L[D], L[o], [D, o])</li>
+<li>L[C] = [C] + merge(L[D], L[o], [D, o])</li>
+<li>L[D] = [D] + merge(L[o], [o]) = [D, o]</li>
+<li>将 L[D] 结果反向带入后:<ol>
+<li>L[B] = [B, D, o]</li>
+<li>L[C] = [C, D, o]</li>
+<li>L[A] = [A] + merge([B, D, o], [C, D, o], [o], [B, C, o])，根据 merge 方法执行流程：<ol>
+<li>L[A] = [A] + merge(<strong>[<code>B</code>, D, o]</strong>, [C, D, o], [o], [B, C, o])</li>
+<li>L[A] = [A, B] + merge(<strong>[<code>D</code>, o]</strong>, [C, D, o], [o], [C, o])</li>
+<li>L[A] = [A, B] + merge([D, o], <strong>[<code>C</code>, D, o]</strong>, [o], [C, o])</li>
+<li>L[A] = [A, B, C] + merge([D, o], <strong>[<code>D</code>, o]</strong>, [o], [o])</li>
+<li>L[A] = [A, B, C, D] + merge([o], <strong>[<code>o</code>]</strong>, [o], [o])</li>
+<li>L[A] = [A, B, C, D, o] + merge([], <strong>[]</strong>, [], [])</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h5 id="BFS-失败案例在-C3-算法下的输出结果"><a href="#BFS-失败案例在-C3-算法下的输出结果" class="headerlink" title="BFS 失败案例在 C3 算法下的输出结果"></a>BFS 失败案例在 C3 算法下的输出结果</h5><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span>:</span> <span class="keyword">pass</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span><span class="params">(A)</span>:</span> <span class="keyword">pass</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span><span class="params">(A, B)</span>:</span> <span class="keyword">pass</span></span><br><span class="line"></span><br><span class="line">print(A.__mro__)</span><br><span class="line">print(B.__mro__)</span><br><span class="line">print(C.__mro__)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Traceback (most recent call last):</span></span><br><span class="line"><span class="comment">#   File "test.py", line 3, in &lt;module&gt;</span></span><br><span class="line"><span class="comment">#     class C(A, B): pass</span></span><br><span class="line"><span class="comment"># TypeError: Cannot create a consistent method resolution</span></span><br><span class="line"><span class="comment"># order (MRO) for bases A, B</span></span><br></pre></td></tr></table></figure>
+
+<p>从结果来看，C3 算法最终会<strong>通过引起异常来维护局部优先原则</strong>。</p>
+<p>下面我们来看一下 C3 算法是如何输出这样的结果的，重点看类 C 的 MRO 生成过程：</p>
+<p>注：在展示 merge 方法执行流程时使用加粗的 <strong>[]</strong> 代表当前列表，使用被 <code>代码块</code> 包裹的类代表待检测类</p>
+<ol>
+<li>根据公式：L[C] = [C] + merge(L[A], L[B], L[o], [A, B, o])</li>
+<li>L[A] = [A] + merge(L[o], [o]) = [A, o]</li>
+<li>L[B] = [B] + merge(L[A], L[o], [A, o])</li>
+<li>将 L[A] 结果反向带入后:<ol>
+<li>L[B] = [B, A, o]</li>
+<li>L[C] = [C] + merge([A, o], [B, A, o], L[o], [A, B, o])，根据 merge 方法执行流程：<ol>
+<li>L[C] = [C] + merge(<strong>[<code>A</code>, o]</strong>, [B, A, o], [o], [A, B, o])</li>
+<li>L[C] = [C] + merge([A, o], <strong>[<code>B</code>, A, o]</strong>, [o], [A, B, o])</li>
+<li>L[C] = [C] + merge([A, o], [B, A, o], <strong>[<code>o</code>]</strong>, [A, B, o])</li>
+<li>L[C] = [C] + merge([A, o], [B, A, o], [o], <strong>[<code>A</code>, B, o]</strong>)</li>
+<li>L[C] = [C] + merge([A, o], [B, A, o], L[o], [A, B, o])</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<p>直至 merge 检查完所有参数 list，仍然存在非空参数 list，因此 merge 抛出异常。</p>
+<h4 id="复杂案例演示"><a href="#复杂案例演示" class="headerlink" title="复杂案例演示"></a>复杂案例演示</h4><p>这里我们通过 <a href="https://zh.wikipedia.org/wiki/C3%E7%BA%BF%E6%80%A7%E5%8C%96#%E4%BE%8B%E5%AD%90" target="_blank" rel="external nofollow noopener noreferrer">维基百科</a> 给出的复杂案例来进行展示：</p>
+<p><strong>注：由于案例过于复杂，这里就不展示源码了，只展示案例依赖图、最终结果和执行过程；</strong></p>
+<p><img src="https://img.blanc.site//wiki/img/20210726232113.png" alt="复杂案例展示"></p>
+<ol>
+<li>根据公式：L[Z] = [Z] + merge(L[K1], L[K3], L[K2], L[o], [K1, K3, K2, o])</li>
+<li>L[K1] = [K1] + merge(L[C], L[A], L[B], L[o], [C, A, B, o]) = [K1, C, A, B, o]</li>
+<li>L[K2] = [A] + merge(L[B], L[D], L[E], L[o], [B, D, E, o]) = [K2, B, D, E, o]</li>
+<li>L[K3] = [A] + merge(L[A], L[D], L[o], [A, D, o]) = [K3, A, D, o]</li>
+<li>L[A] = [A] + merge(L[o], [o]) = [A, o]</li>
+<li>L[B] = [B] + merge(L[o], [o]) = [B, o]</li>
+<li>L[C] = [C] + merge(L[o], [o]) = [C, o]</li>
+<li>L[D] = [D] + merge(L[o], [o]) = [D, o]</li>
+<li>L[E] = [E] + merge(L[o], [o]) = [E, o]</li>
+<li>将结果反向带入得到 L[Z] = [Z] + merge([K1, C, A, B, o], [K3, A, D, o], [K2, B, D, E, o], [o], [K1, K3, K2, o])，根据 merge 方法执行流程：<ol>
+<li>L[Z] = [Z] + merge(<strong>[<code>K1</code>, C, A, B, o]</strong>, [K3, A, D, o], [K2, B, D, E, o], [o], [K1, K3, K2, o])</li>
+<li>L[Z] = [Z, K1] + merge(<strong>[<code>C</code>, A, B, o]</strong>, [K3, A, D, o], [K2, B, D, E, o], [o], [K3, K2, o])</li>
+<li>L[Z] = [Z, K1, C] + merge(<strong>[<code>A</code>, B, o]</strong>, [K3, A, D, o], [K2, B, D, E, o], [o], [K3, K2, o])</li>
+<li>L[Z] = [Z, K1, C] + merge([A, B, o], <strong>[<code>K3</code>, A, D, o]</strong>, [K2, B, D, E, o], [o], [K3, K2, o])</li>
+<li>L[Z] = [Z, K1, C, K3] + merge([A, B, o], <strong>[<code>A</code>, D, o]</strong>, [K2, B, D, E, o], [o], [K2, o])</li>
+<li>L[Z] = [Z, K1, C, K3, A] + merge([B, o], <strong>[<code>D</code>, o]</strong>, [K2, B, D, E, o], [o], [K2, o])</li>
+<li>L[Z] = [Z, K1, C, K3, A] + merge([B, o], [D, o], <strong>[<code>K2</code>, B, D, E, o]</strong>, [o], [K2, o])</li>
+<li>L[Z] = [Z, K1, C, K3, A, K2] + merge([B, o], [D, o], <strong>[<code>B</code>, D, E, o]</strong>, [o], [o])</li>
+<li>L[Z] = [Z, K1, C, K3, A, K2, B] + merge([o], [D, o], <strong>[<code>D</code>, E, o]</strong>, [o], [o])</li>
+<li>L[Z] = [Z, K1, C, K3, A, K2, B, D] + merge([o], [o], <strong>[<code>E</code>, o]</strong>, [o], [o])</li>
+<li>L[Z] = [Z, K1, C, K3, A, K2, B, D, E] + merge([o], [o], <strong>[<code>o</code>]</strong>, [o], [o])</li>
+<li>L[Z] = [Z, K1, C, K3, A, K2, B, D, E, o] + merge([], [], <strong>[]</strong>, [], [])</li>
+</ol>
+</li>
+</ol>
+<p>最终得到结果为：Z -&gt; K1 -&gt; C -&gt; K3 -&gt; A -&gt; K2 -&gt; B -&gt; D -&gt; E -&gt; o</p>
+<h3 id="小技巧"><a href="#小技巧" class="headerlink" title="小技巧"></a>小技巧</h3><p><img src="https://img.blanc.site//wiki/img/20210726235106.jpeg" alt="小技巧展示"></p>
+<ol>
+<li>在多层级多继承关系中最高能够在第二层通过肉眼快速确定 MRO（本类 + 继承类顺序排列 + object）；</li>
+<li>想要快速确定复杂多继承类的 MRO，应该从第二层开始向上层查找；</li>
+</ol>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li><a href="https://xubiubiu.com/python-mro/" target="_blank" rel="external nofollow noopener noreferrer">艽野尘梦：Python 方法解析顺序 MRO</a></li>
+<li><a href="https://www.cnblogs.com/panlq/p/13168195.html" target="_blank" rel="external nofollow noopener noreferrer">JonPan：Python的多继承问题-MRO和C3算法</a></li>
+<li><a href="http://kaiyuan.me/2016/04/27/C3_linearization/" target="_blank" rel="external nofollow noopener noreferrer">YuanBao：C3 线性化算法与 MRO</a></li>
+<li><a href="https://lotabout.me/2020/C3-Algorithm/" target="_blank" rel="external nofollow noopener noreferrer">三点水：C3 算法-Python 多继承的内部原理</a></li>
+</ol>
+
+        
+        <footer class="article-footer">
+        </footer>
+    </div>
+</div></article>
+
+
+    
+<nav id="article-nav">
+    
+        <a href="/archives/5c113e93.html" id="article-nav-newer" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">上一篇</strong>
+            <div class="article-nav-title">
+                
+                    SSH overview
+                
+            </div>
+        </a>
+    
+    
+        <a href="/archives/3beb222a.html" id="article-nav-older" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">下一篇</strong>
+            <div class="article-nav-title">Shell 基础语法</div>
+        </a>
+    
+</nav>
+
+
+
+
+
+    
+    
+        <section id="comments"> <div id="vcomments"></div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        appId: 'sz7ny95XiYWkxht3H3YDs2GX-gzGzoHsz',
+        appKey: 'T8JJugDkbqtFLONIIzcPWW76',
+        placeholder: '不要吝啬赞美的语句ヾﾉ≧∀≦)o!',
+        avatar: 'mp',
+        meta: ['nick','mail','link'],
+        pageSize: 10,
+        visitor: true,
+        notify: true,
+        verify: true
+    })
+    let info = document.querySelectorAll('#vcomments>.info')[0]
+    if (info) { info.style.display = 'none' }
+</script> </section>
+    
+
+
+
+
+<!-- baidu url auto push script -->
+<script type="text/javascript">
+    !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=window.location.href,o=document.referrer;if(!e.test(r)){var n="//api.share.baidu.com/s.gif";o?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var t=new Image;t.src=n}}(window);
+</script>     
+</section>
+        </div>
+        <footer id="footer">
+    <div class="outer">
+        <div id="footer-info" class="inner">
+            ryomahan &copy; 2024 
+            <a rel="external nofollow noopener noreferrer" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png"></a>
+            <br> Powered by <a href="http://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. Comment By <a href="https://valine.js.org/" target="_blank" rel="external nofollow noopener noreferrer">valine</a>. Theme - <a href="https://github.com/zthxxx/hexo-theme-Wikitten" target="_blank" rel="external nofollow noopener noreferrer">wikitten</a>
+            
+                <br>
+                <span id="busuanzi_container_site_pv"><i class="fa fa-eye"></i> <span id="busuanzi_value_site_pv"></span></span>
+                &nbsp;|&nbsp;
+                <span id="busuanzi_container_site_pv"><i class="fa fa-user"></i> <span id="busuanzi_value_site_uv"></span></span>
+            
+        </div>
+    </div>
+</footer>
+
+        
+    
+        
+<script src="/libs/lightgallery/js/lightgallery.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-thumbnail.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-pager.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-autoplay.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-fullscreen.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-zoom.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-hash.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-share.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-video.min.js"></script>
+
+    
+    
+        
+<script src="/libs/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+    
+    
+        <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true,
+            TeX: {
+                equationNumbers: {
+                  autoNumber: 'AMS'
+                }
+            }
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+
+
+<!-- Custom Scripts -->
+
+<script src="/js/main.js"></script>
+
+
+    </div>
+</body>

@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    
+    <title>WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview | 小白维基</title>
+    
+    
+        <meta name="keywords" content="Python,WeeklyPEP">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="前言本文的主体内容大部分来自对 PEP 492 原文的翻译，剩余部分是本人对原文的理解，在整理过程中我没有刻意地区分二者，这两部分被糅杂在一起形成了本文。因此请不要带着「本文的内容是百分百正确」的想法阅读。如果文中的某些内容让你产生疑惑，你可以给我留言与我讨论或者对比 PEP 492 的原文加以确认。 注：PEP 492 创建于 2015-04-09，Python 3.5注：文中的「当前版本」指的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview">
+<meta property="og:url" content="https://wiki.blanc.site/archives/7eaf0f5f.html">
+<meta property="og:site_name" content="小白维基">
+<meta property="og:description" content="前言本文的主体内容大部分来自对 PEP 492 原文的翻译，剩余部分是本人对原文的理解，在整理过程中我没有刻意地区分二者，这两部分被糅杂在一起形成了本文。因此请不要带着「本文的内容是百分百正确」的想法阅读。如果文中的某些内容让你产生疑惑，你可以给我留言与我讨论或者对比 PEP 492 的原文加以确认。 注：PEP 492 创建于 2015-04-09，Python 3.5注：文中的「当前版本」指的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-03-06T00:00:00.000Z">
+<meta property="article:modified_time" content="2024-11-10T15:39:52.936Z">
+<meta property="article:author" content="ryomahan">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="WeeklyPEP">
+<meta name="twitter:card" content="summary">
+    
+
+    
+        <link rel="alternate" href="/atom.xml" title="小白维基" type="application/atom+xml">
+    
+    
+        <link rel="icon" href="/favicon.ico">
+    
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/libs/open-sans/styles.css">
+
+    
+<link rel="stylesheet" href="/libs/source-code-pro/styles.css">
+
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<script src="/libs/jquery/2.1.3/jquery.min.js"></script>
+
+    
+<script src="/libs/jquery/plugins/cookie/1.4.1/jquery.cookie.js"></script>
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/lightgallery/css/lightgallery.min.css">
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/justified-gallery/justifiedGallery.min.css">
+
+    
+    
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110100486-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-110100486-1');
+</script>
+    
+    
+        <meta name="google-site-verification" content="D9ld5oQABBxIwNpgD_WN61p51-ZcABZ6Olt4HKcxlWw">
+    
+    
+        <script>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?fac7e69191f0847b886888aa7c794fa7";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+    
+
+
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- 字体引入 -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Noto+Serif+SC:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+<meta name="generator" content="Hexo 4.2.1"></head>
+</html>
+<body>
+    <div id="container">
+        <header id="header">
+    <div id="header-main" class="header-inner">
+        <div class="outer">
+            <a href="/" id="logo">
+                <i class="logo"></i>
+                <span class="site-title">小白维基</span>
+            </a>
+            <nav id="main-nav">
+                
+                    <a class="main-nav-link" href="/">首页</a>
+                
+                    <a class="main-nav-link" href="/archives">归档</a>
+                
+                    <a class="main-nav-link" href="/categories">分类</a>
+                
+                    <a class="main-nav-link" href="/tags">标签</a>
+                
+                    <a class="main-nav-link" href="/about">关于</a>
+                
+            </nav>
+            
+                
+                <nav id="sub-nav">
+                    <div class="profile" id="profile-nav">
+                        <a id="profile-anchor" href="javascript:;">
+                            <img class="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df">
+                            <i class="fa fa-caret-down"></i>
+                        </a>
+                    </div>
+                </nav>
+            
+            <div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="想要查找什么...">
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div>
+        </div>
+    </div>
+    <div id="main-nav-mobile" class="header-sub header-inner">
+        <table class="menu outer">
+            <tr>
+                
+                    <td><a class="main-nav-link" href="/">首页</a></td>
+                
+                    <td><a class="main-nav-link" href="/archives">归档</a></td>
+                
+                    <td><a class="main-nav-link" href="/categories">分类</a></td>
+                
+                    <td><a class="main-nav-link" href="/tags">标签</a></td>
+                
+                    <td><a class="main-nav-link" href="/about">关于</a></td>
+                
+                <td>
+                    
+    <div class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+    </div>
+
+                </td>
+            </tr>
+        </table>
+    </div>
+</header>
+
+        <div class="outer">
+            
+                
+
+<aside id="profile">
+    <div class="inner profile-inner">
+        <div class="base-info profile-block">
+            <img id="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df?s=128">
+            <h2 id="name">Ryoma</h2>
+            <h3 id="title">毕己一生，依依东望。</h3>
+            <span id="location"><i class="fa fa-map-marker"></i>Jinan, China</span>
+            <a id="follow" target="_blank" href="https://github.com/ryomahan/" rel="external nofollow noopener noreferrer">关注我</a>
+        </div>
+        <div class="article-info profile-block">
+            <div class="article-info-block">
+                25
+                <span>文章</span>
+            </div>
+            <div class="article-info-block">
+                12
+                <span>标签</span>
+            </div>
+        </div>
+        
+        <div class="profile-block social-links">
+            <table>
+                <tr>
+                    
+                    
+                    <td>
+                        <a href="https://blog.blanc.site" target="_blank" title="wordpress" class="tooltip">
+                            <i class="fa fa-wordpress"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://twitter.com/ryomahan1996" target="_blank" title="twitter" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-twitter"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://weibo.com/xiaobaidh" target="_blank" title="weibo" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-weibo"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://github.com/ryomahan" target="_blank" title="github" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-github"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="/atom.xml" target="_blank" title="rss" class="tooltip">
+                            <i class="fa fa-rss"></i>
+                        </a>
+                    </td>
+                    
+                </tr>
+            </table>
+        </div>
+        
+    </div>
+
+    
+        <div class="widget-wrap widget-list">
+            <h3 class="widget-title"><span>友情链接</span></h3>
+            <div class="widget">
+                <ul>
+                    
+                        <li>
+                            <a href="https://pythonhunter.org/" target="_blank" rel="external nofollow noopener noreferrer">捕蛇者说</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://laike9m.com/" target="_blank" rel="external nofollow noopener noreferrer">laike9m</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://www.kawabangga.com/" target="_blank" rel="external nofollow noopener noreferrer">卡瓦邦噶</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://manjusaka.itscoder.com/" target="_blank" rel="external nofollow noopener noreferrer">Manjusaka</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.evo.moe/" target="_blank" rel="external nofollow noopener noreferrer">Sparta_EN</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.blanc.site" target="_blank">一只小白</a>
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    
+</aside>
+
+            
+            
+                <aside id="sidebar">
+   
+        
+    <div class="widget-wrap" id="categories">
+        <h3 class="widget-title">
+            <span>分类</span>
+            &nbsp;
+            <a id="allExpand" href="#">
+                <i class="fa fa-angle-double-down fa-2x"></i>
+            </a>
+        </h3>
+        
+        
+        
+         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-网络笔记
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/e5187cf6.html">同步到腾讯云社区</a></li>  <li class="file"><a href="/archives/4940711f.html">8086 处理器寻址方式</a></li>  <li class="file"><a href="/archives/5c113e93.html">SSH overview</a></li>  <li class="file"><a href="/archives/c57afff6.html">记一次失败的 AI 辅助编程全历程</a></li>  <li class="file"><a href="/archives/d644d904.html">「翻译」如何组织大型 Python 项目</a></li>  <li class="file"><a href="/archives/ed42c0e4.html">「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            2-软件使用
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Chrome
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/decc86d5.html">「转载」解析谷歌 Chrome 各分支版本</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Django
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/b641d3ac.html">Django 笔记-2-源码理解-urls 篇</a></li>  <li class="file"><a href="/archives/ab18c3c3.html">Django 笔记-3-文档阅读-关于 Django 文档</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Vue
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/793400e.html">解决 Vue CSS 样式重复载入，为 Vue 添加全局 less 或 sass 基础样式库</a></li>  <li class="file"><a href="/archives/341c107a.html">Vue Router 实现动态路由和常见问题解决方案</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                    
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            3-计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            1-理论计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-数据结构和算法
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/f3c5e08e.html">数据结构笔记1-概论</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            4-编程语言和编译器
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            Python
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/7a294715.html">所谓 WSGI</a></li>  <li class="file"><a href="/archives/ffe3a081.html">Python MRO</a></li>  <li class="file"><a href="/archives/2accc063.html">WeeklyPEP-0-overview</a></li>  <li class="file"><a href="/archives/f5b4f56.html">所谓 ASGI</a></li>  <li class="file"><a href="/archives/5823d5df.html">WeeklyPEP-2-PEP 343-with 语句-overview</a></li>  <li class="file"><a href="/archives/291be77c.html">解剖 Python 类</a></li>  <li class="file"><a href="/archives/c29b4f3b.html">WeeklyPEP-3-PEP 318-函数装饰器-overview</a></li>  <li class="file active"><a href="/archives/7eaf0f5f.html">WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Shell
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/8f9d5c85.html">Shell 获取当前脚本的绝对路径</a></li>  <li class="file"><a href="/archives/dbac95ae.html">实现 echo 不换行输出</a></li>  <li class="file"><a href="/archives/b422aa7d.html">Shell 区分不同 Unix 系统</a></li>  <li class="file"><a href="/archives/3beb222a.html">Shell 基础语法</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            汇编语言
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/90a7f914.html">NASM Overview</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+    </div>
+    <script>
+        $(document).ready(function() {
+            var iconFolderOpenClass  = 'fa-folder-open';
+            var iconFolderCloseClass = 'fa-folder';
+            var iconAllExpandClass = 'fa-angle-double-down';
+            var iconAllPackClass = 'fa-angle-double-up';
+            // Handle directory-tree expansion:
+            // 左键单独展开目录
+            $(document).on('click', '#categories a[data-role="directory"]', function (event) {
+                event.preventDefault();
+
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var subtree = $(this).siblings('ul');
+                icon.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if (expanded) {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideUp({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderCloseClass);
+                } else {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideDown({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderOpenClass);
+                }
+            });
+            // 右键展开下属所有目录
+            $('#categories a[data-role="directory"]').bind("contextmenu", function(event){
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var listNode = $(this).siblings('ul');
+                var subtrees = $.merge(listNode.find('li ul'), listNode);
+                var icons = $.merge(listNode.find('.fa'), icon);
+                icons.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if(expanded) {
+                    subtrees.slideUp({ duration: 100 });
+                    icons.addClass(iconFolderCloseClass);
+                } else {
+                    subtrees.slideDown({ duration: 100 });
+                    icons.addClass(iconFolderOpenClass);
+                }
+            })
+            // 展开关闭所有目录按钮
+            $(document).on('click', '#allExpand', function (event) {
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconAllExpandClass);
+                icon.removeClass(iconAllExpandClass).removeClass(iconAllPackClass);
+                if(expanded) {
+                    $('#sidebar .fa.fa-folder').removeClass('fa-folder').addClass('fa-folder-open')
+                    $('#categories li ul').slideDown({ duration: 100 });
+                    icon.addClass(iconAllPackClass);
+                } else {
+                    $('#sidebar .fa.fa-folder-open').removeClass('fa-folder-open').addClass('fa-folder')
+                    $('#categories li ul').slideUp({ duration: 100 });
+                    icon.addClass(iconAllExpandClass);
+                }
+            });  
+        });
+    </script>
+
+    
+        
+  <div class="toc-flag"></div>
+  <div class="toc-wrap">
+      <h3>
+          <span>文章目录</span>
+      </h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#摘要"><span class="toc-number">2.</span> <span class="toc-text">摘要</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#接口设计与实施修订"><span class="toc-number">3.</span> <span class="toc-text">接口设计与实施修订</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#理由和目标"><span class="toc-number">4.</span> <span class="toc-text">理由和目标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#规范"><span class="toc-number">5.</span> <span class="toc-text">规范</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#原生协程声明语法"><span class="toc-number">5.1.</span> <span class="toc-text">原生协程声明语法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#types-coroutine"><span class="toc-number">5.2.</span> <span class="toc-text">types.coroutine()</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#await-表达式"><span class="toc-number">5.3.</span> <span class="toc-text">await 表达式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#更新运算符优先级"><span class="toc-number">5.3.1.</span> <span class="toc-text">更新运算符优先级</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#使用-await-关键字的示例"><span class="toc-number">5.3.2.</span> <span class="toc-text">使用 await 关键字的示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#异步上下文管理器与-async-with"><span class="toc-number">5.4.</span> <span class="toc-text">异步上下文管理器与 async with</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#新语法"><span class="toc-number">5.4.1.</span> <span class="toc-text">新语法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#示例"><span class="toc-number">5.4.2.</span> <span class="toc-text">示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#异步迭代器和-async-for"><span class="toc-number">5.5.</span> <span class="toc-text">异步迭代器和 async for</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#新语法-1"><span class="toc-number">5.5.1.</span> <span class="toc-text">新语法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#示例-1"><span class="toc-number">5.5.2.</span> <span class="toc-text">示例 1</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#示例-2"><span class="toc-number">5.5.3.</span> <span class="toc-text">示例 2</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#为什么需要-StopAsyncIteration"><span class="toc-number">5.5.4.</span> <span class="toc-text">为什么需要 StopAsyncIteration</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#协程对象"><span class="toc-number">5.6.</span> <span class="toc-text">协程对象</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#与生成器的不同之处"><span class="toc-number">5.6.1.</span> <span class="toc-text">与生成器的不同之处</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#协程对象的内置方法"><span class="toc-number">5.6.2.</span> <span class="toc-text">协程对象的内置方法</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#用于调试的特性"><span class="toc-number">5.7.</span> <span class="toc-text">用于调试的特性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#新内置函数"><span class="toc-number">5.8.</span> <span class="toc-text">新内置函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#新的抽象基类"><span class="toc-number">5.9.</span> <span class="toc-text">新的抽象基类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#术语表"><span class="toc-number">6.</span> <span class="toc-text">术语表</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#原生协程函数"><span class="toc-number">6.1.</span> <span class="toc-text">原生协程函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#原生协程"><span class="toc-number">6.2.</span> <span class="toc-text">原生协程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#生成器式协程函数"><span class="toc-number">6.3.</span> <span class="toc-text">生成器式协程函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#生成器式协程"><span class="toc-number">6.4.</span> <span class="toc-text">生成器式协程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#协程"><span class="toc-number">6.5.</span> <span class="toc-text">协程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#协程对象-1"><span class="toc-number">6.6.</span> <span class="toc-text">协程对象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类-Future-对象"><span class="toc-number">6.7.</span> <span class="toc-text">类 Future 对象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#可等待对象"><span class="toc-number">6.8.</span> <span class="toc-text">可等待对象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#异步上下文管理器"><span class="toc-number">6.9.</span> <span class="toc-text">异步上下文管理器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#异步可迭代对象"><span class="toc-number">6.10.</span> <span class="toc-text">异步可迭代对象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#异步迭代器"><span class="toc-number">6.11.</span> <span class="toc-text">异步迭代器</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#过渡计划"><span class="toc-number">7.</span> <span class="toc-text">过渡计划</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#向后兼容性"><span class="toc-number">7.1.</span> <span class="toc-text">向后兼容性</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#asyncio"><span class="toc-number">7.1.1.</span> <span class="toc-text">asyncio</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#asyncio-迁移策略"><span class="toc-number">7.1.2.</span> <span class="toc-text">asyncio 迁移策略</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#CPython-代码库中的-async-await"><span class="toc-number">7.1.3.</span> <span class="toc-text">CPython 代码库中的 async&#x2F;await</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#语法更新"><span class="toc-number">7.2.</span> <span class="toc-text">语法更新</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#废弃计划"><span class="toc-number">7.3.</span> <span class="toc-text">废弃计划</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#决策过程"><span class="toc-number">8.</span> <span class="toc-text">决策过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#PEP-3152"><span class="toc-number">8.1.</span> <span class="toc-text">PEP 3152</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#协程生成器"><span class="toc-number">8.2.</span> <span class="toc-text">协程生成器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么选择-async-和-await-关键字"><span class="toc-number">8.3.</span> <span class="toc-text">为什么选择 async 和 await 关键字</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么-aiter-返回的不是可等待对象"><span class="toc-number">8.4.</span> <span class="toc-text">为什么 __aiter__ 返回的不是可等待对象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#async-关键字的重要性"><span class="toc-number">8.5.</span> <span class="toc-text">async 关键字的重要性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么使用-async-def"><span class="toc-number">8.6.</span> <span class="toc-text">为什么使用 async def</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么不使用-await-for-和-await-with"><span class="toc-number">8.7.</span> <span class="toc-text">为什么不使用 await for 和 await with</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么使用-async-def-而不是-def-async"><span class="toc-number">8.8.</span> <span class="toc-text">为什么使用 async def 而不是 def async</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么不导入-future"><span class="toc-number">8.9.</span> <span class="toc-text">为什么不导入 __future__</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么异步魔术方法都用-a-开头"><span class="toc-number">8.10.</span> <span class="toc-text">为什么异步魔术方法都用 a 开头</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么不复用现有魔术方法"><span class="toc-number">8.11.</span> <span class="toc-text">为什么不复用现有魔术方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#为什么复用-for-和-with-语句"><span class="toc-number">8.12.</span> <span class="toc-text">为什么复用 for 和 with 语句</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#异步推导式"><span class="toc-number">8.13.</span> <span class="toc-text">异步推导式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#异步-lambda-函数"><span class="toc-number">8.14.</span> <span class="toc-text">异步 lambda 函数</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#性能影响"><span class="toc-number">9.</span> <span class="toc-text">性能影响</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#整体影响"><span class="toc-number">9.1.</span> <span class="toc-text">整体影响</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#词法分析器的影响"><span class="toc-number">9.2.</span> <span class="toc-text">词法分析器的影响</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#async-await-的影响"><span class="toc-number">9.3.</span> <span class="toc-text">async&#x2F;await 的影响</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实施"><span class="toc-number">10.</span> <span class="toc-text">实施</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#引用"><span class="toc-number">11.</span> <span class="toc-text">引用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">12.</span> <span class="toc-text">参考</span></a></li></ol>
+  </div>
+
+    
+    <div id="toTop" class="fa fa-angle-up"></div>
+</aside>
+            
+            <section id="main"><article id="post-3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+                    <div class="article-meta">
+                        
+    <div class="article-category">
+    	<i class="fa fa-folder"></i>
+        <a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/">3-计算机科学</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/">1-理论计算机科学</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/4-%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E7%BC%96%E8%AF%91%E5%99%A8/">4-编程语言和编译器</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/4-%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E7%BC%96%E8%AF%91%E5%99%A8/Python/">Python</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>, <a class="tag-link" href="/tags/WeeklyPEP/" rel="tag">WeeklyPEP</a>
+    </div>
+
+                        
+    <div class="article-date">
+        <i class="fa fa-calendar"></i>
+        <a href="/archives/7eaf0f5f.html">
+            <time datetime="2024-03-06T00:00:00.000Z" itemprop="datePublished">2024-03-06</time>
+        </a>
+    </div>
+
+
+                        
+                            <i class="fa fa-bar-chart"></i>
+                            <span id="busuanzi_container_site_pv"><span id="busuanzi_value_page_pv"></span></span>    
+                        
+                        
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/raw/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview.md" target="_blank" rel="external nofollow noopener noreferrer"> Source </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/edit/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview.md" target="_blank" rel="external nofollow noopener noreferrer"> Edit </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/commits/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview.md" target="_blank" rel="external nofollow noopener noreferrer"> History </a>
+                            </div>
+                        
+                    </div>
+                
+                
+    
+        <h1 class="article-title" itemprop="name">
+            WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview
+        </h1>
+    
+
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+        
+        
+            <!-- 内容失效提醒 -->
+            
+    <!-- 如果文章创建超过一年或最后一次更新时间超过一个月(默认)则提示文章过期 -->
+    
+        <div class="aging">
+            <i class="fa fa-exclamation-circle aging-icon" aria-hidden="true"></i>
+            <span class="aging-content">请注意：本文编写于 <span class="aging-content-date">2024-03-06</span>，其中某些信息可能已经失去时效性。</span>
+        </div>
+    
+
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文的主体内容大部分来自对 <a href="https://peps.python.org/pep-0492/" target="_blank" rel="external nofollow noopener noreferrer">PEP 492</a> 原文的翻译，剩余部分是本人对原文的理解，在整理过程中我没有刻意地区分二者，这两部分被糅杂在一起形成了本文。因此请<strong>不要带着</strong>「本文的内容是百分百正确」的想法阅读。如果文中的某些内容让你产生疑惑，你可以给我留言与我讨论或者对比 <a href="https://peps.python.org/pep-0492/" target="_blank" rel="external nofollow noopener noreferrer">PEP 492</a> 的原文加以确认。</p>
+<p><strong>注：<a href="https://peps.python.org/pep-0492/" target="_blank" rel="external nofollow noopener noreferrer">PEP 492</a> 创建于 2015-04-09，Python 3.5</strong><br><strong>注：文中的「当前版本」指的是本提案生效之前的版本</strong><br><strong>注：本文过长，虽然已经自我校对过一次，但还是难免存在错别字或语句不通顺的地方，如果您发现了问题欢迎留言给我</strong></p>
+<h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>网络请求爆发性地增长引发了对低延时、可拓展代码的相关需求。本提案旨在让<strong>显式地编写异步、并发 Python 代码更容易、更 Pythoinc</strong>，并以此满足前述需求。</p>
+<p>提案建议使协程成为 Python 中完全独立的新概念，并引入新的支持语法。最终的目的是<strong>在 Python 中建立一个简洁通用的异步编程心智模型，并使它尽可能接近同步编程</strong>。</p>
+<p>在本提案中，<strong>假设</strong>异步任务都使用类似内置模块 <code>asyncio.events.AbstractEventLoop</code> 中的事件循环进行编排和协调。但是，本提案与任何特定的事件循环实现<strong>无关</strong>，只与使用 <code>yield</code> 作为调度信号的协程相关，也就是说协程会在事件（例如 IO）完成前保持等待。</p>
+<p>我们相信，本提案能够让 Python 在快速增长的异步编程领域中继续保持竞争力，因为很多其他语言已经或计划采用近似的特性：<a href="http://wiki.ecmascript.org/doku.php?id=strawman:async_functions" target="_blank" rel="external nofollow noopener noreferrer">2</a>，<a href="https://msdn.microsoft.com/en-us/library/hh191443.aspx" target="_blank" rel="external nofollow noopener noreferrer">5</a>，<a href="https://www.dartlang.org/articles/await-async/" target="_blank" rel="external nofollow noopener noreferrer">7</a>，<a href="http://docs.scala-lang.org/sips/pending/async.html" target="_blank" rel="external nofollow noopener noreferrer">8</a>，<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3722.pdf" target="_blank" rel="external nofollow noopener noreferrer">10</a>。</p>
+<h2 id="接口设计与实施修订"><a href="#接口设计与实施修订" class="headerlink" title="接口设计与实施修订"></a>接口设计与实施修订</h2><p>注：<strong>这部分是修订内容，可以放在最后阅读。</strong></p>
+<ol>
+<li>以初始 Python 3.5 beta 版本的反馈为依据，重构本提案设置的对象模型。这次重构的目的是<strong>更明确地将原生协程与生成器分离</strong>，而不是将原生协程作为一种新的生成器，<strong>原生协程要设计成完全独立的类型</strong>（具体实施在 <a href="https://hg.python.org/cpython/rev/7a0a1a4ac639" target="_blank" rel="external nofollow noopener noreferrer">引用 17</a>）。这么做的主要原因是在尝试为 <a href="https://www.tornadoweb.org/en/stable/" target="_blank" rel="external nofollow noopener noreferrer">Tornado Web Server</a> 集成原生协程时遇到了问题（记录在 <a href="http://bugs.python.org/issue24400" target="_blank" rel="external nofollow noopener noreferrer">引用 18</a>）。</li>
+<li>CPython 3.5.2 更新了 <code>__aiter__</code> 协议。在 3.5.2 之前，<code>__aiter__</code> 返回一个可以被解析成 <a href="#异步迭代器">异步迭代器</a> 的 <a href="https://docs.python.org/zh-cn/3/glossary.html#term-awaitable" target="_blank" rel="external nofollow noopener noreferrer">可等待对象（awaitable）</a>。从 3.5.2 开始，<code>__aiter__</code> <strong>直接返回异步迭代器</strong>。如果在 3.5.2 中使用旧协议，会抛出一个 <code>PendingDeprecatioWarning</code> 异常。而在 3.6 中，旧的 <code>__aiter__</code> 协议仍旧会被支持，但会抛出一个 <code>DeprecationWarning</code> 异常。最终，在 3.7 中，旧的 <code>__aiter__</code> 协议将被废弃，如果 <code>__aiter__</code> 返回的不是异步迭代器，则会引发 <code>RuntimeError</code>。可以通过 <a href="http://bugs.python.org/issue27243" target="_blank" rel="external nofollow noopener noreferrer">引用 19</a> 和 <a href="https://docs.python.org/3/reference/datamodel.html#async-iterators" target="_blank" rel="external nofollow noopener noreferrer">引用 20</a> 来获取更多细节。</li>
+</ol>
+<h2 id="理由和目标"><a href="#理由和目标" class="headerlink" title="理由和目标"></a>理由和目标</h2><p>当前版本的 Python 支持通过生成器来实现协程（<a href="https://peps.python.org/pep-0342/" target="_blank" rel="external nofollow noopener noreferrer">PEP 342</a>），<a href="https://peps.python.org/pep-0380/" target="_blank" rel="external nofollow noopener noreferrer">PEP 380</a> 中引入的 <code>yield from</code> 语法进一步增强了这一特性。但是这种方案有很多缺点：</p>
+<ol>
+<li>生成器实现的协程和正常生成器的语法相同，因此很<strong>容易被混淆</strong>，对于新用户来说尤其如此；</li>
+<li>一个函数是否是协程取决于函数体中是否存在 <code>yield</code> 或 <code>yield from</code> 语句。在重构这些函数时，如果删除或新增了 <code>yield</code> 相关语句就可能会导致一些不明显的错误；</li>
+<li>只能在 <code>yield</code> 语法支持的地方进行异步调用，无法异步调用类似 with 或 for 这样的语句，限制了可用性。</li>
+</ol>
+<p>本提案使协程成为 Python 语言的一种原生特性，并且清晰地将其与生成器区分开。这样做不仅<strong>消除了生成器与协程之间的歧义</strong>，还<strong>可以不依赖特定库直接定义协程</strong>。同时也提升了 linters 或 IDE 静态代码分析和重构的能力。</p>
+<p>原生协程以及相关新语法使得在异步操作中定义上下文管理器和可迭代协议成为可能。稍后会在提案中提及：新的 <code>async with</code> 语句允许 Python 程序在进入或退出上下文上时执行异步调用，而新的 <code>async for</code> 语句可以在迭代器中执行异步调用。</p>
+<h2 id="规范"><a href="#规范" class="headerlink" title="规范"></a>规范</h2><p>规范章节引入了新的语法和语义，以增强 Python 对协程的支持。</p>
+<p>本规范假定阅读者已经了解此前 Python 中协程的实现（ <a href="https://peps.python.org/pep-0342/" target="_blank" rel="external nofollow noopener noreferrer">PEP 342</a> 和 <a href="https://peps.python.org/pep-0380/" target="_blank" rel="external nofollow noopener noreferrer">PEP 380</a>）。本规范涉及的语法修改动机来自 asyncio 模块提案（<a href="https://peps.python.org/pep-3156/" target="_blank" rel="external nofollow noopener noreferrer">PEP 3156</a>）和 Cofunctions 提案（<a href="https://peps.python.org/pep-3152/" target="_blank" rel="external nofollow noopener noreferrer">PEP 3152</a>，现已被本规范否决）。</p>
+<p>在后文中，将使用「原生协程」来指代使用新语法声明的协程，使用「生成器式协程」指代基于生成器语法的协程。</p>
+<h3 id="原生协程声明语法"><a href="#原生协程声明语法" class="headerlink" title="原生协程声明语法"></a>原生协程声明语法</h3><p>原生协程声明语法如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">read_data</span><span class="params">(db)</span>:</span></span><br><span class="line">	<span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<p>它的主要特性有：</p>
+<ol>
+<li>使用 <code>async def</code> 声明的函数一定是协程，即使内部不包含 <code>await</code>；</li>
+<li><strong>在 <code>async</code> 函数中使用 <code>yield</code> 或 <code>yield from</code> 会引发 <code>SyntaxError</code> 异常；</strong></li>
+<li>在内部，引入了两个新的 <a href="https://docs.python.org/3/library/inspect.html#code-objects-bit-flags" target="_blank" rel="external nofollow noopener noreferrer">code object flags</a>：<ol>
+<li><code>CO_COROUTINE</code>：用于标记原生协程；</li>
+<li><code>CO_ITERABLE_COROUTINE</code>：使生成器式协程与原生协程兼容（由 <a href="https://docs.python.org/zh-cn/3/library/types.html#types.coroutine" target="_blank" rel="external nofollow noopener noreferrer">types.coroutine</a> 函数设置）。</li>
+</ol>
+</li>
+<li>常规生成器返回一个生成器对象，类似的，<strong>协程返回一个协程对象</strong>；</li>
+<li>在协程中 <code>StopIteration</code> 会被 <code>RuntimeError</code> 代替，对于常规生成器来说，这种行为会在后续过程中支持（详情请看 <a href="https://peps.python.org/pep-0479/" target="_blank" rel="external nofollow noopener noreferrer">PEP 479</a>）；</li>
+<li>如果不使用 <code>await</code> 直接调用原生协程，当它被垃圾回收时会抛出一个 <code>RuntimeWarning</code>（点击 <a href="#用于调试的特性">用于调试的特性</a> 了解更多）；</li>
+<li>更多特性请看：<a href="#协程对象">协程对象</a> 章节。</li>
+</ol>
+<h3 id="types-coroutine"><a href="#types-coroutine" class="headerlink" title="types.coroutine()"></a>types.coroutine()</h3><p><code>types</code> 模块中新增了一个名为 <code>coroutine(fn)</code> 的函数。它能够帮助「asyncio 中现有的生成器式协程」与「本提案引入的原生协程」实现相互兼容：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@types.coroutine</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">process_data</span><span class="params">(db)</span>:</span></span><br><span class="line">	data = <span class="keyword">yield</span> <span class="keyword">from</span> read_data(db)</span><br><span class="line">	...</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># CPython 3.10 Lib.types.py</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">coroutine</span><span class="params">(func)</span>:</span>  </span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> callable(func):  </span><br><span class="line">        <span class="keyword">raise</span> TypeError(<span class="string">'types.coroutine() expects a callable'</span>)  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">if</span> (</span><br><span class="line">	    func.__class__ <span class="keyword">is</span> FunctionType <span class="keyword">and</span> </span><br><span class="line">	    getattr(func, <span class="string">'__code__'</span>, <span class="literal">None</span>).__class__ <span class="keyword">is</span> CodeType</span><br><span class="line">	):  </span><br><span class="line">        co_flags = func.__code__.co_flags  </span><br><span class="line">		</span><br><span class="line">		<span class="comment"># 0x20 == CO_GENERATOR 生成器标识</span></span><br><span class="line">		<span class="comment"># 0x180 == CO_COROUTINE | CO_ITERABLE_COROUTINE 原生协程标识 or 生成式协程标识</span></span><br><span class="line">		<span class="comment"># 0x100 == CO_ITERABLE_COROUTINE 生成式协程标识</span></span><br><span class="line"></span><br><span class="line">		<span class="comment"># 如果确定传入函数是一个原生协程则直接返回</span></span><br><span class="line">        <span class="keyword">if</span> co_flags &amp; <span class="number">0x180</span>:  </span><br><span class="line">            <span class="keyword">return</span> func  </span><br><span class="line"></span><br><span class="line">		<span class="comment"># 如果传入函数是一个生成器函数，</span></span><br><span class="line">		<span class="comment"># 则将 CO_ITERABLE_COROUTINE 标记附加在此函数上，随后返回</span></span><br><span class="line">        <span class="keyword">if</span> co_flags &amp; <span class="number">0x20</span>:</span><br><span class="line">            co = func.__code__</span><br><span class="line">            func.__code__ = co.replace(co_flags=co.co_flags | <span class="number">0x100</span>)</span><br><span class="line">            <span class="keyword">return</span> func  </span><br><span class="line"></span><br><span class="line">	<span class="comment"># 下面的代码主要用于兼容「返回类似生成器对象」的函数</span></span><br><span class="line">	<span class="comment"># 例如使用 Cython 编译的生成器</span></span><br><span class="line">	<span class="keyword">import</span> functools</span><br><span class="line">    <span class="keyword">import</span> _collections_abc</span><br><span class="line"><span class="meta">    @functools.wraps(func)</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">wrapped</span><span class="params">(*args, **kwargs)</span>:</span>  </span><br><span class="line">        coro = func(*args, **kwargs)  </span><br><span class="line">        <span class="keyword">if</span> (coro.__class__ <span class="keyword">is</span> CoroutineType <span class="keyword">or</span>  </span><br><span class="line">            coro.__class__ <span class="keyword">is</span> GeneratorType <span class="keyword">and</span> coro.gi_code.co_flags &amp; <span class="number">0x100</span>):  </span><br><span class="line">            <span class="keyword">return</span> coro  </span><br><span class="line">        <span class="keyword">if</span> (isinstance(coro, _collections_abc.Generator) <span class="keyword">and</span>  </span><br><span class="line">            <span class="keyword">not</span> isinstance(coro, _collections_abc.Coroutine)):  </span><br><span class="line">            <span class="keyword">return</span> _GeneratorWrapper(coro)  </span><br><span class="line">        <span class="keyword">return</span> coro  </span><br><span class="line">  </span><br><span class="line">    <span class="keyword">return</span> wrapped</span><br></pre></td></tr></table></figure>
+
+<p>如果 <code>fn</code> 是生成器函数， <code>types.coroutine()</code> 会在它的 code object 中添加 <code>CO_ITERABLE_COROUTINE</code> 标志，使其返回一个协程对象。<br>如果 <code>fn</code> 不是生成器函数，<code>types.coroutine()</code> 会对齐进行包装。如果 <code>fn</code> 返回一个生成器函数，返回的函数会被 <code>_GeneratorWrapper</code> 包装。</p>
+<p><code>type.coroutine()</code> 不会为生成器函数附加 <code>CO_COROUTINE</code> 标志，以便区分「原生协程」和「生成器式协程」。</p>
+<h3 id="await-表达式"><a href="#await-表达式" class="headerlink" title="await 表达式"></a>await 表达式</h3><p><code>await</code> 表达式用来获取一个协程执行的结果：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">read_data</span><span class="params">(db)</span>:</span></span><br><span class="line">	data = <span class="keyword">await</span> db.fetch(<span class="string">"SELECT ..."</span>)</span><br><span class="line">	...</span><br></pre></td></tr></table></figure>
+
+<p><code>await</code> 与 <code>yield from</code> 近似，会暂停 read_data 函数的执行直到可等待对象 <code>db.fetch</code> 完成并返回结果。<code>await</code> 使用 <code>yield from</code> 实现，但是多了一个验证参数的步骤。<code>await</code> 后只能跟一个 <a href="https://docs.python.org/zh-cn/3/glossary.html#term-awaitable" target="_blank" rel="external nofollow noopener noreferrer">可等待对象（awaitable）</a>，可以是以下选项之一：</p>
+<ol>
+<li>原生协程函数返回的原生协程对象；</li>
+<li>被 <code>types.coroutine()</code> 装饰的函数中返回的生成式协程对象；</li>
+<li>一个拥有 <code>__await__</code> 方法的对象，且该方法需要返回一个迭代器；</li>
+<li>使用 CPython C API 定义的带有 <code>tp_as_async.am_await</code> 函数的对象，该函数返回一个迭代器（类似 <code>__await__</code> 方法）。</li>
+</ol>
+<p>关于第三点一些延伸内容：任何 <code>yield from</code> 调用链都会以 <code>yield</code> 收尾，这是 <a href="https://docs.python.org/3/library/asyncio-future.html" target="_blank" rel="external nofollow noopener noreferrer">Futures</a> 执行的必要条件。由于<strong>协程本质上是一个特殊的生成器</strong>，因此每个 <code>await</code> 都会被 <code>await</code> 调用链上的某个 <code>yield</code> 挂起（详情请参考 <a href="https://peps.python.org/pep-3156/" target="_blank" rel="external nofollow noopener noreferrer">PEP 3156</a>）。为了在协程上实现这种行为，一个名为 <code>__await__</code> 的新魔术方法被添加进来。例如，在 asyncio 中， 要想在 <code>await</code> 语句中使用 Future，唯一要做的就是在 <code>asyncio.Future</code> 类中添加 <code>__await__ = __iter__</code>。后续章节中，称<strong>带有 <code>__await__</code> 方法的对象为类 Future 对象</strong>。如果 <code>__await__</code> 返回迭代器之外的东西，会抛出 <code>TypeError</code> 异常。</p>
+<p>在原生协程外部使用 <code>await</code> 会抛出 <code>SyntaxError</code> 异常（就像在一般函数外调用 <code>yield</code> 一样）。</p>
+<p>不在 <code>await</code> 关键字后使用可等待对象会抛出 <code>TypeError</code> 异常。</p>
+<h4 id="更新运算符优先级"><a href="#更新运算符优先级" class="headerlink" title="更新运算符优先级"></a>更新运算符优先级</h4><p><code>await</code> 关键字被定义为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">power ::= <span class="keyword">await</span> [<span class="string">"**"</span> u_expr]</span><br><span class="line"><span class="keyword">await</span> ::= [<span class="string">"await"</span>] primary</span><br></pre></td></tr></table></figure>
+
+<p>其中「primary」代表语言中最主要的操作，其语法为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">primary ::= atom | attributerf | subscription | slicing | call</span><br></pre></td></tr></table></figure>
+
+<p>如需理解上述表达式含义可参考 <a href="https://docs.python.org/3/reference/expressions.html#primaries" target="_blank" rel="external nofollow noopener noreferrer">引用 12</a> 和 <a href="#语法更新">语法更新</a>。</p>
+<p>与 <code>yield</code> 和 <code>yield from</code> 不同，大多数情况下 <code>await</code> 表达式不需要被圆括号包裹。此外，<code>yield from</code> 允许将<strong>任何表达式</strong>作为参数，甚至可以 <code>yield from a() + b()</code>，它会被解析为 <code>yield from (a() + b())</code>。这看起来很反常识就像一个 BUG 一样，因为一般来说，算数操作不会产生可等待对象。为了避免此类问题在 <code>await</code> 表达式中再次出现，<strong><code>await</code> 的优先级被设定为低于 <code>[]</code>, <code>()</code>, <code>.</code> 但高于 `</strong>`**。</p>
+<p>具体优先级如下（<strong>从上到下，从低到高</strong>）：</p>
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>yield x, yield from x</code></td>
+<td>Yield 表达式</td>
+</tr>
+<tr>
+<td><code>lambda</code></td>
+<td>Lambda 表达式</td>
+</tr>
+<tr>
+<td><code>if - else</code></td>
+<td>条件语句</td>
+</tr>
+<tr>
+<td><code>or</code></td>
+<td>布尔 或</td>
+</tr>
+<tr>
+<td><code>and</code></td>
+<td>布尔 且</td>
+</tr>
+<tr>
+<td><code>not x</code></td>
+<td>布尔 非</td>
+</tr>
+<tr>
+<td><code>in, not in, is, is not, &lt;, &lt;=, &gt;, &gt;=, !=, ==</code></td>
+<td>比较，包括成员测试和身份测试</td>
+</tr>
+<tr>
+<td><code>|</code></td>
+<td>位运算 或</td>
+</tr>
+<tr>
+<td><code>^</code></td>
+<td>位运算 异或</td>
+</tr>
+<tr>
+<td><code>&amp;</code></td>
+<td>位运算 且</td>
+</tr>
+<tr>
+<td><code>&lt;&lt;, &gt;&gt;</code></td>
+<td>位运算 左移和右移</td>
+</tr>
+<tr>
+<td><code>+, -</code></td>
+<td>加减运算</td>
+</tr>
+<tr>
+<td><code>*, @, /, //, %</code></td>
+<td>乘、矩阵乘、除、地板除、取余</td>
+</tr>
+<tr>
+<td><code>+x, -x, ~x</code></td>
+<td>正、负、按位取反</td>
+</tr>
+<tr>
+<td><code>**</code></td>
+<td>幂运算</td>
+</tr>
+<tr>
+<td><code>await x</code></td>
+<td>await 表达式</td>
+</tr>
+<tr>
+<td><code>x[index], x[index:index], x(args...), x.attribute</code></td>
+<td>索引、切片、调用、属性</td>
+</tr>
+<tr>
+<td><code>(expressions...), [expressions...], {key: value...}, {expressions...}</code></td>
+<td>元组生成器、列表生成器、字典生成器、集合生成器</td>
+</tr>
+</tbody></table>
+<h4 id="使用-await-关键字的示例"><a href="#使用-await-关键字的示例" class="headerlink" title="使用 await 关键字的示例"></a>使用 await 关键字的示例</h4><p><strong>有效调用：</strong></p>
+<table>
+<thead>
+<tr>
+<th>Expression</th>
+<th>Will be parsed as</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>if await fut: pass</code></td>
+<td><code>if (await fut): pass</code></td>
+</tr>
+<tr>
+<td><code>if await fut + 1: poass</code></td>
+<td><code>if (await fut) + 1: pass</code></td>
+</tr>
+<tr>
+<td><code>pair = await fut, &#39;spam&#39;</code></td>
+<td><code>pair = (await fut), &#39;spam&#39;</code></td>
+</tr>
+<tr>
+<td><code>with await fut, open(): pass</code></td>
+<td><code>with (await fut), open(): pass</code></td>
+</tr>
+<tr>
+<td><code>await foo()[&#39;spam&#39;].baz()()</code></td>
+<td><code>await ( foo()[&#39;spam&#39;].baz()() )</code></td>
+</tr>
+<tr>
+<td><code>return await coro()</code></td>
+<td><code>return ( await coro() )</code></td>
+</tr>
+<tr>
+<td><code>res = await coro() ** 2</code></td>
+<td><code>res = (await coro()) ** 2</code></td>
+</tr>
+<tr>
+<td><code>func(a1=await coro(), a2=0)</code></td>
+<td><code>func(a1=(await coro()), a2=0)</code></td>
+</tr>
+<tr>
+<td><code>await foo() + await bar()</code></td>
+<td><code>(await foo()) + (await bar())</code></td>
+</tr>
+<tr>
+<td><code>-await foo()</code></td>
+<td><code>-(await foo())</code></td>
+</tr>
+</tbody></table>
+<p><strong>无效调用：</strong></p>
+<table>
+<thead>
+<tr>
+<th>Expression</th>
+<th>Shoud be written as</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>await await coro()</code></td>
+<td><code>await (await coro())</code></td>
+</tr>
+<tr>
+<td><code>await -coro()</code></td>
+<td><code>await (-coro())</code></td>
+</tr>
+</tbody></table>
+<h3 id="异步上下文管理器与-async-with"><a href="#异步上下文管理器与-async-with" class="headerlink" title="异步上下文管理器与 async with"></a>异步上下文管理器与 async with</h3><p><strong>注：关于上下文管理器的内容可以参考：<a href="https://wiki.blanc.site/archives/5823d5df.html">WeeklyPEP-2-PEP343-with 语句-overview</a></strong></p>
+<p>所谓异步上下文管理器，是一种能够在进入或退出上下文时调用异步代码的上下文管理器。为了实现它，本规范单独为异步上下文提出了一个新协议，此协议由两个新的魔术方法组成：<code>__aenter__</code> 和 <code>__aexit__</code>。<strong>它们都必须返回一个可等待对象</strong>。</p>
+<p>异步上下文管理器的示例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AsyncContextManager</span>:</span></span><br><span class="line">	<span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">__aenter__</span><span class="params">(self)</span>:</span></span><br><span class="line">		<span class="keyword">await</span> log(<span class="string">"entering context"</span>)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">__aexit__</span><span class="params">(self, exc_type, exc, tb)</span>:</span></span><br><span class="line">		<span class="keyword">await</span> log(<span class="string">"exiting context"</span>)</span><br></pre></td></tr></table></figure>
+
+<h4 id="新语法"><a href="#新语法" class="headerlink" title="新语法"></a>新语法</h4><p>本规范规定的异步上下文管理器声明方式如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="keyword">with</span> EXPR <span class="keyword">as</span> VAR:</span><br><span class="line">	BLOCK</span><br></pre></td></tr></table></figure>
+
+<p>语义上等同于：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">mgr = (EXPR)</span><br><span class="line">aexit = type(mgr).__aexit__</span><br><span class="line">aenter = type(mgr).__aenter__</span><br><span class="line"></span><br><span class="line">VAR = <span class="keyword">await</span> aenter(mgr)</span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">	BLOCK</span><br><span class="line"><span class="keyword">except</span>:</span><br><span class="line">	<span class="keyword">if</span> <span class="keyword">not</span> <span class="keyword">await</span> aexit(mgr, *sys.exc_info()):</span><br><span class="line">		<span class="keyword">raise</span></span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">	<span class="keyword">await</span> aexit(mgr, <span class="literal">None</span>, <span class="literal">None</span>, <span class="literal">None</span>)</span><br></pre></td></tr></table></figure>
+
+<p>与普通的 <code>with</code> 语句一样，可以在单个 <code>async with</code> 语句中指定多个上下文管理器。</p>
+<p>不能将没有实现 <code>__aenter__</code> 和 <code>__aexit__</code> 的普通上下文管理器传递给 <code>async with</code>。在 <code>async def</code> 函数之外使用 <code>async with</code> 会抛出 <code>SyntaxError</code> 异常。</p>
+<h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><p>通过异步上下文管理器可以很方便的在协程中实现数据库事务管理器：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">commit</span><span class="params">(session, data)</span>:</span></span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">async</span> <span class="keyword">with</span> session.transaction():</span><br><span class="line">		...</span><br><span class="line">		<span class="keyword">await</span> session.update(data)</span><br><span class="line">		...</span><br></pre></td></tr></table></figure>
+
+<p>也可以很简洁的使用锁：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="keyword">with</span> lock:</span><br><span class="line">	...</span><br></pre></td></tr></table></figure>
+
+<p>代替之前的：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> (<span class="keyword">yield</span> <span class="keyword">from</span> lock):</span><br><span class="line">	...</span><br></pre></td></tr></table></figure>
+
+<h3 id="异步迭代器和-async-for"><a href="#异步迭代器和-async-for" class="headerlink" title="异步迭代器和 async for"></a>异步迭代器和 async for</h3><p>所谓异步迭代器，是一种可以在 iter 和 next 方法中调用异步代码的迭代器。要想实现它：</p>
+<ol>
+<li>指定对象必须实现一个返回异步迭代器对象的 <code>__aiter__</code> 方法（如果是通过 CPython  C API 定义则需要定义 <code>tp_as_async.am_aiter</code> slot 代替 <code>__aiter__</code>）；</li>
+<li>异步迭代器对象必须实现一个返回可等待对象的 <code>__anext__</code> 方法（如果是通过 CPython  C API 定义则需要定义 <code>tp_as_async.am_anext</code> slot 代替 <code>__anext__</code>）；</li>
+<li>为了使迭代过程不会无限进行下去，<code>__anext__</code> 必须在适当的时候抛出 <code>StopAsyncIteration</code> 异常。</li>
+</ol>
+<p>异步迭代器示例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AsyncIterable</span>:</span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">__aiter__</span><span class="params">(self)</span>:</span></span><br><span class="line">		<span class="keyword">return</span> self</span><br><span class="line"></span><br><span class="line">	<span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">__anext__</span><span class="params">(self)</span>:</span></span><br><span class="line">		data = <span class="keyword">await</span> self.fetch_data()</span><br><span class="line">		<span class="keyword">if</span> data:</span><br><span class="line">			<span class="keyword">return</span> data</span><br><span class="line">		<span class="keyword">else</span>:</span><br><span class="line">			<span class="keyword">raise</span> StopAsyncIteration</span><br><span class="line"></span><br><span class="line">	<span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">fetch_data</span><span class="params">(self)</span>:</span></span><br><span class="line">		...</span><br></pre></td></tr></table></figure>
+
+<h4 id="新语法-1"><a href="#新语法-1" class="headerlink" title="新语法"></a>新语法</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="keyword">for</span> TARGET <span class="keyword">in</span> ITER:</span><br><span class="line">	BLOCK</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">	BLOCK2</span><br></pre></td></tr></table></figure>
+
+<p>语义上等同于：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">iter = (ITER)</span><br><span class="line">iter = type(iter).__aiter__(iter)</span><br><span class="line">running = <span class="literal">True</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> running:</span><br><span class="line">	<span class="keyword">try</span>:</span><br><span class="line">		TARGET = <span class="keyword">await</span> type(iter).__anext__(iter)</span><br><span class="line">	<span class="keyword">except</span> StopAsyncIteration:</span><br><span class="line">		runnint = <span class="literal">False</span></span><br><span class="line">	<span class="keyword">else</span>:</span><br><span class="line">		BLOCK</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">	BLOCK2</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>async for</code> 后使用未实现 <code>__aiter__</code> 方法的常规迭可迭代对象会抛出 <code>TypeError</code> 异常，在 <code>async def</code> 外使用 <code>async for</code> 会抛出 <code>SyntaxError</code> 异常。</p>
+<p>与常规 <code>for</code> 语句一样，<code>async for</code> 也有一个可选的 <code>else</code> 字句。</p>
+<h4 id="示例-1"><a href="#示例-1" class="headerlink" title="示例 1"></a>示例 1</h4><p>通过异步迭代器可以在迭代过程中异步缓冲数据：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="keyword">for</span> data <span class="keyword">in</span> cursor:</span><br><span class="line">	...</span><br></pre></td></tr></table></figure>
+
+<p>其中，<code>cursor</code> 是一个异步迭代器，每迭代 N 次就会从数据库中预取 N 行数据。</p>
+<p>下面的代码实现了异步迭代协议：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Cursor</span>:</span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self)</span>:</span></span><br><span class="line">		self.buffer = collections.deque()</span><br><span class="line"></span><br><span class="line">	<span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">_prefetch</span><span class="params">(self)</span>:</span></span><br><span class="line">		...</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">__aiter__</span><span class="params">(self)</span>:</span></span><br><span class="line">		<span class="keyword">return</span> self</span><br><span class="line"></span><br><span class="line">	<span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">__anext__</span><span class="params">(self)</span>:</span></span><br><span class="line">		<span class="keyword">if</span> <span class="keyword">not</span> self.buffer:</span><br><span class="line">			self.buffer = <span class="keyword">await</span> self._prefetch()</span><br><span class="line">			<span class="keyword">if</span> <span class="keyword">not</span> self.buffer:</span><br><span class="line">				<span class="keyword">raise</span> StopAsyncIteration</span><br><span class="line">		<span class="keyword">return</span> self.buffer.popleft()</span><br></pre></td></tr></table></figure>
+
+<p>然后 <code>Cursor</code> 类可以像这样被使用：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="keyword">for</span> row <span class="keyword">in</span> Cursor():</span><br><span class="line">	print(row)</span><br></pre></td></tr></table></figure>
+
+<p>等同于下面这段代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">i = Cursor().__aiter__()</span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">	<span class="keyword">try</span>:</span><br><span class="line">		row = <span class="keyword">await</span> i.__anext__()</span><br><span class="line">	<span class="keyword">except</span> StopAsyncIteration:</span><br><span class="line">		<span class="keyword">break</span>:</span><br><span class="line">	<span class="keyword">else</span>:</span><br><span class="line">		print(row)</span><br></pre></td></tr></table></figure>
+
+<h4 id="示例-2"><a href="#示例-2" class="headerlink" title="示例 2"></a>示例 2</h4><p>下面的示例是一个通用的工具类，它能够将常规迭代器转换为异步迭代器。虽然这不是一个会经常使用的操作，但是这个示例代码说明了常规迭代器和异步迭代器之间的关系：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AsyncIteratorWrapper</span>:</span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, obj)</span>:</span></span><br><span class="line">		self._it = iter(obj)</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">__aiter__</span><span class="params">(self)</span>:</span></span><br><span class="line">		<span class="keyword">return</span> self</span><br><span class="line"></span><br><span class="line">	<span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">__anext__</span><span class="params">(self)</span>:</span></span><br><span class="line">		<span class="keyword">try</span>:</span><br><span class="line">			value = next(self._it)</span><br><span class="line">		expect StopIteration:</span><br><span class="line">			<span class="keyword">raise</span> StopAsyncIteration</span><br><span class="line">		<span class="keyword">return</span> value</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">for</span> letter <span class="keyword">in</span> AsyncIteratorWrapper(<span class="string">"abc"</span>):</span><br><span class="line">	print(letter)</span><br></pre></td></tr></table></figure>
+
+<h4 id="为什么需要-StopAsyncIteration"><a href="#为什么需要-StopAsyncIteration" class="headerlink" title="为什么需要 StopAsyncIteration"></a>为什么需要 StopAsyncIteration</h4><p>为什么需要 <code>StopAsyncIteration</code> 也就是为什么不继续使用 <code>StopIteration</code>。协程的本质是生成器，所以在 <a href="https://peps.python.org/pep-0479/" target="_blank" rel="external nofollow noopener noreferrer">PEP 479</a> 之前，下面的两段代码没有本质上的不同：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">g1</span><span class="params">()</span>:</span></span><br><span class="line">	<span class="keyword">yield</span> <span class="keyword">from</span> fut</span><br><span class="line">	<span class="keyword">return</span> <span class="string">"spam"</span></span><br></pre></td></tr></table></figure>
+
+<p>和 </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">g2</span><span class="params">()</span>:</span></span><br><span class="line">	<span class="keyword">yield</span> <span class="keyword">from</span> fut</span><br><span class="line">	<span class="keyword">raise</span> StopIteration(<span class="string">"spam"</span>)</span><br></pre></td></tr></table></figure>
+
+<p>由于 <a href="https://peps.python.org/pep-0479/" target="_blank" rel="external nofollow noopener noreferrer">PEP 479</a> 被接受并且在协程中默认启用，下面的示例代码将会使用 <code>RuntimeError</code> 包裹 <code>StopIteration</code>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">a1</span><span class="params">()</span>:</span></span><br><span class="line">	<span class="keyword">await</span> fut</span><br><span class="line">	<span class="keyword">raise</span> StopIteration(<span class="string">"spam"</span>)</span><br></pre></td></tr></table></figure>
+
+<p>因此通知外部代码迭代结束的唯一方案就是抛出一个 <code>StopIteration</code> 以外的异常，也正是因为这样才需要新增一个内置的 <code>StopAsyncIteration</code> 异常。此外，根据 <a href="https://peps.python.org/pep-0479/" target="_blank" rel="external nofollow noopener noreferrer">PEP 479</a> 中的定义，<strong>所有在协程中抛出的 <code>StopIteration</code> 异常都会被封装在 <code>RuntimeError</code> 中</strong>。</p>
+<h3 id="协程对象"><a href="#协程对象" class="headerlink" title="协程对象"></a>协程对象</h3><h4 id="与生成器的不同之处"><a href="#与生成器的不同之处" class="headerlink" title="与生成器的不同之处"></a>与生成器的不同之处</h4><p>本小节仅适用于带有 <code>CO_COROUTINE</code> 的原生协程，即通过 <code>async def</code> 语法定义的协程。<strong>asyncio 中现有的生成器式协程的行为保持不变。</strong></p>
+<p>为了确保协程与生成器作为不同的概念处理需要付出很大的努力：</p>
+<ol>
+<li>原生协程对象没有实现 <code>__iter__</code> 和 <code>__next__</code> 方法。因此，它不能通过 <code>iter()</code>，<code>list()</code>，<code>tuple()</code> 或其他内置方法迭代，同样不能在 <code>for .. in</code> 中使用。若要强行在原生协程中实现 <code>__iter__</code> 或 <code>__next__</code> 会抛出 <code>TypeError</code> 异常；</li>
+<li>不能使用 <code>yield from</code> 加原生协程返回正常的生成器，这个行为会抛出 <code>TypeError</code> 异常；</li>
+<li>可以使用 <code>yield from</code> 加原生协程返回生成器式协程（在 asyncio 代码中必须使用 <a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.coroutine" target="_blank" rel="external nofollow noopener noreferrer"><code>@asyncio.coroutine</code></a>）；</li>
+<li><code>inspect.isgenerator()</code> 和 <code>inspect.isgeneratorfunction()</code> 在接收原生协对象和原生协程方法时需要返回 <code>False</code>。</li>
+</ol>
+<h4 id="协程对象的内置方法"><a href="#协程对象的内置方法" class="headerlink" title="协程对象的内置方法"></a>协程对象的内置方法</h4><p>在底层实现上，协程继承自生成器共享实现代码。所以，协程类似生成器拥有 <code>throw()</code>，<code>send()</code> 和 <code>close()</code> 方法，<code>StopIteration</code> 和 <code>GeneratorExit</code> 在协程中也起相同的作用（尽管 <a href="https://peps.python.org/pep-0479/" target="_blank" rel="external nofollow noopener noreferrer">PEP 479</a> 默认在协程中启用）。协程的 <code>throw()</code> 和 <code>send()</code> 方法被用来将值或异常传递给类 Future 对象。</p>
+<p>更多细节请看 <a href="https://peps.python.org/pep-0342/" target="_blank" rel="external nofollow noopener noreferrer">PEP 342</a>，<a href="https://peps.python.org/pep-0380/" target="_blank" rel="external nofollow noopener noreferrer">PEP 380</a> 和 <a href="https://docs.python.org/3/reference/expressions.html#generator-iterator-methods" target="_blank" rel="external nofollow noopener noreferrer">Python 文档相关章节</a>。</p>
+<h3 id="用于调试的特性"><a href="#用于调试的特性" class="headerlink" title="用于调试的特性"></a>用于调试的特性</h3><p>注：<code>asyncio.coroutine</code> <strong>在 Python 3.8 之后被标记为废弃，并在 Python 3.11 正式删除。</strong><br>注：被标记为废弃的是 <code>asyncio.coroutine</code> 而不是 <code>types.coroutine</code><br>注：这一小节的内容我看完之后有点犯迷糊，不知道他在表述什么事情。</p>
+<p>新手容易犯的一个错误是忘记可以在协程中使用 <code>yield from</code>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@asyncio.coroutine</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">useful</span><span class="params">()</span>:</span></span><br><span class="line">	<span class="comment"># 如果没有 yield from 语句，这段代码将不会起作用</span></span><br><span class="line">	asyncio.sleep(<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+<p>为了调试这类错误，asyncio 中有一种特殊的调试模式，其中 <code>@coroutine</code> 装饰器使用一个特殊的对象包装所有传递进来的函数，这个对象的析构函数会记录警告日志。每当被包装的<strong>生成器</strong>被 GC 进行垃圾回收时，就会产生一条详细的日志信息，其中包含该装饰器确切的定义位置、被回收位置的堆栈跟踪等信息。封装对象还提供了一个方便的 <code>__repr__</code> 函数，一种包含有关生成器的详细信息。</p>
+<p>问题是如何启动这些调试功能。调试功能在生产环境下应该是不可用的，所以 <code>@coroutine</code> 装饰器根据操作系统环境变量 <code>PYTHONSYNCIODEBUG</code> 来判断是否起作用。这样就可以在运行 asyncio 程序时使用 asyncio 自带的函数。<code>EventLoop.set_debug</code>（一种不用的调试工具）对 <code>@coroutine</code> 装饰器的行为没有影响。</p>
+<p>为了使协程就成为与生成器不同的原生概念：</p>
+<ol>
+<li>如果协程未被 await 直接调用会抛出 <code>RuntimeWarning</code> 异常；</li>
+<li>还建议在 <code>sys</code> 模块中添加两个新函数：<code>set_coroutine_wrapper</code> 和 <code>get_coroutine_wrapper</code>。它们的作用是在 asyncio 或其他框架中启用高级调试功能（例如显示创建协程的具体位置，以及更详细的垃圾回收堆栈跟踪）。</li>
+</ol>
+<h3 id="新内置函数"><a href="#新内置函数" class="headerlink" title="新内置函数"></a>新内置函数</h3><ol>
+<li><code>types.coroutine(gen)</code>：点击 <a href="#types.coroutine()">types.coroutine()</a> 了解更多；</li>
+<li><code>inspect.iscoroutine(obj)</code>：如果 <code>obj</code> 是原生协程对象，返回 <code>True</code>；</li>
+<li><code>inspect.iscoroutinefunction(obj)</code>：如果 <code>obj</code> 是原生协程函数，返回 <code>Ture</code>；</li>
+<li><code>inspect.isawaitable(obj)</code>：如果 <code>obj</code> 是可等待对象，返回 <code>True</code>；</li>
+<li><code>inspect.getcoroutinestate(coro)</code>：返回原生协程对象的当前状态（<code>inspect.getfgeneratorstate(gen)</code> 的逆向函数）；</li>
+<li><code>inspect.getfgeneratorstate(gen)</code>：返回本地协程独享的局部变量与其值的映射（<code>inspect.getcoroutinestate(coro)</code> 的逆向函数）；</li>
+<li><code>sys.set_coroutine_wrapper(wrapper)</code>：允许拦截原生协程的创建，在原生协程创建时调用 <code>wrapper</code>。<code>wrapper</code> 可以是「一个接受一个参数（一个协程对象）的可调用对象」或是 <code>None</code>。如果是 <code>None</code> 则会重置之前定义的 <code>wrapper</code>，如果调用多次，新的 wrpaaer 将取代之前的。该函数是线程绑定的；</li>
+<li><code>sys.get_coroutine_wrapper()</code>：返回通过 <code>sys.set_coroutine_wrapper</code> 设置的 <code>wrapper</code>，如果没设置则返回 <code>None</code>。该函数是线程绑定的。</li>
+</ol>
+<h3 id="新的抽象基类"><a href="#新的抽象基类" class="headerlink" title="新的抽象基类"></a>新的抽象基类</h3><p>为了更好的与现有框架（如 Tornado，参考 <a href="https://mail.python.org/pipermail/python-dev/2015-May/139851.html" target="_blank" rel="external nofollow noopener noreferrer">引用 13</a>）和编译器（如 Cython，参考 <a href="https://github.com/python/asyncio/issues/233" target="_blank" rel="external nofollow noopener noreferrer">引用 16</a>）集成，新增了两个抽象基类：</p>
+<ol>
+<li><code>collections.abc.Awaitable</code>：为类 Future 对象创建的基类，实现了 <code>__await__</code> 方法；</li>
+<li><code>collection.abc.Coroutine</code>：为协程对象创建的基类，实现了 <code>send(value)</code>，<code>throw(type, exc, tb)</code>，<code>close</code> 和 <code>__await__()</code> 方法。</li>
+</ol>
+<p>注意，带有 <code>CO_ITERABLE_COROUTINE</code> 标志的生成器式协程没有实现 <code>__await__</code> 方法，因此不是 <code>collections.abc.Coroutine</code> 或 <code>collections.abc.Awaitable</code> 基类的实例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@types.coroutine</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">gencoro</span><span class="params">()</span>:</span></span><br><span class="line">	<span class="keyword">yield</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">assert</span> <span class="keyword">not</span> isinstance(gencoro(), collections.abc.Coroutine)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 应该如何识别：</span></span><br><span class="line"><span class="keyword">assert</span> inspect.isawaitable(gencoro())</span><br></pre></td></tr></table></figure>
+
+<p>为了能更简单地测试指定对象是否支持异步迭代，又引入了另外两个基类：</p>
+<ol>
+<li><code>collections.abc.AsyncIterable</code>：测试是否存在 <code>__aiter__</code> 方法；</li>
+<li><code>collections.abs.AsyncIterator</code>：测试是否存在 <code>__aiter__</code> 和 <code>__anext__</code> 方法。</li>
+</ol>
+<h2 id="术语表"><a href="#术语表" class="headerlink" title="术语表"></a>术语表</h2><h3 id="原生协程函数"><a href="#原生协程函数" class="headerlink" title="原生协程函数"></a>原生协程函数</h3><p>Navite coroutine function，通过 <code>async def</code> 定义的协程函数，点击 <a href="#原生协程声明语法">原生协程声明语法</a> 了解更多。</p>
+<h3 id="原生协程"><a href="#原生协程" class="headerlink" title="原生协程"></a>原生协程</h3><p>Navite coroutine，从原生协程函数返回的内容，点击 [await 表达式](#await 表达式) 了解更多。</p>
+<h3 id="生成器式协程函数"><a href="#生成器式协程函数" class="headerlink" title="生成器式协程函数"></a>生成器式协程函数</h3><p>Generator-based coroutine function，基于生成器语法的协程，更常见的示例是使用 <code>@asyncio.coroutine</code> 定义的函数。</p>
+<h3 id="生成器式协程"><a href="#生成器式协程" class="headerlink" title="生成器式协程"></a>生成器式协程</h3><p> Generator-based coroutine，通过生成器式协程函数返回的内容。</p>
+<h3 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h3><p>Coroutine，原生协程或生成器式协程。</p>
+<h3 id="协程对象-1"><a href="#协程对象-1" class="headerlink" title="协程对象"></a>协程对象</h3><p>Coroutine object，原生协程对象或生成器式协程对象。</p>
+<h3 id="类-Future-对象"><a href="#类-Future-对象" class="headerlink" title="类 Future 对象"></a>类 Future 对象</h3><p>Future-like object，拥有 <code>__await__</code> 方法的对象或拥有 <code>tp_as_async-&gt;am_await</code> 函数的 C Object，且该函数或方法返回一个迭代器。可以在协程中作为 <code>await</code> 表达式的参数。在协程中 <code>await</code> 类 Future 对象时，协程会被推迟直到类 Future 对象的 <code>__await__</code> 完成并且返回结果，点击 [await 表达式](#await 表达式) 了解更多。</p>
+<h3 id="可等待对象"><a href="#可等待对象" class="headerlink" title="可等待对象"></a>可等待对象</h3><p>Awaitable，类 Future 对象或协程对象。点击 [await 表达式](#await 表达式) 了解更多。</p>
+<h3 id="异步上下文管理器"><a href="#异步上下文管理器" class="headerlink" title="异步上下文管理器"></a>异步上下文管理器</h3><p>Asynchronous context manager，拥有 <code>__aenter__</code> 和 <code>__aexit__</code> 方法的对象，可以搭配 <code>async with</code> 使用，点击 [异步上下文管理器与 async with](#异步上下文管理器与 async await) 了解更多。</p>
+<h3 id="异步可迭代对象"><a href="#异步可迭代对象" class="headerlink" title="异步可迭代对象"></a>异步可迭代对象</h3><p>Asynchronous iterable，拥有 <code>__aiter__</code> 方法的对象，该方法返回一个异步迭代器对象。可以搭配 <code>async for</code> 一起使用，点击 [异步迭代器和 async for](#异步迭代器和 async for) 了解更多。</p>
+<h3 id="异步迭代器"><a href="#异步迭代器" class="headerlink" title="异步迭代器"></a>异步迭代器</h3><p>Asynchronos iterator，拥有 <code>__anext__</code> 方法的对象，点击 [异步迭代器和 async for](#异步迭代器和 async for) 了解更多。</p>
+<h2 id="过渡计划"><a href="#过渡计划" class="headerlink" title="过渡计划"></a>过渡计划</h2><blockquote>
+<p><code>tokenizer.c</code> 文件是 CPython 源码中的一个文件，主要负责实现 Python 解释器中的词法分析器。</p>
+</blockquote>
+<p>为了解决 <code>async</code> 和 <code>await</code> 的向后兼容性问题，需要对 <code>tokenizer.c</code> 进行如下修改：</p>
+<ol>
+<li>识别 <code>async def</code> <code>NAME</code> 标记组合；</li>
+<li>在对 <code>async def</code> 块进行词法分析时，会将 <code>async</code> <code>NAME</code> 标记替换为 <code>ASYNC</code>，将 <code>await</code> <code>NAME</code> 标记替换为 <code>AWAIT</code>；</li>
+<li>在对 <code>def</code> 块进行词法分析时，会保持 <code>async</code> 和 <code>await</code> <code>NAME</code> 不变。</li>
+</ol>
+<p>这种实现方式能够让新语法（只能在 <code>async</code> 函数中使用）与现有代码无缝结合。一个既包含 <code>async def</code> 又包含 <code>async</code> 属性的示例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Spam</span>:</span></span><br><span class="line">	<span class="keyword">async</span> = <span class="number">42</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 协程函数能够被执行并且打印 42</span></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">ham</span><span class="params">()</span>:</span></span><br><span class="line">	print(getattr(Spam, <span class="string">"async"</span>))</span><br></pre></td></tr></table></figure>
+
+<h3 id="向后兼容性"><a href="#向后兼容性" class="headerlink" title="向后兼容性"></a>向后兼容性</h3><p>为了兼容新语法，需要确保在现有的内置模块中不存在与 <code>async</code> 和 <code>await</code> 关键字冲突的命名，且新的原生协程需要兼容之前存在的生成器式协程。</p>
+<h4 id="asyncio"><a href="#asyncio" class="headerlink" title="asyncio"></a>asyncio</h4><p><strong>注：在本 PEP 实施之前，asyncio 库中已经存在了一个名为 <code>async</code> 的函数。</strong></p>
+<p><code>asyncio</code> 模块进行了调整和测试，使现有协程方案与新语法保持兼容，保证 100% 向后兼容，即现有代码能够在新版本中正常运行。</p>
+<p>进行调整的主要有：</p>
+<ol>
+<li>使 <code>@asyncio.coroutine</code> 装饰器使用新的 <code>types.coroutine()</code> 函数；</li>
+<li>向 <code>asyncio.Future</code> 类添加 <code>__await__ = __iter__</code>；</li>
+<li>将 <code>ensure_future()</code> 作为 <code>async()</code> 函数的别名，废弃 <code>asyncio</code> 中的 <code>async()</code> 函数。</li>
+</ol>
+<h4 id="asyncio-迁移策略"><a href="#asyncio-迁移策略" class="headerlink" title="asyncio 迁移策略"></a>asyncio 迁移策略</h4><p> <code>yield from</code> 原生协程对象不能返回普通的生成器（点击 <a href="#与生成器的不同之处">与生成器的不同之处</a> 了解更多），因此建议在开始使用新语法之前，确保所有生成器式协程都使用 <code>@asyncio.coroutine</code> 进行装饰。</p>
+<h4 id="CPython-代码库中的-async-await"><a href="#CPython-代码库中的-async-await" class="headerlink" title="CPython 代码库中的 async/await"></a>CPython 代码库中的 async/await</h4><p>在 CPython 中没有使用 <code>await</code>。</p>
+<p><code>async</code> 关键字主要是被 asyncio 模块占用。为了解决这个问题，需要将 asyncio 模块中的 <code>async()</code> 函数重命名为 <code>ensure_future()</code>（点击 <a href="#asyncio">asyncio</a> 了解更多）。</p>
+<p><code>async</code> 关键字的另一个占用场景是 <code>Lib/xml/dom/xmlbuilder.py</code> 中为 <code>DocumentLS</code> 类定义的 <code>async = False</code> 属性。没有针对这一属性的文档或测试文件，CPython 中的其他地方也没有使用这个属性。现在它被一个 getter 取代，调用 getter 会引发一个 <code>DeprecationWarning</code> 异常并通过异常信息建议使用 <code>async_</code> 属性代替此属性。 除此以外，CPython 代码库中没有其他的 async 属性被记录或使用。</p>
+<h3 id="语法更新"><a href="#语法更新" class="headerlink" title="语法更新"></a>语法更新</h3><p>语法的变化相当小：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">decorated: decorators (classdef | funcdef | async_funcdef)</span><br><span class="line">async_funcdef: ASYNC funcdef</span><br><span class="line"></span><br><span class="line">compound_stmt: (if_stmt | while_stmt | for_stmt | try_stmt | with_stmt</span><br><span class="line">				| funcdef | classdef | decorated | async_stmt)</span><br><span class="line"></span><br><span class="line">async_stmt: ASYNC (funcdef | with_stmt | for_stmt)</span><br><span class="line"></span><br><span class="line">power: atom_expr ['**' factor]</span><br><span class="line">atom_expr: [AWAIT] atom tarilter*</span><br><span class="line"></span><br><span class="line"># 这段代码定义了 Python 中异步语法的各个组成部分，</span><br><span class="line"># 包括异步函数定义、异步语句以及与异步操作相关的表达式。 </span><br><span class="line"># 这些语法元素共同构成了 Python 异步编程的基础。</span><br><span class="line"># 来自 Google Gemini <span class="number">1.5</span> Pro</span><br></pre></td></tr></table></figure>
+
+<h3 id="废弃计划"><a href="#废弃计划" class="headerlink" title="废弃计划"></a>废弃计划</h3><p><strong>注：根据原文，本来计划在 Python 3.5 或 3.6 中废弃 <code>async</code> 和 <code>await</code>，并在 3.7 中过渡到一个更合适的关键字，但从当下来看这个计划应该是没有实施。</strong></p>
+<h2 id="决策过程"><a href="#决策过程" class="headerlink" title="决策过程"></a>决策过程</h2><h3 id="PEP-3152"><a href="#PEP-3152" class="headerlink" title="PEP 3152"></a>PEP 3152</h3><p>Gregory Ewing 提出的 <a href="https://peps.python.org/pep-3152/" target="_blank" rel="external nofollow noopener noreferrer">PEP 3152</a> 提供了另一种机制来实现协程（或者称为 cofunctions），其中一些关键的要素：</p>
+<ol>
+<li>用于声明 cofunction 的新关键字 <code>codef</code>。Cofunction 总是一个生成器，即使没有 <code>cocall</code> 表达式在其内部。类比 <code>async def</code>；</li>
+<li>用于调用 cofunction 的新关键字 <code>cocall</code>。只能够被用在 cofunction 内部。类比 <code>await</code>；</li>
+<li>Cofunction 只能通过 <code>cocall</code> 关键字调用；</li>
+<li><code>cocall</code> 语法需要在其后方使用圆括号；</li>
+<li><code>cocall f(*args, **kwargs)</code> 在语义上等同于 <code>yield from f.__cocall__(*args, **kwds)</code>。</li>
+</ol>
+<p>相关语法定义：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">atom: cocall | &lt;existing alternatives <span class="keyword">for</span> atom&gt;</span><br><span class="line">cocall: 'cocall' atom cotrailer* '(' [arglist] ')'</span><br><span class="line">cotrailer: <span class="string">'['</span> subscriptlist <span class="string">']'</span> | <span class="string">'.'</span> NAME</span><br></pre></td></tr></table></figure>
+
+<p>与本提案的不同之处：</p>
+<ol>
+<li>没有与 <code>__cocall__</code> 一致的方法。<code>__cocall__</code> 方法会被 <code>cocall</code> 表达式会调用并将其结果传递给 <code>yield from</code>，虽然 <code>__await__</code> 方法与 <code>__cocall__</code> 类似，但 <code>__await__</code> 只用于定义类 Future 对象。</li>
+<li>在语法中，<code>await</code> 的定义几乎与 <code>yield from</code> 相同（后来强制规定 <code>await</code> 只能出现在 <code>async def</code> 中）。但 <code>await</code> 可以很简洁地使用 <code>await future</code> 的方式调用，而 <code>cocall</code> 总是需要圆括号辅助； </li>
+<li>要使 asyncio 与 <a href="https://peps.python.org/pep-3152/" target="_blank" rel="external nofollow noopener noreferrer">PEP 3152</a> 兼容，需要重构 <code>@asyncio.coroutine</code> 装饰器，来将所有函数封装在一个带有 <code>__cocal__</code> 方法的对象中，或在生成器上实现 <code>__cocall__</code>。要在生成器式协程中调用 cofunctions，需要使用内置的 <code>costart(cofunc, *args, **kwargs)</code>；</li>
+<li>因为 cofunction 必须使用 <code>cocall</code> 关键字调用 ，因此自动避免在生成器式协程中忘记使用 <code>yield from</code> 的常见错误。本提案是使用其他方法来解决这一问题的，点击 <a href="#用于调试的特性">用于调试的特性</a> 了解更多。</li>
+<li>使用 <code>cocall</code> 调用 cofunction 的一个缺点是，如果决定实现协程生成器（使用 <code>yield</code> 或 <code>async yield</code> 表达式的协程），就不需要 <code>cocall</code> 关键字来调用。因此最终会使得协程拥有 <code>__cocall__</code> 而没有 <code>__call__</code>，协程生成器拥有 <code>__call__</code> 而没有 <code>__cocall__</code>。</li>
+<li>在 <a href="https://peps.python.org/pep-3152/" target="_blank" rel="external nofollow noopener noreferrer">PEP 3152</a> 中， 没有类似 <code>async for</code> 和 <code>async with</code> 的设计。</li>
+<li>括号语法会带来很多问题：</li>
+</ol>
+<p>下面这段代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">await</span> fut</span><br><span class="line"><span class="keyword">await</span> function_returning_future()</span><br><span class="line"><span class="keyword">await</span> asyncio.gather(coro1(arg1, arg2), coro2(arg1, arg2))</span><br></pre></td></tr></table></figure>
+
+<p>需要这样表达：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cocall fut()</span><br><span class="line">cocall (function_returning_future())</span><br><span class="line">cocall asyncio.gather(costart(coro1, arg1, arg2), costar(coro2, arg1, arg2))</span><br></pre></td></tr></table></figure>
+
+<h3 id="协程生成器"><a href="#协程生成器" class="headerlink" title="协程生成器"></a>协程生成器</h3><p>通过 <code>async for</code> 关键字可以实现一种协程生成器的概念，即一个带有 <code>yield</code> 或 <code>yield from</code> 的协程。为了避免与一般的生成器混淆，可能需要在 <code>yield</code> 关键字前加上 <code>async</code> 关键字，而 <code>async yield from</code> 会抛出 <code>StopAsyncIteration</code> 异常。</p>
+<p>虽然协程生成器的概念可能实现，但是不应该在本提案中讨论。这是一个高阶的概念，会使当前生成器的实现发生巨大的变动，应该权衡利弊，仔细考虑。这个问题应该由一个单独的 PEP 进行讨论。 </p>
+<h3 id="为什么选择-async-和-await-关键字"><a href="#为什么选择-async-和-await-关键字" class="headerlink" title="为什么选择 async 和 await 关键字"></a>为什么选择 async 和 await 关键字</h3><p>在众多编程语言中，async/await 已经不是一个新鲜的概念了：</p>
+<ol>
+<li>C# 很久以前就是使用它们，请看 <a href="https://msdn.microsoft.com/en-us/library/hh191443.aspx" target="_blank" rel="external nofollow noopener noreferrer">引用 5</a>；</li>
+<li>ECMAScript 7 中也提议键入 async/await，在 Traceur 项目也是，请看 <a href="http://wiki.ecmascript.org/doku.php?id=strawman:async_functions" target="_blank" rel="external nofollow noopener noreferrer">引用 2</a> 和 <a href="https://github.com/google/traceur-compiler/wiki/LanguageFeatures#async-functions-experimental" target="_blank" rel="external nofollow noopener noreferrer">引用 9</a>；</li>
+<li>Facebook’s Hack/HHVM，请看 <a href="http://docs.hhvm.com/manual/en/hack.async.php" target="_blank" rel="external nofollow noopener noreferrer">引用 6</a>；</li>
+<li>Googles Dart 语言，请看 <a href="https://www.dartlang.org/articles/await-async/" target="_blank" rel="external nofollow noopener noreferrer">引用 7</a>；</li>
+<li>Scala，请看 <a href="http://docs.scala-lang.org/sips/pending/async.html" target="_blank" rel="external nofollow noopener noreferrer">引用 8</a>；</li>
+<li>提议在 C++ 添加 async/await，请看 <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3722.pdf" target="_blank" rel="external nofollow noopener noreferrer">引用 10</a>；</li>
+<li>还有很多其他语言…</li>
+</ol>
+<p>这是一个巨大的优势，因为这些语言的使用者已经有了使用 async/await 的经验，而这使得在一个项目中使用多种语言（例如在 Python 中使用 ECMAScript 7）变得更加容易。</p>
+<h3 id="为什么-aiter-返回的不是可等待对象"><a href="#为什么-aiter-返回的不是可等待对象" class="headerlink" title="为什么 __aiter__ 返回的不是可等待对象"></a>为什么 <code>__aiter__</code> 返回的不是可等待对象</h3><p><a href="https://peps.python.org/pep-0492/" target="_blank" rel="external nofollow noopener noreferrer">PEP 492</a> 在 CPython 3.5.0 被接受，并且新增了 <code>__aiter__</code> 方法，该方法返回一个解析为异步迭代器的可等待对象。</p>
+<p>在 3.5.2 中（PEP 492 被临时接受），<code>__aiter__</code> 协议被更新为直接返回异步迭代器。</p>
+<p>这么做的目的是在 Python 中实现异步生成器，点击 <a href="http://bugs.python.org/issue27243" target="_blank" rel="external nofollow noopener noreferrer">引用 19</a> 和 <a href="https://docs.python.org/3/reference/datamodel.html#async-iterators" target="_blank" rel="external nofollow noopener noreferrer">引用 20</a> 了解更多。</p>
+<h3 id="async-关键字的重要性"><a href="#async-关键字的重要性" class="headerlink" title="async 关键字的重要性"></a>async 关键字的重要性</h3><p>虽然可以只实现 <code>await</code> 表达式，并且将至少拥有一个 <code>await</code> 的函数视为协程，但这样做会增加 API 设计、代码重构和长期支持的难度。</p>
+<p>假设 Python 只有 <code>await</code> 关键字：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">useful</span><span class="params">()</span>:</span></span><br><span class="line">	...</span><br><span class="line">	<span class="keyword">await</span> log(...)</span><br><span class="line">	...</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">important</span><span class="params">()</span>:</span></span><br><span class="line">	<span class="keyword">await</span> useful()</span><br></pre></td></tr></table></figure>
+
+<p>如果对 <code>useful()</code> 函数进行重构，删除其内部所有 <code>await</code> 表达式，它就会变成一个普通 Python 函数，所有依赖于它的代码（例如 <code>important()</code>）都会产生异常。要想解决这个问题，必须引入类似 <code>@asyncio.coroutine</code> 的装饰器。</p>
+<h3 id="为什么使用-async-def"><a href="#为什么使用-async-def" class="headerlink" title="为什么使用 async def"></a>为什么使用 async def</h3><p>直接使用 <code>async name(): pass</code> 可能比 <code>async def name(): pass</code> 更有吸引力，因为这种方式输入的字符更少。但它打破了 <code>async def</code>、<code>async with</code> 和 <code>async for</code> 之间的一致性，其中 <code>async</code> 都是修饰符，表示语句是异步的。此外，它与现有语法更契合。</p>
+<h3 id="为什么不使用-await-for-和-await-with"><a href="#为什么不使用-await-for-和-await-with" class="headerlink" title="为什么不使用 await for 和 await with"></a>为什么不使用 await for 和 await with</h3><p><code>async</code> 是一个形容词，因此更适合作为修饰词与其他关键字搭配。await for/with 看起来更像是等待 <code>for</code> 或 <code>with</code> 语句执行完成。</p>
+<h3 id="为什么使用-async-def-而不是-def-async"><a href="#为什么使用-async-def-而不是-def-async" class="headerlink" title="为什么使用 async def 而不是 def async"></a>为什么使用 async def 而不是 def async</h3><p><code>async</code> 关键字是一个语句的修饰符。在其他编程语言中常见的 <code>static</code>、<code>public</code>、<code>unsafe</code> 等关键字是一个很形象的类比。<code>async for</code> 是异步的 <code>for</code> 语句，<code>async with</code> 是异步的 <code>with</code> 语句，<code>async def</code> 是异步函数。</p>
+<p>将 <code>async</code> 放在其他关键字后面很可能会引起混淆，例如 <code>for async item in iterator</code> 可以理解为从 iterator 中遍历异步的 item。</p>
+<p>将 <code>async</code> 放在 <code>def</code>、<code>with</code> 和 <code>for</code> 前面，还能使语言语法更加简单。同时，<code>async def</code> 也能让使用者更方便地区分协程与普通函数。</p>
+<h3 id="为什么不导入-future"><a href="#为什么不导入-future" class="headerlink" title="为什么不导入 __future__"></a>为什么不导入 <code>__future__</code></h3><blockquote>
+<p><code>from __future__ import feature</code> 形式的导入被称为 future 语句。 它们会被 Python 编译器当作特例，通过包含 future 语句来允许新的 Python 特性在该特性成为语言标准之前发布的模块中使用。</p>
+</blockquote>
+<p><a href="#过渡计划">过渡计划</a> 章节介绍了词法分析器做了哪些修改使其仅在 <code>async def</code> 块才中将 <code>async</code> 和<code>await</code> 作为关键字处理。因此，<code>async def</code> 发挥了模块级编译器声明（类似 <code>from  __future__ import async_await</code>）的作用。</p>
+<h3 id="为什么异步魔术方法都用-a-开头"><a href="#为什么异步魔术方法都用-a-开头" class="headerlink" title="为什么异步魔术方法都用 a 开头"></a>为什么异步魔术方法都用 a 开头</h3><p>一个备选方案是使用 <code>async</code> 前缀，但是为了让新的魔术方法和原有魔术方法保持尽可能高的相似性，最终选择了方法名更短的方案。</p>
+<h3 id="为什么不复用现有魔术方法"><a href="#为什么不复用现有魔术方法" class="headerlink" title="为什么不复用现有魔术方法"></a>为什么不复用现有魔术方法</h3><p>存在一个异步迭代器和异步上下文管理器的备选方案，提议在声明中添加 <code>async</code> 关键字来复用现有的魔术方法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CM</span>:</span></span><br><span class="line">	<span class="comment"># 代替 __aenter__</span></span><br><span class="line">	<span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">__enter__</span><span class="params">(self)</span>:</span></span><br><span class="line">		...</span><br></pre></td></tr></table></figure>
+
+<p>这个方案有以下缺点：</p>
+<ol>
+<li>不能创建一个既可以在 <code>with</code> 中使用，又可以在 <code>async with</code> 中使用的对象；</li>
+<li>会破坏兼容性，因为在版本低于 3.4 的 Python 代码中没有规定禁止从 <code>__enter__</code> 或 <code>__exit__</code> 中返回类 Future 对象；</li>
+<li>让原生协程简洁无歧义是本提案主要目的之一，因此将异步协议用的魔术方法做了区分处理。</li>
+</ol>
+<h3 id="为什么复用-for-和-with-语句"><a href="#为什么复用-for-和-with-语句" class="headerlink" title="为什么复用 for 和 with 语句"></a>为什么复用 for 和 with 语句</h3><p>无论是现有的生成器式协程还是本提案提出的原生协程都更希望使用者能够明显地看到代码可能阻塞的位置。让现有的 <code>for</code> 和 <code>with</code> 语句识别异步迭代器和异步上下文管理器会不可避免地引入隐式阻塞点，从而导致代码变得更难理解。</p>
+<h3 id="异步推导式"><a href="#异步推导式" class="headerlink" title="异步推导式"></a>异步推导式</h3><p>可以提供异步推导式，但是这个语法不在本提案的讨论范围内。</p>
+<p><strong>注：<a href="https://wiki.blanc.site/archives/5823d5df.html">PEP 530</a> 定义了异步推导式，可以在 3.6 之后的版本使用。</strong></p>
+<h3 id="异步-lambda-函数"><a href="#异步-lambda-函数" class="headerlink" title="异步 lambda 函数"></a>异步 lambda 函数</h3><p>可以提供异步 lambda 函数，但这个语法不在本提案的讨论范围内。</p>
+<p><strong>注：目前 Python 还没有解锁异步 lambda。</strong></p>
+<h2 id="性能影响"><a href="#性能影响" class="headerlink" title="性能影响"></a>性能影响</h2><h3 id="整体影响"><a href="#整体影响" class="headerlink" title="整体影响"></a>整体影响</h3><p>本提案不会对 Pyhton 本身的性能产生明显影响。下面是 <a href="https://hg.python.org/benchmarks" target="_blank" rel="external nofollow noopener noreferrer">Python 官方基准测试</a> 的输出结果：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">python perf.py -r -b default ..&#x2F;cpython&#x2F;python.exe ..&#x2F;cpython-aw&#x2F;python.exe</span><br><span class="line"></span><br><span class="line">[skipped]</span><br><span class="line"></span><br><span class="line">Report on Darwin ysmac 14.3.0 Darwin Kernel Version 14.3.0:</span><br><span class="line">Mon Mar 23 11:59:05 PDT 2015; root:xnu-2782.20.48~5&#x2F;RELEASE_X86_64</span><br><span class="line">x86_64 i386</span><br><span class="line"></span><br><span class="line">Total CPU cores: 8</span><br><span class="line"></span><br><span class="line">### etree_iterparse ###</span><br><span class="line">Min: 0.365359 -&gt; 0.349168: 1.05x faster</span><br><span class="line">Avg: 0.396924 -&gt; 0.379735: 1.05x faster</span><br><span class="line">Significant (t&#x3D;9.71)</span><br><span class="line">Stddev: 0.01225 -&gt; 0.01277: 1.0423x larger</span><br><span class="line"></span><br><span class="line">The following not significant results are hidden, use -v to show them:</span><br><span class="line">django_v2, 2to3, etree_generate, etree_parse, etree_process, fastpickle,</span><br><span class="line">fastunpickle, json_dump_v2, json_load, nbody, regex_v8, tornado_http.</span><br></pre></td></tr></table></figure>
+
+<h3 id="词法分析器的影响"><a href="#词法分析器的影响" class="headerlink" title="词法分析器的影响"></a>词法分析器的影响</h3><p>使用修改后的词法分析起解析 Python 文件没有明显的速度减慢：解析一个 12MB 的文件（<code>Lib/test/test_binop.py</code> 重复 1000 次）所需时间（与之前）相同。</p>
+<h3 id="async-await-的影响"><a href="#async-await-的影响" class="headerlink" title="async/await 的影响"></a>async/await 的影响</h3><p>下面的微型基准测试用于确定异步函数和生成器之间的性能差异：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">binary</span><span class="params">(n)</span>:</span></span><br><span class="line">	<span class="keyword">if</span> n &lt;= <span class="number">0</span>:</span><br><span class="line">		<span class="keyword">return</span> <span class="number">1</span></span><br><span class="line">	l = <span class="keyword">yield</span> <span class="keyword">from</span> binary(n - <span class="number">1</span>)</span><br><span class="line">	r = <span class="keyword">yield</span> <span class="keyword">from</span> binary(n - <span class="number">1</span>)</span><br><span class="line">	<span class="keyword">return</span> l + <span class="number">1</span> + r</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">abinary</span><span class="params">(n)</span>:</span></span><br><span class="line">	<span class="keyword">if</span> n &lt; <span class="number">0</span>:</span><br><span class="line">		<span class="keyword">return</span> <span class="number">1</span></span><br><span class="line">	l = <span class="keyword">await</span> abinary(n - <span class="number">1</span>)</span><br><span class="line">    r = <span class="keyword">await</span> abinary(n - <span class="number">1</span>)</span><br><span class="line">    <span class="keyword">return</span> l + <span class="number">1</span> + r</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">timeit</span><span class="params">(func, depth, repate)</span>:</span></span><br><span class="line">	t0 = time.time()</span><br><span class="line">	<span class="keyword">for</span> _ <span class="keyword">in</span> range(repeat):</span><br><span class="line">		o = func(depth)</span><br><span class="line">			<span class="keyword">try</span>:</span><br><span class="line">				<span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">					o.send(<span class="literal">None</span>)</span><br><span class="line">			<span class="keyword">except</span> StopIteration:</span><br><span class="line">				<span class="keyword">pass</span></span><br><span class="line">	t1 = time.time()</span><br><span class="line">	print(<span class="string">'&#123;&#125;(&#123;&#125;) * &#123;&#125;: total &#123;:.3f&#125;s'</span>.format(func.__name__, depth, repeat, t1-t0))</span><br></pre></td></tr></table></figure>
+
+<p>结果是没有观察到明显的性能差异：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">binary(19) * 30: total 53.321s</span><br><span class="line">abinary(19) * 30: total 55.073s</span><br><span class="line"></span><br><span class="line">binary(19) * 30: total 53.361s</span><br><span class="line">abinary(19) * 30: total 51.360s</span><br><span class="line"></span><br><span class="line">binary(19) * 30: total 49.438s</span><br><span class="line">abinary(19) * 30: total 51.047s</span><br></pre></td></tr></table></figure>
+
+<p>注 depth = 19 以为着 1048575 次调用。</p>
+<h2 id="实施"><a href="#实施" class="headerlink" title="实施"></a>实施</h2><p>可以通过 <a href="http://bugs.python.org/issue24017" target="_blank" rel="external nofollow noopener noreferrer">引用 15</a> 追踪具体实施过程，它在 2015-5-11 提交。</p>
+<h2 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h2><ol>
+<li><a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.coroutine" target="_blank" rel="external nofollow noopener noreferrer">https://docs.python.org/3/library/asyncio-task.html#asyncio.coroutine</a></li>
+<li><a href="http://wiki.ecmascript.org/doku.php?id=strawman:async_functions" target="_blank" rel="external nofollow noopener noreferrer">http://wiki.ecmascript.org/doku.php?id=strawman:async_functions</a></li>
+<li><a href="https://github.com/1st1/cpython/tree/await" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/1st1/cpython/tree/await</a></li>
+<li><a href="https://hg.python.org/benchmarks" target="_blank" rel="external nofollow noopener noreferrer">https://hg.python.org/benchmarks</a></li>
+<li><a href="https://msdn.microsoft.com/en-us/library/hh191443.aspx" target="_blank" rel="external nofollow noopener noreferrer">https://msdn.microsoft.com/en-us/library/hh191443.aspx</a></li>
+<li><a href="http://docs.hhvm.com/manual/en/hack.async.php" target="_blank" rel="external nofollow noopener noreferrer">http://docs.hhvm.com/manual/en/hack.async.php</a></li>
+<li><a href="https://www.dartlang.org/articles/await-async/" target="_blank" rel="external nofollow noopener noreferrer">https://www.dartlang.org/articles/await-async/</a></li>
+<li><a href="http://docs.scala-lang.org/sips/pending/async.html" target="_blank" rel="external nofollow noopener noreferrer">http://docs.scala-lang.org/sips/pending/async.html</a></li>
+<li><a href="https://github.com/google/traceur-compiler/wiki/LanguageFeatures#async-functions-experimental" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/google/traceur-compiler/wiki/LanguageFeatures#async-functions-experimental</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3722.pdf" target="_blank" rel="external nofollow noopener noreferrer">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3722.pdf</a></li>
+<li><a href="https://docs.python.org/3/reference/expressions.html#generator-iterator-methods" target="_blank" rel="external nofollow noopener noreferrer">https://docs.python.org/3/reference/expressions.html#generator-iterator-methods</a></li>
+<li><a href="https://docs.python.org/3/reference/expressions.html#primaries" target="_blank" rel="external nofollow noopener noreferrer">https://docs.python.org/3/reference/expressions.html#primaries</a></li>
+<li><a href="https://mail.python.org/pipermail/python-dev/2015-May/139851.html" target="_blank" rel="external nofollow noopener noreferrer">https://mail.python.org/pipermail/python-dev/2015-May/139851.html</a></li>
+<li><a href="https://mail.python.org/pipermail/python-dev/2015-May/139844.html" target="_blank" rel="external nofollow noopener noreferrer">https://mail.python.org/pipermail/python-dev/2015-May/139844.html</a></li>
+<li><a href="http://bugs.python.org/issue24017" target="_blank" rel="external nofollow noopener noreferrer">http://bugs.python.org/issue24017</a></li>
+<li><a href="https://github.com/python/asyncio/issues/233" target="_blank" rel="external nofollow noopener noreferrer">https://github.com/python/asyncio/issues/233</a></li>
+<li><a href="https://hg.python.org/cpython/rev/7a0a1a4ac639" target="_blank" rel="external nofollow noopener noreferrer">https://hg.python.org/cpython/rev/7a0a1a4ac639</a></li>
+<li><a href="http://bugs.python.org/issue24400" target="_blank" rel="external nofollow noopener noreferrer">http://bugs.python.org/issue24400</a></li>
+<li><a href="http://bugs.python.org/issue27243" target="_blank" rel="external nofollow noopener noreferrer">http://bugs.python.org/issue27243</a></li>
+<li><a href="https://docs.python.org/3/reference/datamodel.html#async-iterators" target="_blank" rel="external nofollow noopener noreferrer">https://docs.python.org/3/reference/datamodel.html#async-iterators</a></li>
+</ol>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li><a href="https://peps.python.org/pep-0492/" target="_blank" rel="external nofollow noopener noreferrer">PEP 492 – Coroutines with async and await syntax</a></li>
+</ol>
+
+        
+        <footer class="article-footer">
+        </footer>
+    </div>
+</div></article>
+
+
+    
+<nav id="article-nav">
+    
+        <a href="/archives/ed42c0e4.html" id="article-nav-newer" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">上一篇</strong>
+            <div class="article-nav-title">
+                
+                    「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine
+                
+            </div>
+        </a>
+    
+    
+        <a href="/archives/c29b4f3b.html" id="article-nav-older" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">下一篇</strong>
+            <div class="article-nav-title">WeeklyPEP-3-PEP 318-函数装饰器-overview</div>
+        </a>
+    
+</nav>
+
+
+
+
+
+    
+    
+        <section id="comments"> <div id="vcomments"></div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        appId: 'sz7ny95XiYWkxht3H3YDs2GX-gzGzoHsz',
+        appKey: 'T8JJugDkbqtFLONIIzcPWW76',
+        placeholder: '不要吝啬赞美的语句ヾﾉ≧∀≦)o!',
+        avatar: 'mp',
+        meta: ['nick','mail','link'],
+        pageSize: 10,
+        visitor: true,
+        notify: true,
+        verify: true
+    })
+    let info = document.querySelectorAll('#vcomments>.info')[0]
+    if (info) { info.style.display = 'none' }
+</script> </section>
+    
+
+
+
+
+<!-- baidu url auto push script -->
+<script type="text/javascript">
+    !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=window.location.href,o=document.referrer;if(!e.test(r)){var n="//api.share.baidu.com/s.gif";o?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var t=new Image;t.src=n}}(window);
+</script>     
+</section>
+        </div>
+        <footer id="footer">
+    <div class="outer">
+        <div id="footer-info" class="inner">
+            ryomahan &copy; 2024 
+            <a rel="external nofollow noopener noreferrer" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png"></a>
+            <br> Powered by <a href="http://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. Comment By <a href="https://valine.js.org/" target="_blank" rel="external nofollow noopener noreferrer">valine</a>. Theme - <a href="https://github.com/zthxxx/hexo-theme-Wikitten" target="_blank" rel="external nofollow noopener noreferrer">wikitten</a>
+            
+                <br>
+                <span id="busuanzi_container_site_pv"><i class="fa fa-eye"></i> <span id="busuanzi_value_site_pv"></span></span>
+                &nbsp;|&nbsp;
+                <span id="busuanzi_container_site_pv"><i class="fa fa-user"></i> <span id="busuanzi_value_site_uv"></span></span>
+            
+        </div>
+    </div>
+</footer>
+
+        
+    
+        
+<script src="/libs/lightgallery/js/lightgallery.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-thumbnail.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-pager.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-autoplay.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-fullscreen.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-zoom.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-hash.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-share.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-video.min.js"></script>
+
+    
+    
+        
+<script src="/libs/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+    
+    
+        <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true,
+            TeX: {
+                equationNumbers: {
+                  autoNumber: 'AMS'
+                }
+            }
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+
+
+<!-- Custom Scripts -->
+
+<script src="/js/main.js"></script>
+
+
+    </div>
+</body>

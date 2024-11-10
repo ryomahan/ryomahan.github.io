@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    
+    <title>解剖 Python 类 | 小白维基</title>
+    
+    
+        <meta name="keywords" content="Python">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="前言最近想为 SQLAlchemy 封装一套类似 Django ORM 的 Model Manager，于是捡起了「流畅的 Python」开始看被我遗留的「元编程」部分。在阅读的过程中，我慢慢发现自己并没有像想象的那样对 Python 类了如指掌，在很多概念的划分上我都是模棱两可的。因此特地总结这样一篇文章，希望能够由浅至深对 Python 类进行一次全面解剖手术。 注：本文所讨论的内容仅适用于">
+<meta property="og:type" content="article">
+<meta property="og:title" content="解剖 Python 类">
+<meta property="og:url" content="https://wiki.blanc.site/archives/291be77c.html">
+<meta property="og:site_name" content="小白维基">
+<meta property="og:description" content="前言最近想为 SQLAlchemy 封装一套类似 Django ORM 的 Model Manager，于是捡起了「流畅的 Python」开始看被我遗留的「元编程」部分。在阅读的过程中，我慢慢发现自己并没有像想象的那样对 Python 类了如指掌，在很多概念的划分上我都是模棱两可的。因此特地总结这样一篇文章，希望能够由浅至深对 Python 类进行一次全面解剖手术。 注：本文所讨论的内容仅适用于">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.blanc.site//wiki/img202204011031943.png">
+<meta property="og:image" content="https://img.blanc.site//wiki/img202204011254343.png">
+<meta property="article:published_time" content="2022-04-01T00:00:00.000Z">
+<meta property="article:modified_time" content="2024-11-10T15:39:52.936Z">
+<meta property="article:author" content="ryomahan">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.blanc.site//wiki/img202204011031943.png">
+    
+
+    
+        <link rel="alternate" href="/atom.xml" title="小白维基" type="application/atom+xml">
+    
+    
+        <link rel="icon" href="/favicon.ico">
+    
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/libs/open-sans/styles.css">
+
+    
+<link rel="stylesheet" href="/libs/source-code-pro/styles.css">
+
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<script src="/libs/jquery/2.1.3/jquery.min.js"></script>
+
+    
+<script src="/libs/jquery/plugins/cookie/1.4.1/jquery.cookie.js"></script>
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/lightgallery/css/lightgallery.min.css">
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/justified-gallery/justifiedGallery.min.css">
+
+    
+    
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110100486-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-110100486-1');
+</script>
+    
+    
+        <meta name="google-site-verification" content="D9ld5oQABBxIwNpgD_WN61p51-ZcABZ6Olt4HKcxlWw">
+    
+    
+        <script>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?fac7e69191f0847b886888aa7c794fa7";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+    
+
+
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- 字体引入 -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Noto+Serif+SC:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+<meta name="generator" content="Hexo 4.2.1"></head>
+</html>
+<body>
+    <div id="container">
+        <header id="header">
+    <div id="header-main" class="header-inner">
+        <div class="outer">
+            <a href="/" id="logo">
+                <i class="logo"></i>
+                <span class="site-title">小白维基</span>
+            </a>
+            <nav id="main-nav">
+                
+                    <a class="main-nav-link" href="/">首页</a>
+                
+                    <a class="main-nav-link" href="/archives">归档</a>
+                
+                    <a class="main-nav-link" href="/categories">分类</a>
+                
+                    <a class="main-nav-link" href="/tags">标签</a>
+                
+                    <a class="main-nav-link" href="/about">关于</a>
+                
+            </nav>
+            
+                
+                <nav id="sub-nav">
+                    <div class="profile" id="profile-nav">
+                        <a id="profile-anchor" href="javascript:;">
+                            <img class="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df">
+                            <i class="fa fa-caret-down"></i>
+                        </a>
+                    </div>
+                </nav>
+            
+            <div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="想要查找什么...">
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div>
+        </div>
+    </div>
+    <div id="main-nav-mobile" class="header-sub header-inner">
+        <table class="menu outer">
+            <tr>
+                
+                    <td><a class="main-nav-link" href="/">首页</a></td>
+                
+                    <td><a class="main-nav-link" href="/archives">归档</a></td>
+                
+                    <td><a class="main-nav-link" href="/categories">分类</a></td>
+                
+                    <td><a class="main-nav-link" href="/tags">标签</a></td>
+                
+                    <td><a class="main-nav-link" href="/about">关于</a></td>
+                
+                <td>
+                    
+    <div class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+    </div>
+
+                </td>
+            </tr>
+        </table>
+    </div>
+</header>
+
+        <div class="outer">
+            
+                
+
+<aside id="profile">
+    <div class="inner profile-inner">
+        <div class="base-info profile-block">
+            <img id="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df?s=128">
+            <h2 id="name">Ryoma</h2>
+            <h3 id="title">毕己一生，依依东望。</h3>
+            <span id="location"><i class="fa fa-map-marker"></i>Jinan, China</span>
+            <a id="follow" target="_blank" href="https://github.com/ryomahan/" rel="external nofollow noopener noreferrer">关注我</a>
+        </div>
+        <div class="article-info profile-block">
+            <div class="article-info-block">
+                25
+                <span>文章</span>
+            </div>
+            <div class="article-info-block">
+                12
+                <span>标签</span>
+            </div>
+        </div>
+        
+        <div class="profile-block social-links">
+            <table>
+                <tr>
+                    
+                    
+                    <td>
+                        <a href="https://blog.blanc.site" target="_blank" title="wordpress" class="tooltip">
+                            <i class="fa fa-wordpress"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://twitter.com/ryomahan1996" target="_blank" title="twitter" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-twitter"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://weibo.com/xiaobaidh" target="_blank" title="weibo" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-weibo"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://github.com/ryomahan" target="_blank" title="github" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-github"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="/atom.xml" target="_blank" title="rss" class="tooltip">
+                            <i class="fa fa-rss"></i>
+                        </a>
+                    </td>
+                    
+                </tr>
+            </table>
+        </div>
+        
+    </div>
+
+    
+        <div class="widget-wrap widget-list">
+            <h3 class="widget-title"><span>友情链接</span></h3>
+            <div class="widget">
+                <ul>
+                    
+                        <li>
+                            <a href="https://pythonhunter.org/" target="_blank" rel="external nofollow noopener noreferrer">捕蛇者说</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://laike9m.com/" target="_blank" rel="external nofollow noopener noreferrer">laike9m</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://www.kawabangga.com/" target="_blank" rel="external nofollow noopener noreferrer">卡瓦邦噶</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://manjusaka.itscoder.com/" target="_blank" rel="external nofollow noopener noreferrer">Manjusaka</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.evo.moe/" target="_blank" rel="external nofollow noopener noreferrer">Sparta_EN</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.blanc.site" target="_blank">一只小白</a>
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    
+</aside>
+
+            
+            
+                <aside id="sidebar">
+   
+        
+    <div class="widget-wrap" id="categories">
+        <h3 class="widget-title">
+            <span>分类</span>
+            &nbsp;
+            <a id="allExpand" href="#">
+                <i class="fa fa-angle-double-down fa-2x"></i>
+            </a>
+        </h3>
+        
+        
+        
+         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-网络笔记
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/e5187cf6.html">同步到腾讯云社区</a></li>  <li class="file"><a href="/archives/4940711f.html">8086 处理器寻址方式</a></li>  <li class="file"><a href="/archives/5c113e93.html">SSH overview</a></li>  <li class="file"><a href="/archives/c57afff6.html">记一次失败的 AI 辅助编程全历程</a></li>  <li class="file"><a href="/archives/d644d904.html">「翻译」如何组织大型 Python 项目</a></li>  <li class="file"><a href="/archives/ed42c0e4.html">「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            2-软件使用
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Chrome
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/decc86d5.html">「转载」解析谷歌 Chrome 各分支版本</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Django
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/b641d3ac.html">Django 笔记-2-源码理解-urls 篇</a></li>  <li class="file"><a href="/archives/ab18c3c3.html">Django 笔记-3-文档阅读-关于 Django 文档</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Vue
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/793400e.html">解决 Vue CSS 样式重复载入，为 Vue 添加全局 less 或 sass 基础样式库</a></li>  <li class="file"><a href="/archives/341c107a.html">Vue Router 实现动态路由和常见问题解决方案</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                    
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            3-计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            1-理论计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-数据结构和算法
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/f3c5e08e.html">数据结构笔记1-概论</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            4-编程语言和编译器
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            Python
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/7a294715.html">所谓 WSGI</a></li>  <li class="file"><a href="/archives/ffe3a081.html">Python MRO</a></li>  <li class="file"><a href="/archives/2accc063.html">WeeklyPEP-0-overview</a></li>  <li class="file"><a href="/archives/f5b4f56.html">所谓 ASGI</a></li>  <li class="file"><a href="/archives/5823d5df.html">WeeklyPEP-2-PEP 343-with 语句-overview</a></li>  <li class="file active"><a href="/archives/291be77c.html">解剖 Python 类</a></li>  <li class="file"><a href="/archives/c29b4f3b.html">WeeklyPEP-3-PEP 318-函数装饰器-overview</a></li>  <li class="file"><a href="/archives/7eaf0f5f.html">WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Shell
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/8f9d5c85.html">Shell 获取当前脚本的绝对路径</a></li>  <li class="file"><a href="/archives/dbac95ae.html">实现 echo 不换行输出</a></li>  <li class="file"><a href="/archives/b422aa7d.html">Shell 区分不同 Unix 系统</a></li>  <li class="file"><a href="/archives/3beb222a.html">Shell 基础语法</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            汇编语言
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/90a7f914.html">NASM Overview</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+    </div>
+    <script>
+        $(document).ready(function() {
+            var iconFolderOpenClass  = 'fa-folder-open';
+            var iconFolderCloseClass = 'fa-folder';
+            var iconAllExpandClass = 'fa-angle-double-down';
+            var iconAllPackClass = 'fa-angle-double-up';
+            // Handle directory-tree expansion:
+            // 左键单独展开目录
+            $(document).on('click', '#categories a[data-role="directory"]', function (event) {
+                event.preventDefault();
+
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var subtree = $(this).siblings('ul');
+                icon.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if (expanded) {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideUp({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderCloseClass);
+                } else {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideDown({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderOpenClass);
+                }
+            });
+            // 右键展开下属所有目录
+            $('#categories a[data-role="directory"]').bind("contextmenu", function(event){
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var listNode = $(this).siblings('ul');
+                var subtrees = $.merge(listNode.find('li ul'), listNode);
+                var icons = $.merge(listNode.find('.fa'), icon);
+                icons.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if(expanded) {
+                    subtrees.slideUp({ duration: 100 });
+                    icons.addClass(iconFolderCloseClass);
+                } else {
+                    subtrees.slideDown({ duration: 100 });
+                    icons.addClass(iconFolderOpenClass);
+                }
+            })
+            // 展开关闭所有目录按钮
+            $(document).on('click', '#allExpand', function (event) {
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconAllExpandClass);
+                icon.removeClass(iconAllExpandClass).removeClass(iconAllPackClass);
+                if(expanded) {
+                    $('#sidebar .fa.fa-folder').removeClass('fa-folder').addClass('fa-folder-open')
+                    $('#categories li ul').slideDown({ duration: 100 });
+                    icon.addClass(iconAllPackClass);
+                } else {
+                    $('#sidebar .fa.fa-folder-open').removeClass('fa-folder-open').addClass('fa-folder')
+                    $('#categories li ul').slideUp({ duration: 100 });
+                    icon.addClass(iconAllExpandClass);
+                }
+            });  
+        });
+    </script>
+
+    
+        
+  <div class="toc-flag"></div>
+  <div class="toc-wrap">
+      <h3>
+          <span>文章目录</span>
+      </h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#概念"><span class="toc-number">2.</span> <span class="toc-text">概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#对象-object"><span class="toc-number">2.1.</span> <span class="toc-text">对象 | object</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类型-type"><span class="toc-number">2.2.</span> <span class="toc-text">类型 | type</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类-class"><span class="toc-number">2.3.</span> <span class="toc-text">类 | class</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#导入时和运行时-import-amp-run"><span class="toc-number">2.4.</span> <span class="toc-text">导入时和运行时 | import &amp; run</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类对象-class-object"><span class="toc-number">2.5.</span> <span class="toc-text">类对象 | class object</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#实例对象-instance-object"><span class="toc-number">2.6.</span> <span class="toc-text">实例对象 | instance object</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#实例-instance"><span class="toc-number">2.7.</span> <span class="toc-text">实例 | instance</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#继承-subclass"><span class="toc-number">2.8.</span> <span class="toc-text">继承 | subclass</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#变量和属性-variable-amp-attributes"><span class="toc-number">2.9.</span> <span class="toc-text">变量和属性 | variable &amp; attributes</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#函数和方法-function-amp-method"><span class="toc-number">2.10.</span> <span class="toc-text">函数和方法 | function &amp; method</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#可调用对象-callable"><span class="toc-number">2.11.</span> <span class="toc-text">可调用对象 | callable</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#对象：万物的起源"><span class="toc-number">3.</span> <span class="toc-text">对象：万物的起源</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#官方文档"><span class="toc-number">3.1.</span> <span class="toc-text">官方文档</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Cpython"><span class="toc-number">3.2.</span> <span class="toc-text">Cpython</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#PyObject-amp-PyVarObject-对象基石"><span class="toc-number">3.2.1.</span> <span class="toc-text">PyObject &amp; PyVarObject | 对象基石</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#PyBaseObject-Type-object-的实现"><span class="toc-number">3.2.2.</span> <span class="toc-text">PyBaseObject_Type | object 的实现</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#object-分析"><span class="toc-number">3.3.</span> <span class="toc-text">object 分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#type-object-type"><span class="toc-number">3.3.1.</span> <span class="toc-text">type(object) &#x3D;&#x3D; type</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#object-base-None"><span class="toc-number">3.3.2.</span> <span class="toc-text">object.__base__ &#x3D;&#x3D; None</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#object-里有什么"><span class="toc-number">3.3.3.</span> <span class="toc-text">object 里有什么</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#object-a-1"><span class="toc-number">3.3.4.</span> <span class="toc-text">object.a &#x3D; 1</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#类型：类的定义（描述）"><span class="toc-number">4.</span> <span class="toc-text">类型：类的定义（描述）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#官方文档-1"><span class="toc-number">4.1.</span> <span class="toc-text">官方文档</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CPython"><span class="toc-number">4.2.</span> <span class="toc-text">CPython</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#PyTypeObject-类型基石"><span class="toc-number">4.2.1.</span> <span class="toc-text">PyTypeObject | 类型基石</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#PyType-Type-type-实现"><span class="toc-number">4.2.2.</span> <span class="toc-text">PyType_Type | type 实现</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#type-分析"><span class="toc-number">4.3.</span> <span class="toc-text">type 分析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#type-type-type"><span class="toc-number">4.3.1.</span> <span class="toc-text">type(type) &#x3D;&#x3D; type</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#type-base-object"><span class="toc-number">4.3.2.</span> <span class="toc-text">type.__base__ &#x3D;&#x3D; object</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#type-里有什么"><span class="toc-number">4.3.3.</span> <span class="toc-text">type 里有什么</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结：对象与类型"><span class="toc-number">5.</span> <span class="toc-text">小结：对象与类型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#类型实例（类对象）：类的生成"><span class="toc-number">6.</span> <span class="toc-text">类型实例（类对象）：类的生成</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#手写类的生成"><span class="toc-number">6.1.</span> <span class="toc-text">手写类的生成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类对象"><span class="toc-number">6.2.</span> <span class="toc-text">类对象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类的继承"><span class="toc-number">6.3.</span> <span class="toc-text">类的继承</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实例：类的实例"><span class="toc-number">7.</span> <span class="toc-text">实例：类的实例</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#手写类的实例化"><span class="toc-number">7.1.</span> <span class="toc-text">手写类的实例化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#实例对象"><span class="toc-number">7.2.</span> <span class="toc-text">实例对象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#类对象和实例对象的简单对比"><span class="toc-number">7.3.</span> <span class="toc-text">类对象和实例对象的简单对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#函数是如何变成方法的-self-是在何时被赋值的"><span class="toc-number">7.4.</span> <span class="toc-text">函数是如何变成方法的 | self 是在何时被赋值的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#各种优先级对比"><span class="toc-number">7.5.</span> <span class="toc-text">各种优先级对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结：类型、类、实例"><span class="toc-number">8.</span> <span class="toc-text">小结：类型、类、实例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#概念的抽象"><span class="toc-number">9.</span> <span class="toc-text">概念的抽象</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Python-中的抽象"><span class="toc-number">9.1.</span> <span class="toc-text">Python 中的抽象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#通过道德经歪解抽象"><span class="toc-number">9.2.</span> <span class="toc-text">通过道德经歪解抽象</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#结语"><span class="toc-number">10.</span> <span class="toc-text">结语</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">11.</span> <span class="toc-text">参考</span></a></li></ol>
+  </div>
+
+    
+    <div id="toTop" class="fa fa-angle-up"></div>
+</aside>
+            
+            <section id="main"><article id="post-3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/解剖 Python 类" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+                    <div class="article-meta">
+                        
+    <div class="article-category">
+    	<i class="fa fa-folder"></i>
+        <a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/">3-计算机科学</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/">1-理论计算机科学</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/4-%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E7%BC%96%E8%AF%91%E5%99%A8/">4-编程语言和编译器</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/4-%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E7%BC%96%E8%AF%91%E5%99%A8/Python/">Python</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>
+    </div>
+
+                        
+    <div class="article-date">
+        <i class="fa fa-calendar"></i>
+        <a href="/archives/291be77c.html">
+            <time datetime="2022-04-01T00:00:00.000Z" itemprop="datePublished">2022-04-01</time>
+        </a>
+    </div>
+
+
+                        
+                            <i class="fa fa-bar-chart"></i>
+                            <span id="busuanzi_container_site_pv"><span id="busuanzi_value_page_pv"></span></span>    
+                        
+                        
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/raw/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/解剖 Python 类.md" target="_blank" rel="external nofollow noopener noreferrer"> Source </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/edit/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/解剖 Python 类.md" target="_blank" rel="external nofollow noopener noreferrer"> Edit </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/commits/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/解剖 Python 类.md" target="_blank" rel="external nofollow noopener noreferrer"> History </a>
+                            </div>
+                        
+                    </div>
+                
+                
+    
+        <h1 class="article-title" itemprop="name">
+            解剖 Python 类
+        </h1>
+    
+
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+        
+        
+            <!-- 内容失效提醒 -->
+            
+    <!-- 如果文章创建超过一年或最后一次更新时间超过一个月(默认)则提示文章过期 -->
+    
+        <div class="aging">
+            <i class="fa fa-exclamation-circle aging-icon" aria-hidden="true"></i>
+            <span class="aging-content">请注意：本文编写于 <span class="aging-content-date">2022-04-01</span>，其中某些信息可能已经失去时效性。</span>
+        </div>
+    
+
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近想为 SQLAlchemy 封装一套类似 Django ORM 的 Model Manager，于是捡起了「流畅的 Python」开始看被我遗留的「元编程」部分。在阅读的过程中，我慢慢发现自己并没有像想象的那样对 Python 类了如指掌，在很多概念的划分上我都是模棱两可的。因此特地总结这样一篇文章，希望能够由浅至深对 Python 类进行一次全面解剖手术。</p>
+<p><strong>注：本文所讨论的内容仅适用于 Python3。</strong><br><strong>注：本文针对源码的讨论仅适用于 CPython。</strong><br><strong>注：本文写作时参考 CPython 代码版本：3.9。</strong><br><strong>注：本文写作时参考 Python 官方文档版本：3.10.4。</strong></p>
+<h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>在开始解剖 Python 类之前需要先正确的理解一些概念。</p>
+<p>在 Python 中有一句影响深远的话：一切皆对象。请不要被误导，此处的「对象」指的是一个抽象的概念，而 Python 内部为了能够清楚的表达「对象」这个概念将其分为了两个部分：object and type，即对象和类型。由这两部分组成的能够表达某类抽象「对象」的东西在 Python 中被称为 class，即类。</p>
+<p><strong>注：后文中凡是有括号的「对象」表示的都是一个抽象概念，而无括号的对象表示的则是 Python 中的 object。</strong></p>
+<p>另外还有一组概念要提前理解：</p>
+<ul>
+<li>当在 IDE 或文本编辑器中通过 <code>class XX</code> 的语法定义好某个类后，我们得到的只是一个<strong>类</strong>；</li>
+<li>一旦这个模块被导入后，Python 解释器就会生成相应的<strong>类对象</strong>；</li>
+<li>一旦这个类在导入时或运行时被实例化了，Python 解释器就会生成相应的<strong>实例对象</strong>。</li>
+</ul>
+<p><strong>注：关于这几个概念在本章的后续会有更详细的解释，而更深入的解析会在对应名字的章节上。</strong></p>
+<p>我们在使用 Python 语法编写程序时之所以能够一上来就定义一些复杂的类、生成复杂的类对象和实例对象，是因为 Python 在出厂时为我们包装好了各种基于类型和对象生成的类和相应类对象与实例对象（有些是内置的工具使用 C 实现的，拥有更好的执行效率）。</p>
+<h3 id="对象-object"><a href="#对象-object" class="headerlink" title="对象 | object"></a>对象 | object</h3><p><a href="https://docs.python.org/3/library/functions.html#object" target="_blank" rel="external nofollow noopener noreferrer">object</a>。</p>
+<h3 id="类型-type"><a href="#类型-type" class="headerlink" title="类型 | type"></a>类型 | type</h3><p><a href="https://docs.python.org/3/library/functions.html#type" target="_blank" rel="external nofollow noopener noreferrer">type</a>。</p>
+<h3 id="类-class"><a href="#类-class" class="headerlink" title="类 | class"></a>类 | class</h3><blockquote>
+<p>Classes provide a means of bundling data and functionality together. Creating a new class creates a new type of object, allowing new instances of that type to be made. Each class instance can have attributes attached to it for maintaining its state. Class instances can also have methods (defined by its class) for modifying its state.</p>
+<p>类把数据与功能绑定在一起。创建新类就是创建新的对象类型，从而创建该类型的新实例。类实例支持维持自身状态的属性，还支持（由类定义的）修改自身状态的方法。</p>
+<p>——<a href="https://docs.python.org/zh-cn/3/tutorial/classes.html#tut-private" target="_blank" rel="external nofollow noopener noreferrer">《Python 官方文档 - Python 教程 - 9. 类》</a></p>
+</blockquote>
+<p><strong>注：可以仔细品读一下官方文档的这段话，这段话已经将类的绝大多数秘密展示出来了。</strong></p>
+<h3 id="导入时和运行时-import-amp-run"><a href="#导入时和运行时-import-amp-run" class="headerlink" title="导入时和运行时 | import &amp; run"></a>导入时和运行时 | import &amp; run</h3><p>导入时：import 某个模块时此模块所处的状态；<br>运行时：调用某个模块时模块所处的状态；</p>
+<p><strong>注：在《流畅的 Python》这本书的 21.3 和 21.4 两个章节里有两个实例能够帮助更好地理解这两个概念。</strong></p>
+<h3 id="类对象-class-object"><a href="#类对象-class-object" class="headerlink" title="类对象 | class object"></a>类对象 | class object</h3><p>类对象用于维护类的基本信息。</p>
+<blockquote>
+<p>类对象支持两种操作：属性引用和实例化。</p>
+<p>属性引用使用 Python 中所有属性引用所使用的标准语法：obj.name。有效的属性名称是类对象被创建时存在于类<a href="https://docs.python.org/zh-cn/3/tutorial/classes.html#python-scopes-and-namespaces" target="_blank" rel="external nofollow noopener noreferrer">命名空间</a>中的所有名称。</p>
+<p>类的实例化使用函数表达法。可以把类对象视为是返回该类的一个新实例的不带参数的函数。<br>实例化操作（“调用”类对象）会创建一个空对象。 许多类喜欢创建带有特定初始状态的自定义实例。 为此类定义可能包含一个名为 __init__() 的特殊方法。<br>当一个类定义了 __init__() 方法时，类的实例化操作会自动为新创建的类实例发起调用 __init__()。<br>当然，__init__() 方法还可以有额外参数以实现更高灵活性。 在这种情况下，提供给类实例化运算符的参数将被传递给 __init__()。</p>
+<p>——<a href="https://docs.python.org/zh-cn/3/tutorial/classes.html#tut-private" target="_blank" rel="external nofollow noopener noreferrer">《Python 官方文档 - Python 教程 - 9. 类》</a></p>
+</blockquote>
+<h3 id="实例对象-instance-object"><a href="#实例对象-instance-object" class="headerlink" title="实例对象 | instance object"></a>实例对象 | instance object</h3><p>实例对象用于维护实例的基本信息。</p>
+<blockquote>
+<p>实例对象所能理解的唯一操作是属性引用。 有两种有效的属性名称：数据属性和方法。</p>
+<p>数据属性 对应于 Smalltalk 中的“实例变量”，以及 C++ 中的“数据成员”。 数据属性不需要声明；像局部变量一样，它们将在第一次被赋值时产生。</p>
+<p>另一类实例属性引用称为 方法。 方法是“从属于”对象的函数。在 Python 中，方法这个术语并不是类实例所特有的：其他对象也可以有方法。 例如，列表对象具有 append, insert, remove, sort 等方法。</p>
+<p>——<a href="https://docs.python.org/zh-cn/3/tutorial/classes.html#tut-private" target="_blank" rel="external nofollow noopener noreferrer">《Python 官方文档 - Python 教程 - 9. 类》</a></p>
+</blockquote>
+<p><strong>注：请从此刻开始有意识的思考「实例对象的属性和类对象的属性之间的优先级关系」</strong><br><strong>注：有关类对象和实例对象的对比会在后文详细展开。</strong><br><strong>注：关于类对象和实例对象部分 <a href="https://mooc.study.163.com/course/2001361005?tid=2403008003&_trace_c_p_k2_=cebe971c79de49d793ef1bf8d63db625#/info" target="_blank" rel="external nofollow noopener noreferrer">网易云课堂-Python 微专业</a> 的面向对象基础里有比较详细的讲解。</strong><br><strong>注：针对上一条，如果你搞不到资源的话可以看后面我自己的总结，内容大差不差。</strong></p>
+<h3 id="实例-instance"><a href="#实例-instance" class="headerlink" title="实例 | instance"></a>实例 | instance</h3><p>实例，代表的是类对象与其实例对象或类型与对应类之间的关系。</p>
+<p>type，即类型是实例关系的顶点，type 的类型还是 type，object 的类型也是 type。</p>
+<h3 id="继承-subclass"><a href="#继承-subclass" class="headerlink" title="继承 | subclass"></a>继承 | subclass</h3><p>继承，代表的是父对象与子对象或父类型与子类型之间的关系。</p>
+<p>object，即对象是继承关系的顶点，object 没有更上一层的对象了，而 type 的父对象是 object。</p>
+<p><strong>注：关于实例和继承的详细过程也会在后文详展开。</strong></p>
+<h3 id="变量和属性-variable-amp-attributes"><a href="#变量和属性-variable-amp-attributes" class="headerlink" title="变量和属性 | variable &amp; attributes"></a>变量和属性 | variable &amp; attributes</h3><p>变量，指的是在进行 Python 编码的过程中为某个具体对象赋予的名称。</p>
+<p>属性也是变量，但属性不会单独出现。我们在称呼一个变量为属性的时候一般会称其为某某对象的属性。当然在一些常见场景中，为了方便称呼会省略定语「某某对象的」，但省略不代表没有。</p>
+<h3 id="函数和方法-function-amp-method"><a href="#函数和方法-function-amp-method" class="headerlink" title="函数和方法 | function &amp; method"></a>函数和方法 | function &amp; method</h3><p>在 <a href="https://docs.python.org/3/library/types.html" target="_blank" rel="external nofollow noopener noreferrer">Python 官方文档的 types 文档</a> 中有这么几个类型：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">types.FunctionType</span><br><span class="line">types.LambdaType</span><br><span class="line"></span><br><span class="line">The type of user-defined functions and functions created by lambda expressions.</span><br><span class="line"></span><br><span class="line"># ---</span><br><span class="line"></span><br><span class="line">types.MethodType</span><br><span class="line"></span><br><span class="line">The type of methods of user-defined class instances.</span><br><span class="line"></span><br><span class="line"># ---</span><br><span class="line"></span><br><span class="line">types.BuiltinFunctionType</span><br><span class="line">types.BuiltinMethodType</span><br><span class="line"></span><br><span class="line">The type of built-in functions like len() or sys.exit(), and methods of built-in classes. (Here, the term “built-in” means “written in C”.)</span><br></pre></td></tr></table></figure>
+
+<p>大概可以理解为：<br>用户直接定义的函数或通过 lambda 生成的函数称为函数，是 FunctionType 类型，也就是函数；<br>用户通过实例引用的函数称为方法，是 MethodType 类型，也就是方法；<br>所有内建的函数（方法）称为内建函数（方法），是 BuiltinFunctionType，也就是内建函数（方法）；</p>
+<p>其中 FunctionType 和 LambdaType 是等效的，BuiltinFunctionType 和 BuiltinMethodType 是等效的。</p>
+<p><strong>注：关于函数和方法的详细区别，以及类中函数转化为方法的过程会在后文展开。</strong></p>
+<h3 id="可调用对象-callable"><a href="#可调用对象-callable" class="headerlink" title="可调用对象 | callable"></a>可调用对象 | callable</h3><p>可以通过函数调用的方式（例如 <code>foo()</code>）进行调用的对象。</p>
+<h2 id="对象：万物的起源"><a href="#对象：万物的起源" class="headerlink" title="对象：万物的起源"></a>对象：万物的起源</h2><p>我刚开始接触 Python 时看的各种学习资料都在强调一点：在 Python 中，一切皆是对象。直到我整理这篇文章之前我对这句话的理解都仅限于字面意思。最近，正好借着工作需要的由头我收集了一些相关的资料（比较重要的我都放在了 <a href="#参考">参考</a> 中）横向地了解了一下。下面就正式开始，好好地扒一扒 Python 中的「一切接对象」到底是什么意思以及隐藏在这句话背后的 Python 类究竟是如何构造的。</p>
+<h3 id="官方文档"><a href="#官方文档" class="headerlink" title="官方文档"></a>官方文档</h3><p>从 Python 官方文档来看，object 关键字对应的是一个可调用对象，下面是官方文档对 object 的描述：</p>
+<blockquote>
+<p>Return a new featureless object. object is a base for all classes. It has methods that are common to all instances of Python classes. This function does not accept any arguments.<br>object does not have a __dict__, so you can’t assign arbitrary attributes to an instance of the object class.</p>
+<p>返回一个不带特征的新对象。object 是所有类的基类。它带有所有 Python 类实例均通用的方法。本函数不接受任何参数。<br>由于 object 没有 __dict__，因此无法将任意属性赋给 object 的实例。</p>
+<p>——<a href="https://docs.python.org/3/library/functions.html#object" target="_blank" rel="external nofollow noopener noreferrer">《Python 官方文档 - 内置函数》</a></p>
+</blockquote>
+<p><strong>注：这里有个细节可以关注一下，虽然 object 被放在内置函数章节，但是却被标记为了 class。</strong></p>
+<h3 id="Cpython"><a href="#Cpython" class="headerlink" title="Cpython"></a>Cpython</h3><h4 id="PyObject-amp-PyVarObject-对象基石"><a href="#PyObject-amp-PyVarObject-对象基石" class="headerlink" title="PyObject &amp; PyVarObject | 对象基石"></a>PyObject &amp; PyVarObject | 对象基石</h4><p>Cpython 中 Python 所有类型都由结构体 <code>PyObject</code> 扩展而来，而那些指向可变大小 Python 对象的指针都可以被转换为 <code>PyVarObject</code>，具体如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 注：为了阅读体验，在书写格式上有所调整</span></span><br><span class="line"><span class="comment">// cpython-root/Include/object.h</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> Py_TRACE_REFS</span></span><br><span class="line"><span class="comment">/* Define pointers to support a doubly-linked list of all live heap objects. */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _PyObject_HEAD_EXTRA            \</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> _<span class="title">object</span> *_<span class="title">ob_next</span>;</span>           \</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> _<span class="title">object</span> *_<span class="title">ob_prev</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _PyObject_EXTRA_INIT 0, 0,</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _PyObject_HEAD_EXTRA</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> _PyObject_EXTRA_INIT</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Nothing is actually declared to be a PyObject, but every pointer to</span></span><br><span class="line"><span class="comment"> * a Python object can be cast to a PyObject*.  This is inheritance built</span></span><br><span class="line"><span class="comment"> * by hand.  Similarly every pointer to a variable-size Python object can,</span></span><br><span class="line"><span class="comment"> * in addition, be cast to PyVarObject*.</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * 实际上没有任何东西被声明为 PyObject，</span></span><br><span class="line"><span class="comment"> * 但是每一个指向 Python 对象的指针都可以被转换为 PyObject。 </span></span><br><span class="line"><span class="comment"> * 这是通过手动强制建立的继承关系。 </span></span><br><span class="line"><span class="comment"> * 同样地，每个指向可变大小的 Python 对象的指针都可以被转换为 PyVarObject</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">object</span> &#123;</span></span><br><span class="line">    <span class="comment">// 代表了两个 PyObject* 双向链表的指针，用于把堆上的所有对象链接起来，</span></span><br><span class="line">    <span class="comment">// 只会在开启了 Py_TRACE_REFS 宏的时候进行构造，方便调试；</span></span><br><span class="line">    _PyObject_HEAD_EXTRA</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 引用计数，用于垃圾回收；</span></span><br><span class="line">    Py_ssize_t ob_refcnt;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 指针，指向对象的类型对象，用来标识对象属于的类型，并存储类型的元数据；</span></span><br><span class="line">    PyTypeObject *ob_type;</span><br><span class="line">&#125; PyObject;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    PyObject ob_base;</span><br><span class="line">    Py_ssize_t ob_size; <span class="comment">/* Number of items in variable part */</span></span><br><span class="line">&#125; PyVarObject;</span><br></pre></td></tr></table></figure>
+
+<p>PyObject 和 PyVarObject 一般是作为头部被包含在一个变量结构体中的（可以近似理解为继承），根据该变量大小是否固定来选择使用哪一种。PyObject 和 PyVarObject 是 Cpython 的基石，Python 中的 object 和 type 都是由这两个结构体拓展而来。</p>
+<h4 id="PyBaseObject-Type-object-的实现"><a href="#PyBaseObject-Type-object-的实现" class="headerlink" title="PyBaseObject_Type | object 的实现"></a>PyBaseObject_Type | object 的实现</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 注：为了阅读体验，在书写格式上有所调整</span></span><br><span class="line"><span class="comment">// cpython-root/Object/typeobject.c</span></span><br><span class="line"></span><br><span class="line">PyTypeObject PyBaseObject_Type = &#123;</span><br><span class="line">    PyVarObject_HEAD_INIT(&amp;PyType_Type, <span class="number">0</span>)</span><br><span class="line">    <span class="string">"object"</span>,                                   <span class="comment">/* tp_name */</span></span><br><span class="line">    <span class="keyword">sizeof</span>(PyObject),                           <span class="comment">/* tp_basicsize */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_itemsize */</span></span><br><span class="line">    object_dealloc,                             <span class="comment">/* tp_dealloc */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_vectorcall_offset */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_getattr */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_setattr */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_as_async */</span></span><br><span class="line">    object_repr,                                <span class="comment">/* tp_repr */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_as_number */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_as_sequence */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_as_mapping */</span></span><br><span class="line">    (hashfunc)_Py_HashPointer,                  <span class="comment">/* tp_hash */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_call */</span></span><br><span class="line">    object_str,                                 <span class="comment">/* tp_str */</span></span><br><span class="line">    PyObject_GenericGetAttr,                    <span class="comment">/* tp_getattro */</span></span><br><span class="line">    PyObject_GenericSetAttr,                    <span class="comment">/* tp_setattro */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_as_buffer */</span></span><br><span class="line">    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   <span class="comment">/* tp_flags */</span></span><br><span class="line">    object_doc,                                 <span class="comment">/* tp_doc */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_traverse */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_clear */</span></span><br><span class="line">    object_richcompare,                         <span class="comment">/* tp_richcompare */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_weaklistoffset */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_iter */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_iternext */</span></span><br><span class="line">    object_methods,                             <span class="comment">/* tp_methods */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_members */</span></span><br><span class="line">    object_getsets,                             <span class="comment">/* tp_getset */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_base */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_dict */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_descr_get */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_descr_set */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_dictoffset */</span></span><br><span class="line">    object_init,                                <span class="comment">/* tp_init */</span></span><br><span class="line">    PyType_GenericAlloc,                        <span class="comment">/* tp_alloc */</span></span><br><span class="line">    object_new,                                 <span class="comment">/* tp_new */</span></span><br><span class="line">    PyObject_Del,                               <span class="comment">/* tp_free */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>注：本人没有系统性的学习过 C/C++ 所以在后文的表述中难免有些外行。</strong></p>
+<p>仅从当前展示的代码还比较难理解 CPython 中 Python 类的实现思路，需配合后文中类型的 CPython 源码分析才能更全面的理解 Python 中那些底层的特性是为何表现出来的。</p>
+<h3 id="object-分析"><a href="#object-分析" class="headerlink" title="object 分析"></a>object 分析</h3><h4 id="type-object-type"><a href="#type-object-type" class="headerlink" title="type(object) == type"></a>type(object) == type</h4><p>从代码中不难发现 PyBaseObject_Type 是结构体 PyTypeObject 的一个实现。而且结构体的第一行 <code>PyVarObject_HEAD_INIT(&amp;PyType_Type, 0)</code> 也印证了 <code>type(object) == type</code>（PyType_Type 是 type 的实现）。</p>
+<h4 id="object-base-None"><a href="#object-base-None" class="headerlink" title="object.__base__ == None"></a>object.__base__ == None</h4><p><s>从源码中可以找到，tp_base 对应的值是 0。</s></p>
+<p>最开始我是这么认为的，但后面当我想用同样的道理证明 <code>tpye.__base__ == object</code> 的时候却发现 PyType_Type 的 tp_base 也是 0。后面我在 <a href="https://mp.weixin.qq.com/s/ivZk_ba3qRS94o65n8a2Yw" target="_blank" rel="external nofollow noopener noreferrer">古明地觉：《源码探秘 CPython》3. type 和 object 的恩怨纠葛</a> 一文中看到了半句解释：</p>
+<blockquote>
+<p>因为 Python 的动态性，显然不可能在定义的时候就将所有成员属性都设置好、然后解释器一启动就会得到我们平时使用的类型对象。<br>目前看到的类型对象是一个半成品，有一部分成员属性是在解释器启动之后再进行动态完善的。</p>
+</blockquote>
+<p>我简单的翻看了一下后续的文章没有找到实际完善的地方，后续找到解释再进行补充吧。</p>
+<h4 id="object-里有什么"><a href="#object-里有什么" class="headerlink" title="object 里有什么"></a>object 里有什么</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">dir(object)</span><br><span class="line">[<span class="string">'__class__'</span>,</span><br><span class="line"> <span class="string">'__delattr__'</span>,</span><br><span class="line"> <span class="string">'__dir__'</span>,</span><br><span class="line"> <span class="string">'__doc__'</span>,</span><br><span class="line"> <span class="string">'__eq__'</span>,</span><br><span class="line"> <span class="string">'__format__'</span>,</span><br><span class="line"> <span class="string">'__ge__'</span>,</span><br><span class="line"> <span class="string">'__getattribute__'</span>,</span><br><span class="line"> <span class="string">'__gt__'</span>,</span><br><span class="line"> <span class="string">'__hash__'</span>,</span><br><span class="line"> <span class="string">'__init__'</span>,</span><br><span class="line"> <span class="string">'__init_subclass__'</span>,</span><br><span class="line"> <span class="string">'__le__'</span>,</span><br><span class="line"> <span class="string">'__lt__'</span>,</span><br><span class="line"> <span class="string">'__ne__'</span>,</span><br><span class="line"> <span class="string">'__new__'</span>,</span><br><span class="line"> <span class="string">'__reduce__'</span>,</span><br><span class="line"> <span class="string">'__reduce_ex__'</span>,</span><br><span class="line"> <span class="string">'__repr__'</span>,</span><br><span class="line"> <span class="string">'__setattr__'</span>,</span><br><span class="line"> <span class="string">'__sizeof__'</span>,</span><br><span class="line"> <span class="string">'__str__'</span>,</span><br><span class="line"> <span class="string">'__subclasshook__'</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 除此之外，还有：</span></span><br><span class="line">object.__bases__        <span class="comment"># ()</span></span><br><span class="line">object.__qualname__     <span class="comment"># 'object'</span></span><br><span class="line">object.__subclasses__() <span class="comment"># 太多了...</span></span><br><span class="line">object.mro()            <span class="comment"># [object]</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="object-a-1"><a href="#object-a-1" class="headerlink" title="object.a = 1"></a>object.a = 1</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">object.a = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># TypeError: can't set attributes of built-in/extension type 'object'</span></span><br><span class="line"></span><br><span class="line">a = object()</span><br><span class="line">a.a = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># AttributeError: 'object' object has no attribute 'a'</span></span><br><span class="line"></span><br><span class="line">a.__init__ = <span class="number">1</span></span><br><span class="line">AttributeError: <span class="string">'object'</span> object attribute <span class="string">'__init__'</span> <span class="keyword">is</span> read-only</span><br></pre></td></tr></table></figure>
+
+<h2 id="类型：类的定义（描述）"><a href="#类型：类的定义（描述）" class="headerlink" title="类型：类的定义（描述）"></a>类型：类的定义（描述）</h2><h3 id="官方文档-1"><a href="#官方文档-1" class="headerlink" title="官方文档"></a>官方文档</h3><p>从 Python 官方文档来看，type 关键字和 object 关键字一样对应的是一个可调用对象，下面是官方文档对 type 的描述：</p>
+<blockquote>
+<p>With one argument, return the type of an object. The return value is a type object and generally the same object as returned by object.<strong>class</strong>.</p>
+<p>The isinstance() built-in function is recommended for testing the type of an object, because it takes subclasses into account.</p>
+<p>With three arguments, return a new type object. This is essentially a dynamic form of the class statement. The name string is the class name and becomes the <strong>name</strong> attribute. The bases tuple contains the base classes and becomes the <strong>bases</strong> attribute; if empty, object, the ultimate base of all classes, is added. The dict dictionary contains attribute and method definitions for the class body; it may be copied or wrapped before becoming the <strong>dict</strong> attribute.</p>
+<p>传入一个参数时，返回 object 的类型。 返回值是一个 type 对象，通常与 object.<strong>class</strong> 所返回的对象相同。</p>
+<p>推荐使用 isinstance() 内置函数来检测对象的类型，因为它会考虑子类的情况。</p>
+<p>传入三个参数时，返回一个新的 type 对象。 这在本质上是 class 语句的一种动态形式，name 字符串即类名并会成为 <strong>name</strong> 属性；bases 元组包含基类并会成为 <strong>bases</strong> 属性；如果为空则会添加所有类的终极基类 object。 dict 字典包含类主体的属性和方法定义；它在成为 <strong>dict</strong> 属性之前可能会被拷贝或包装。</p>
+<p>——<a href="https://docs.python.org/3/library/functions.html#object" target="_blank" rel="external nofollow noopener noreferrer">《Python 官方文档 - 内置函数》</a></p>
+</blockquote>
+<h3 id="CPython"><a href="#CPython" class="headerlink" title="CPython"></a>CPython</h3><h4 id="PyTypeObject-类型基石"><a href="#PyTypeObject-类型基石" class="headerlink" title="PyTypeObject | 类型基石"></a>PyTypeObject | 类型基石</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 注：为了阅读体验，在书写格式上有所调整</span></span><br><span class="line"><span class="comment">// cpython-root/Include/object.h</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PyObject_VAR_HEAD      PyVarObject ob_base;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* PyTypeObject structure is defined in cpython/object.h.</span></span><br><span class="line"><span class="comment">   In Py_LIMITED_API, PyTypeObject is an opaque structure. */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">typeobject</span> <span class="title">PyTypeObject</span>;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// cpython-root/Include/cpython/object.h</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    lenfunc sq_length;</span><br><span class="line">    binaryfunc sq_concat;</span><br><span class="line">    ssizeargfunc sq_repeat;</span><br><span class="line">    ssizeargfunc sq_item;</span><br><span class="line">    <span class="keyword">void</span> *was_sq_slice;</span><br><span class="line">    ssizeobjargproc sq_ass_item;</span><br><span class="line">    <span class="keyword">void</span> *was_sq_ass_slice;</span><br><span class="line">    objobjproc sq_contains;</span><br><span class="line"></span><br><span class="line">    binaryfunc sq_inplace_concat;</span><br><span class="line">    ssizeargfunc sq_inplace_repeat;</span><br><span class="line">&#125; PySequenceMethods;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> _<span class="title">typeobject</span> &#123;</span></span><br><span class="line">    PyObject_VAR_HEAD</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span> *tp_name; <span class="comment">/* For printing, in format "&lt;module&gt;.&lt;name&gt;" */</span></span><br><span class="line">    Py_ssize_t tp_basicsize, tp_itemsize; <span class="comment">/* For allocation 创建实例时分配内存的大小 */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Methods to implement standard operations */</span></span><br><span class="line"></span><br><span class="line">    destructor tp_dealloc; <span class="comment">// 析构</span></span><br><span class="line">    Py_ssize_t tp_vectorcall_offset;</span><br><span class="line">    getattrfunc tp_getattr; <span class="comment">// 弃用 </span></span><br><span class="line">    setattrfunc tp_setattr; <span class="comment">// 弃用 </span></span><br><span class="line">    PyAsyncMethods *tp_as_async; <span class="comment">/* formerly known as tp_compare (Python 2)</span></span><br><span class="line"><span class="comment">                                    or tp_reserved (Python 3) */</span></span><br><span class="line">    reprfunc tp_repr; <span class="comment">// __repr__</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Method suites for standard classes */</span></span><br><span class="line"></span><br><span class="line">    PyNumberMethods *tp_as_number; <span class="comment">// 函数簇，封装了对应类型的操作，可以参考前文给出的 PySequenceMethods</span></span><br><span class="line">    PySequenceMethods *tp_as_sequence;</span><br><span class="line">    PyMappingMethods *tp_as_mapping;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* More standard operations (here for binary compatibility) */</span></span><br><span class="line"></span><br><span class="line">    hashfunc tp_hash; <span class="comment">// __hash__</span></span><br><span class="line">    ternaryfunc tp_call; <span class="comment">// __call__</span></span><br><span class="line">    reprfunc tp_str; <span class="comment">// __str__</span></span><br><span class="line">    getattrofunc tp_getattro; <span class="comment">// __getattr__</span></span><br><span class="line">    setattrofunc tp_setattro; <span class="comment">// __setattr__</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Functions to access object as input/output buffer */</span></span><br><span class="line">    PyBufferProcs *tp_as_buffer; <span class="comment">// 类似前文的 PyNumberMethods</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Flags to define presence of optional/expanded features */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> tp_flags; <span class="comment">// 由各种标志组成的位掩码</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span> *tp_doc; <span class="comment">/* Documentation string | __doc__ */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Assigned meaning in release 2.0 */</span></span><br><span class="line">    <span class="comment">/* call function for all accessible objects */</span></span><br><span class="line">    traverseproc tp_traverse; <span class="comment">// 垃圾回收相关</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* delete references to contained objects */</span></span><br><span class="line">    inquiry tp_clear; <span class="comment">// 垃圾回收相关</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Assigned meaning in release 2.1 */</span></span><br><span class="line">    <span class="comment">/* rich comparisons */</span></span><br><span class="line">    richcmpfunc tp_richcompare;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* weak reference enabler */</span></span><br><span class="line">    Py_ssize_t tp_weaklistoffset; <span class="comment">// 弱引用相关</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Iterators | 迭代器相关 */</span></span><br><span class="line">    getiterfunc tp_iter;</span><br><span class="line">    iternextfunc tp_iternext;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* Attribute descriptor and subclassing stuff */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">PyMethodDef</span> *<span class="title">tp_methods</span>;</span> <span class="comment">// regular methods</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">PyMemberDef</span> *<span class="title">tp_members</span>;</span> <span class="comment">// regular data members</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">PyGetSetDef</span> *<span class="title">tp_getset</span>;</span>  <span class="comment">// computed attribute</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> _<span class="title">typeobject</span> *<span class="title">tp_base</span>;</span>    <span class="comment">// 基类（父类）</span></span><br><span class="line">    PyObject *tp_dict; <span class="comment">// __dict__</span></span><br><span class="line">    descrgetfunc tp_descr_get; <span class="comment">// 描述符相关</span></span><br><span class="line">    descrsetfunc tp_descr_set; <span class="comment">// 描述符相关</span></span><br><span class="line">    Py_ssize_t tp_dictoffset;  <span class="comment">// 与 __slots__ 有关</span></span><br><span class="line">    initproc tp_init;</span><br><span class="line">    allocfunc tp_alloc;</span><br><span class="line">    newfunc tp_new;</span><br><span class="line">    freefunc tp_free; <span class="comment">/* Low-level free-memory routine */</span></span><br><span class="line">    inquiry tp_is_gc; <span class="comment">/* For PyObject_IS_GC | 垃圾回收相关 */</span></span><br><span class="line">    PyObject *tp_bases;</span><br><span class="line">    PyObject *tp_mro; <span class="comment">/* method resolution order */</span></span><br><span class="line">    PyObject *tp_cache;</span><br><span class="line">    PyObject *tp_subclasses;</span><br><span class="line">    PyObject *tp_weaklist;</span><br><span class="line">    destructor tp_del;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Type attribute cache version tag. Added in version 2.6 */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> tp_version_tag;</span><br><span class="line"></span><br><span class="line">    destructor tp_finalize;</span><br><span class="line">    vectorcallfunc tp_vectorcall;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>通过分析 PyTypeObject 我们可以发现一些 Python 底层有趣的实现：</p>
+<p>在 PyTypeObject 中有这样几个值</p>
+<p>PyAsyncMethods *tp_as_async<br>PyNumberMethods *tp_as_number;<br>PySequenceMethods *tp_as_sequence;<br>PyMappingMethods *tp_as_mapping;<br>PyBufferProcs *tp_as_buffer;</p>
+<p>这些值的类型分别对应到了同名的结构体上，而这些结构体中定义了相关类型的操作方法，正是由于这样的结构使得 Python 可以支持鸭子类型。</p>
+<p><strong>注：这里描述的并非鸭子类型的原理，仅仅是通过源码进行一些延伸。</strong></p>
+<p>除此之外，如果想了解更多 PyTypeObject 内部变量的具体意义可以访问 <a href="https://docs.python.org/3/c-api/typeobj.html" target="_blank" rel="external nofollow noopener noreferrer">Python 官方文档-C API-Type Objects</a> 进行查看。</p>
+<h4 id="PyType-Type-type-实现"><a href="#PyType-Type-type-实现" class="headerlink" title="PyType_Type | type 实现"></a>PyType_Type | type 实现</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">PyTypeObject PyType_Type = &#123;</span><br><span class="line">    PyVarObject_HEAD_INIT(&amp;PyType_Type, <span class="number">0</span>)</span><br><span class="line">    <span class="string">"type"</span>,                                     <span class="comment">/* tp_name */</span></span><br><span class="line">    <span class="keyword">sizeof</span>(PyHeapTypeObject),                   <span class="comment">/* tp_basicsize */</span></span><br><span class="line">    <span class="keyword">sizeof</span>(PyMemberDef),                        <span class="comment">/* tp_itemsize */</span></span><br><span class="line">    (destructor)type_dealloc,                   <span class="comment">/* tp_dealloc */</span></span><br><span class="line">    offsetof(PyTypeObject, tp_vectorcall),      <span class="comment">/* tp_vectorcall_offset */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_getattr */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_setattr */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_as_async */</span></span><br><span class="line">    (reprfunc)type_repr,                        <span class="comment">/* tp_repr */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_as_number */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_as_sequence */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_as_mapping */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_hash */</span></span><br><span class="line">    (ternaryfunc)type_call,                     <span class="comment">/* tp_call */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_str */</span></span><br><span class="line">    (getattrofunc)type_getattro,                <span class="comment">/* tp_getattro */</span></span><br><span class="line">    (setattrofunc)type_setattro,                <span class="comment">/* tp_setattro */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_as_buffer */</span></span><br><span class="line">    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC |</span><br><span class="line">    Py_TPFLAGS_BASETYPE | Py_TPFLAGS_TYPE_SUBCLASS |</span><br><span class="line">    Py_TPFLAGS_HAVE_VECTORCALL,                 <span class="comment">/* tp_flags */</span></span><br><span class="line">    type_doc,                                   <span class="comment">/* tp_doc */</span></span><br><span class="line">    (traverseproc)type_traverse,                <span class="comment">/* tp_traverse */</span></span><br><span class="line">    (inquiry)type_clear,                        <span class="comment">/* tp_clear */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_richcompare */</span></span><br><span class="line">    offsetof(PyTypeObject, tp_weaklist),        <span class="comment">/* tp_weaklistoffset */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_iter */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_iternext */</span></span><br><span class="line">    type_methods,                               <span class="comment">/* tp_methods */</span></span><br><span class="line">    type_members,                               <span class="comment">/* tp_members */</span></span><br><span class="line">    type_getsets,                               <span class="comment">/* tp_getset */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_base */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_dict */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_descr_get */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_descr_set */</span></span><br><span class="line">    offsetof(PyTypeObject, tp_dict),            <span class="comment">/* tp_dictoffset */</span></span><br><span class="line">    type_init,                                  <span class="comment">/* tp_init */</span></span><br><span class="line">    <span class="number">0</span>,                                          <span class="comment">/* tp_alloc */</span></span><br><span class="line">    type_new,                                   <span class="comment">/* tp_new */</span></span><br><span class="line">    PyObject_GC_Del,                            <span class="comment">/* tp_free */</span></span><br><span class="line">    (inquiry)type_is_gc,                        <span class="comment">/* tp_is_gc */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="type-分析"><a href="#type-分析" class="headerlink" title="type 分析"></a>type 分析</h3><h4 id="type-type-type"><a href="#type-type-type" class="headerlink" title="type(type) == type"></a>type(type) == type</h4><p>从源码中可以发现 PyType_Type 也是结构体 PyTypeObject 的实现。同样结构体的第一行 <code>PyVarObject_HEAD_INIT(&amp;PyType_Type, 0)</code> 印证了 <code>type(type) == type</code>。</p>
+<p>甚至：type(type(type)) == type，无论嵌套多少层都是成立的。</p>
+<h4 id="type-base-object"><a href="#type-base-object" class="headerlink" title="type.__base__ == object"></a>type.__base__ == object</h4><p>原因待补充。</p>
+<h4 id="type-里有什么"><a href="#type-里有什么" class="headerlink" title="type 里有什么"></a>type 里有什么</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">dir(type)</span><br><span class="line">[<span class="string">'__abstractmethods__'</span>,</span><br><span class="line"> <span class="string">'__base__'</span>,</span><br><span class="line"> <span class="string">'__bases__'</span>,</span><br><span class="line"> <span class="string">'__basicsize__'</span>,</span><br><span class="line"> <span class="string">'__call__'</span>,</span><br><span class="line"> <span class="string">'__class__'</span>,</span><br><span class="line"> <span class="string">'__delattr__'</span>,</span><br><span class="line"> <span class="string">'__dict__'</span>,</span><br><span class="line"> <span class="string">'__dictoffset__'</span>,</span><br><span class="line"> <span class="string">'__dir__'</span>,</span><br><span class="line"> <span class="string">'__doc__'</span>,</span><br><span class="line"> <span class="string">'__eq__'</span>,</span><br><span class="line"> <span class="string">'__flags__'</span>,</span><br><span class="line"> <span class="string">'__format__'</span>,</span><br><span class="line"> <span class="string">'__ge__'</span>,</span><br><span class="line"> <span class="string">'__getattribute__'</span>,</span><br><span class="line"> <span class="string">'__gt__'</span>,</span><br><span class="line"> <span class="string">'__hash__'</span>,</span><br><span class="line"> <span class="string">'__init__'</span>,</span><br><span class="line"> <span class="string">'__init_subclass__'</span>,</span><br><span class="line"> <span class="string">'__instancecheck__'</span>,</span><br><span class="line"> <span class="string">'__itemsize__'</span>,</span><br><span class="line"> <span class="string">'__le__'</span>,</span><br><span class="line"> <span class="string">'__lt__'</span>,</span><br><span class="line"> <span class="string">'__module__'</span>,</span><br><span class="line"> <span class="string">'__mro__'</span>,</span><br><span class="line"> <span class="string">'__name__'</span>,</span><br><span class="line"> <span class="string">'__ne__'</span>,</span><br><span class="line"> <span class="string">'__new__'</span>,</span><br><span class="line"> <span class="string">'__prepare__'</span>,</span><br><span class="line"> <span class="string">'__qualname__'</span>,</span><br><span class="line"> <span class="string">'__reduce__'</span>,</span><br><span class="line"> <span class="string">'__reduce_ex__'</span>,</span><br><span class="line"> <span class="string">'__repr__'</span>,</span><br><span class="line"> <span class="string">'__setattr__'</span>,</span><br><span class="line"> <span class="string">'__sizeof__'</span>,</span><br><span class="line"> <span class="string">'__str__'</span>,</span><br><span class="line"> <span class="string">'__subclasscheck__'</span>,</span><br><span class="line"> <span class="string">'__subclasses__'</span>,</span><br><span class="line"> <span class="string">'__subclasshook__'</span>,</span><br><span class="line"> <span class="string">'__text_signature__'</span>,</span><br><span class="line"> <span class="string">'__weakrefoffset__'</span>,</span><br><span class="line"> <span class="string">'mro'</span>]</span><br></pre></td></tr></table></figure>
+
+<h2 id="小结：对象与类型"><a href="#小结：对象与类型" class="headerlink" title="小结：对象与类型"></a>小结：对象与类型</h2><p>至此，CPython 中用于实现 Python 类的几个比较重要的结构体和实现都被展示出来了：</p>
+<p><img src="https://img.blanc.site//wiki/img202204011031943.png" alt="CPython 结构关系"></p>
+<p>后文基本上都是基于 Python 的内容了，不会再设计 CPython 源码的列举。</p>
+<h2 id="类型实例（类对象）：类的生成"><a href="#类型实例（类对象）：类的生成" class="headerlink" title="类型实例（类对象）：类的生成"></a>类型实例（类对象）：类的生成</h2><p>根据前文的内容我们已然得知：类是由类型实例化得到的。</p>
+<h3 id="手写类的生成"><a href="#手写类的生成" class="headerlink" title="手写类的生成"></a>手写类的生成</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, name)</span>:</span></span><br><span class="line">        self.name = name</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">custom_init</span><span class="params">(self, name)</span>:</span></span><br><span class="line">    self.name = name</span><br><span class="line"></span><br><span class="line">Bar = type(<span class="string">"Bar"</span>, (object, ), &#123;<span class="string">"__init__"</span>: custom_init&#125;)</span><br><span class="line"></span><br><span class="line">a = Foo(<span class="string">"foo"</span>)</span><br><span class="line">b = Bar(<span class="string">"bar"</span>)</span><br></pre></td></tr></table></figure>
+
+<p>通过上面的代码我们能得到两个类对象：Foo 和 Bar，其中 Foo 的定义方式是在 Python 编码过程中常用的形式，而 Bar 的定义方式则更能体现「类是有类型实例化得到的」。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span><span class="params">(metaclass=type)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, name)</span>:</span></span><br><span class="line">        self.name = name</span><br></pre></td></tr></table></figure>
+
+<p>当有很多属性和方法需要定义时，使用 Bar 的定义方式会显得很不方便。但在通过对 Foo 的定义方式进行改造后，同样能够帮助我们清楚地看清类对象生成过程。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FooType</span><span class="params">(type)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__new__</span><span class="params">(cls, name, bases, attrs)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> type.__new__(cls, name, bases, attrs)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span><span class="params">(metaclass=FooTyoe)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, name)</span>:</span></span><br><span class="line">        self.name = name</span><br></pre></td></tr></table></figure>
+
+<p>为了更清楚的理解类型（元类）的工作过程，我封装了一个 FooType 类型，并让 Foo 类对象使用这个类型。</p>
+<h3 id="类对象"><a href="#类对象" class="headerlink" title="类对象"></a>类对象</h3><p>当我们使用编辑器在文件中定义好类的主体后，就可以使用 Python 解释器加载相关文件（模块）了，在 Python 解释器加载了相关文件（模块）后，定义好的类主体会被用来生成相应的类对象。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># test.py</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span>:</span></span><br><span class="line">    a = <span class="number">1</span></span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, b=None)</span>:</span></span><br><span class="line">        self.b = b</span><br><span class="line">    </span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">static_foo</span><span class="params">()</span>:</span></span><br><span class="line">        print(Foo.a)</span><br><span class="line">    </span><br><span class="line"><span class="meta">    @classmethod</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">class_foo</span><span class="params">(cls)</span>:</span></span><br><span class="line">        print(cls.a)</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">foo</span><span class="params">(self)</span>:</span></span><br><span class="line">        print(self.a)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Foo.__dict__</span></span><br><span class="line"><span class="comment"># mappingproxy(&#123;'__module__': '__main__',</span></span><br><span class="line"><span class="comment">#              'a': 1,</span></span><br><span class="line"><span class="comment">#              '__init__': &lt;function __main__.Foo.__init__(self, b=None)&gt;,</span></span><br><span class="line"><span class="comment">#              'static_foo': &lt;staticmethod at 0x108992160&gt;,</span></span><br><span class="line"><span class="comment">#              'class_foo': &lt;classmethod at 0x108992e50&gt;,</span></span><br><span class="line"><span class="comment">#              'foo': &lt;function __main__.Foo.foo(self)&gt;,</span></span><br><span class="line"><span class="comment">#              '__dict__': &lt;attribute '__dict__' of 'Foo' objects&gt;,</span></span><br><span class="line"><span class="comment">#              '__weakref__': &lt;attribute '__weakref__' of 'Foo' objects&gt;,</span></span><br><span class="line"><span class="comment">#              '__doc__': None&#125;)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="类的继承"><a href="#类的继承" class="headerlink" title="类的继承"></a>类的继承</h3><p>在 Python3 中，类的继承解析使用的是 C3 算法，可以参考我的另一篇文章：<a href="https://wiki.blanc.site/archives/ffe3a081.html">Python MRO</a>。</p>
+<h2 id="实例：类的实例"><a href="#实例：类的实例" class="headerlink" title="实例：类的实例"></a>实例：类的实例</h2><h3 id="手写类的实例化"><a href="#手写类的实例化" class="headerlink" title="手写类的实例化"></a>手写类的实例化</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, name)</span>:</span></span><br><span class="line">        self.name = name</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">instance_maker</span><span class="params">(the_class, *args, **kwargs)</span>:</span></span><br><span class="line">    new_inscance = the_class.__new__(the_class, *args, **kwargs)</span><br><span class="line">    <span class="keyword">if</span> isinstance(new_inscance, the_class):</span><br><span class="line">        the_class.__init__(new_inscance, *args, **kwargs)</span><br><span class="line">    <span class="keyword">return</span> new_inscance</span><br><span class="line"></span><br><span class="line"><span class="comment"># 以下两条语句效果一致</span></span><br><span class="line">x = Foo(<span class="string">"foo"</span>)</span><br><span class="line">z = instance_maker(Foo, <span class="string">"foo"</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="实例对象"><a href="#实例对象" class="headerlink" title="实例对象"></a>实例对象</h3><p>当我们在编码的过程中定义了类实例化的内容，并在导入相关文件（模块）后执行相关代码，Python 解释器会在执行到类实例化内容的时候生成实例对象。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">class Foo:</span><br><span class="line">    def __init__(self, name):</span><br><span class="line">        self.name &#x3D; name</span><br><span class="line"></span><br><span class="line">foo &#x3D; Foo(&quot;foo&quot;)</span><br></pre></td></tr></table></figure>
+
+<h3 id="类对象和实例对象的简单对比"><a href="#类对象和实例对象的简单对比" class="headerlink" title="类对象和实例对象的简单对比"></a>类对象和实例对象的简单对比</h3><ul>
+<li>类对象是全局唯一的；</li>
+<li>实例对象在每次执行到实例化内容时都会生成；</li>
+<li>可以利用各种技巧实现单例模式，使得类对象在实例化的过程中只返回唯一的实例；</li>
+<li>类对象可以调用类属性、类方法以及静态方法；</li>
+<li>实例对象可以调用类属性、类方法、实例属性、实例方法以及静态方法；</li>
+</ul>
+<p><strong>注：类对象也是可以调用实例方法的，只是需要传入一个存在的实例对象作为 self；</strong></p>
+<h3 id="函数是如何变成方法的-self-是在何时被赋值的"><a href="#函数是如何变成方法的-self-是在何时被赋值的" class="headerlink" title="函数是如何变成方法的 | self 是在何时被赋值的"></a>函数是如何变成方法的 | self 是在何时被赋值的</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">class Foo:</span><br><span class="line">    def __init__(self, name):</span><br><span class="line">        self.name &#x3D; name</span><br><span class="line">    </span><br><span class="line">    def foo(self):</span><br><span class="line">        print(self.name)</span><br><span class="line"></span><br><span class="line">foo &#x3D; Foo(&quot;foo&quot;)</span><br><span class="line">foo.foo()</span><br><span class="line"># foo</span><br><span class="line"></span><br><span class="line">Foo.foo()</span><br><span class="line"># TypeError: foo() missing 1 required positional argument: &#39;self&#39;</span><br><span class="line"></span><br><span class="line">type(Foo.foo) # function | 函数</span><br><span class="line">type(foo.foo) # method   | 方法</span><br><span class="line"></span><br><span class="line">Foo.foo # &lt;function __main__.Foo.foo(self)&gt;</span><br><span class="line">foo.foo # &lt;bound method Foo.foo of &lt;__main__.Foo object at 0x10bcc01c0&gt;&gt;</span><br><span class="line"></span><br><span class="line">dir(Foo.foo)</span><br><span class="line"># ...</span><br><span class="line"># __call__          # 调用时执行的方法</span><br><span class="line"># __code__          # 包含已编译函数的代码对象 bytecode</span><br><span class="line"># __defaults__      # 所有位置或关键字参数的默认值的元组</span><br><span class="line"># __kwdefaults__    # 所有关键字参数默认值的映射</span><br><span class="line"># ...</span><br><span class="line"></span><br><span class="line">dir(foo.foo)</span><br><span class="line"># ...</span><br><span class="line"># __call__          # 调用时执行的方法</span><br><span class="line"># __func__          # 实现该方法的函数对象  </span><br><span class="line"># __self__          # 该方法被绑定的实例，若没有绑定则为 None</span><br><span class="line"># ...</span><br><span class="line"></span><br><span class="line"># 实例对象下方法的 __func__ 指向的是类对象中的函数</span><br><span class="line">id(foo.foo)          # 4504426880</span><br><span class="line">id(foo.foo.__func__) # 4505398432</span><br><span class="line">id(Foo.foo)          # 4505398432</span><br><span class="line"></span><br><span class="line"># 实例对象下的方法绑定的 self 是实例对象本身</span><br><span class="line">id(foo)              # 4493634912</span><br><span class="line">id(foo.foo.__self__) # 4493634912</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>定义在类中的函数会在类对象实例化后化作实例对象中绑定方法的 __func__ 属性；</li>
+<li>方法会将自己绑定的实例对象存放在 __slef__ 属性中；</li>
+<li>绑定方法在执行时会将 __self__ 属性当做 __func__ 的第一个参数传入。</li>
+</ul>
+<p>以上，方法在无形中将 self 传入到了函数中。</p>
+<h3 id="各种优先级对比"><a href="#各种优先级对比" class="headerlink" title="各种优先级对比"></a>各种优先级对比</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span><span class="params">(Bar)</span>:</span></span><br><span class="line">    a = <span class="number">1</span></span><br><span class="line">    b = <span class="number">2</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, b=None)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> b:</span><br><span class="line">            self.b = b</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">echo</span><span class="params">(self)</span>:</span></span><br><span class="line">        print(self.a, self.b)</span><br><span class="line">    </span><br><span class="line"><span class="meta">    @property</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">name</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">"foo"</span></span><br><span class="line">    </span><br><span class="line"><span class="meta">    @property</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">foo</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">"property"</span></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">foo = Foo(<span class="string">"foo"</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 实例属性 &gt; 类属性</span></span><br><span class="line">foo.a = <span class="number">3</span></span><br><span class="line">foo.echo()           <span class="comment"># 3 foo</span></span><br><span class="line">print(Foo.a, Foo.b)  <span class="comment"># 1 2</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># property 特性 &gt; 实例属性</span></span><br><span class="line">foo.foo         <span class="comment"># property</span></span><br><span class="line">foo.foo = <span class="string">"foo"</span> <span class="comment"># AttributeError: can't set attribute</span></span><br><span class="line">foo.__dict__[<span class="string">"foo"</span>] = <span class="string">"foo"</span></span><br><span class="line">foo.foo         <span class="comment"># property</span></span><br><span class="line">foo.b           <span class="comment"># foo</span></span><br><span class="line">Foo.b = property(<span class="keyword">lambda</span> self: <span class="string">"property"</span>)</span><br><span class="line">foo.b           <span class="comment"># property</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="小结：类型、类、实例"><a href="#小结：类型、类、实例" class="headerlink" title="小结：类型、类、实例"></a>小结：类型、类、实例</h2><p><img src="https://img.blanc.site//wiki/img202204011254343.png" alt="类型、类和实例的关系"></p>
+<h2 id="概念的抽象"><a href="#概念的抽象" class="headerlink" title="概念的抽象"></a>概念的抽象</h2><p>Python 之所以要设计这么复杂的一套逻辑来构建「类」体系，其核心目的就是为了帮助使用者在使用的过程中能够更加方便的进行概念抽象化，并且能够趁手的使用被抽象化后的类。</p>
+<p>关于抽象，我最早产生好奇的时候搜到了 CSDN 杏仁技术栈转载的章烨明的 <a href="https://blog.csdn.net/y4x5M0nivSrJaY3X92c/article/details/78863467" target="_blank" rel="external nofollow noopener noreferrer">谈谈到底什么是抽象，以及软件设计的抽象原则</a> 以及 optman 的 <a href="https://blog.csdn.net/optman/article/details/1383325" target="_blank" rel="external nofollow noopener noreferrer">抽象的层次</a>，此外应该还看过其他的一些文章但是我没有保存下来所以也没法考究了。在那之后，我大致能在编程的过程中理解抽象以及那些被抽象的东西，并且能够沿着抽象层级一点一点的去拨开各类开源库的核心，从中学习好的编码思想。</p>
+<p>现在，我对「抽象」这个概念又产生了新的困惑，我开始好奇原本抽象的上一层抽象是什么，我还好奇数学是被发现的还是被发明的。通过最近这段时间的阅读我已经有了笼统的概念，下面是我的一些浅显的理解，希望能够帮助同样好奇的你。</p>
+<h3 id="Python-中的抽象"><a href="#Python-中的抽象" class="headerlink" title="Python 中的抽象"></a>Python 中的抽象</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># 在编程过程中，下面的概念自左向右抽象等级依次提高</span><br><span class="line">variable → collections → method → class → module → package </span><br><span class="line"># 但从编程语言的实现角度来看所有的概念又可以抽象为 object</span><br><span class="line">                        ↓↓↓</span><br><span class="line">                       object</span><br><span class="line">                      ↓       ↓</span><br><span class="line">                    object   type</span><br><span class="line"># 而在 Python 的最终实现上，object 这个抽象概念被实现成了 object 和 type 两个 object</span><br><span class="line"># 通过 object 和 type 就可以生产所有最上面提到的概念</span><br></pre></td></tr></table></figure>
+
+<h3 id="通过道德经歪解抽象"><a href="#通过道德经歪解抽象" class="headerlink" title="通过道德经歪解抽象"></a>通过道德经歪解抽象</h3><p><strong>注：以下歪解大都是以「更好的理解 Python」为出发点的。</strong></p>
+<blockquote>
+<p>道生一，一生二，二生三，三生万物。</p>
+<p>——《道德经》</p>
+</blockquote>
+<p>人们将自己对于现实世界的观察（道）进行抽象产生了对象（一）这个概念，再以对象为基础创建了一门编程语言，这门编程语言中万事万物都是对象，并通过对象和类型两个概念（二）去描述所有的对象（万物）。</p>
+<p>当然，人们对世界的观察并非真正的「道」而是人们对「道」的「名」。但放到一门编程语言中，这些「名」组成了这门语言的「道」。</p>
+<blockquote>
+<p>“一”可以是阴，也可以是阳。但是只能是一个面。“一”有它的对立面，这就有了阴阳。“二”就是阴阳。阴阳是有力量的， 他们互不相容，必定要相互作用，这种相互作用的趋势，就是“三”，就是冲气。道生一，一生二，二生三，把“生”字换成“有”更好理解。道有一，也有零；一有它的对立面，这就构成了二；二有三，因为二中的两个一相互对立，所以要相互作用，这个趋势就是三。“三生万物”的“生”理解为“产生”更合适。</p>
+<p>——《道德经》 富强 译注</p>
+</blockquote>
+<p>参照注释的讲解，可以对我上面的描述进行更进一步的理解：在开始创建一门面向对象的编程语言的时候，这门语言中还没有任何概念，因此我们从现实生活中进行抽象，得到了「对象」。仅有「对象」这个概念是无法开展下一步的工作的，因此我们尝试对「对象」进行描述得到了「类型」，在有了「类型」后「对象」和「类型」就有了一种相互作用的能力：「（反）实例化」。</p>
+<p>在有了这样的一门编程语言之后，我们就可以利用面向对象的特性和抽象思想将现实生活中的业务场景使用编程语言表达出来。</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>本来是想好好的剖析一下 Python 中的类，结果写出这么一篇四不像来。在写作的过程中总是想涵盖更多的东西，结果发现自己好像 hold 不住，于是开始删减，只保留了当前的这些内容，希望能够帮助你更好的理解 Python 中的类。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li><a href="https://docs.python.org/3/index.html" target="_blank" rel="external nofollow noopener noreferrer">Python 官方文档</a></li>
+<li><a href="https://www.zhihu.com/question/38791962/answer/78159157" target="_blank" rel="external nofollow noopener noreferrer">灼弦-知乎回答：Python 的 type 和 object 之间是怎么一种关系？</a></li>
+<li><a href="https://www.zhihu.com/question/38791962/answer/78218158" target="_blank" rel="external nofollow noopener noreferrer">高山流水-知乎回答：Python 的 type 和 object 之间是怎么一种关系？</a></li>
+<li><a href="https://mooc.study.163.com/course/2001361005?tid=2403008003&_trace_c_p_k2_=cebe971c79de49d793ef1bf8d63db625#/info" target="_blank" rel="external nofollow noopener noreferrer">网易云课堂-Python 微专业（目前不开了已经）</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/357021677" target="_blank" rel="external nofollow noopener noreferrer">Providence：Python 源码学习（1）：类型和对象</a></li>
+<li><a href="https://book.douban.com/subject/27028517/" target="_blank" rel="external nofollow noopener noreferrer">Luciano Ramalho：流畅的 Python（安道 吴珂译）</a></li>
+<li><a href="https://he11olx.com/2018/07/14/1.CPython3.6%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/1.0.PyObject/" target="_blank" rel="external nofollow noopener noreferrer">Lx’s Blog：【CPython3.6源码分析】PyObject/PyObjectType</a></li>
+</ol>
+
+        
+        <footer class="article-footer">
+        </footer>
+    </div>
+</div></article>
+
+
+    
+<nav id="article-nav">
+    
+        <a href="/archives/c57afff6.html" id="article-nav-newer" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">上一篇</strong>
+            <div class="article-nav-title">
+                
+                    记一次失败的 AI 辅助编程全历程
+                
+            </div>
+        </a>
+    
+    
+        <a href="/archives/5823d5df.html" id="article-nav-older" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">下一篇</strong>
+            <div class="article-nav-title">WeeklyPEP-2-PEP 343-with 语句-overview</div>
+        </a>
+    
+</nav>
+
+
+
+
+
+    
+    
+        <section id="comments"> <div id="vcomments"></div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        appId: 'sz7ny95XiYWkxht3H3YDs2GX-gzGzoHsz',
+        appKey: 'T8JJugDkbqtFLONIIzcPWW76',
+        placeholder: '不要吝啬赞美的语句ヾﾉ≧∀≦)o!',
+        avatar: 'mp',
+        meta: ['nick','mail','link'],
+        pageSize: 10,
+        visitor: true,
+        notify: true,
+        verify: true
+    })
+    let info = document.querySelectorAll('#vcomments>.info')[0]
+    if (info) { info.style.display = 'none' }
+</script> </section>
+    
+
+
+
+
+<!-- baidu url auto push script -->
+<script type="text/javascript">
+    !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=window.location.href,o=document.referrer;if(!e.test(r)){var n="//api.share.baidu.com/s.gif";o?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var t=new Image;t.src=n}}(window);
+</script>     
+</section>
+        </div>
+        <footer id="footer">
+    <div class="outer">
+        <div id="footer-info" class="inner">
+            ryomahan &copy; 2024 
+            <a rel="external nofollow noopener noreferrer" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png"></a>
+            <br> Powered by <a href="http://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. Comment By <a href="https://valine.js.org/" target="_blank" rel="external nofollow noopener noreferrer">valine</a>. Theme - <a href="https://github.com/zthxxx/hexo-theme-Wikitten" target="_blank" rel="external nofollow noopener noreferrer">wikitten</a>
+            
+                <br>
+                <span id="busuanzi_container_site_pv"><i class="fa fa-eye"></i> <span id="busuanzi_value_site_pv"></span></span>
+                &nbsp;|&nbsp;
+                <span id="busuanzi_container_site_pv"><i class="fa fa-user"></i> <span id="busuanzi_value_site_uv"></span></span>
+            
+        </div>
+    </div>
+</footer>
+
+        
+    
+        
+<script src="/libs/lightgallery/js/lightgallery.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-thumbnail.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-pager.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-autoplay.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-fullscreen.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-zoom.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-hash.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-share.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-video.min.js"></script>
+
+    
+    
+        
+<script src="/libs/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+    
+    
+        <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true,
+            TeX: {
+                equationNumbers: {
+                  autoNumber: 'AMS'
+                }
+            }
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+
+
+<!-- Custom Scripts -->
+
+<script src="/js/main.js"></script>
+
+
+    </div>
+</body>

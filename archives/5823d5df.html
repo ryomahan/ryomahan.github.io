@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    
+    <title>WeeklyPEP-2-PEP 343-with 语句-overview | 小白维基</title>
+    
+    
+        <meta name="keywords" content="Python,WeeklyPEP">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="前言本文的主体内容大部分来自对 PEP 343 原文的翻译，其余部分为本人对原文的理解，在整理过程中我没有刻意地区分翻译的部分和我个人理解的部分，这两部分内容被糅杂在一起形成了本文。因此，请不要带着「本文的内容是百分之百正确」的想法阅读。如果文中的某些内容让你产生疑惑，你可以给我留言与我讨论或者对比 PEP 343 的原文加以确认。 摘要本 PEP 为 Python 增加了一个新的语法：with，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="WeeklyPEP-2-PEP 343-with 语句-overview">
+<meta property="og:url" content="https://wiki.blanc.site/archives/5823d5df.html">
+<meta property="og:site_name" content="小白维基">
+<meta property="og:description" content="前言本文的主体内容大部分来自对 PEP 343 原文的翻译，其余部分为本人对原文的理解，在整理过程中我没有刻意地区分翻译的部分和我个人理解的部分，这两部分内容被糅杂在一起形成了本文。因此，请不要带着「本文的内容是百分之百正确」的想法阅读。如果文中的某些内容让你产生疑惑，你可以给我留言与我讨论或者对比 PEP 343 的原文加以确认。 摘要本 PEP 为 Python 增加了一个新的语法：with，">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-02-01T00:00:00.000Z">
+<meta property="article:modified_time" content="2024-11-10T15:39:52.936Z">
+<meta property="article:author" content="ryomahan">
+<meta property="article:tag" content="Python">
+<meta property="article:tag" content="WeeklyPEP">
+<meta name="twitter:card" content="summary">
+    
+
+    
+        <link rel="alternate" href="/atom.xml" title="小白维基" type="application/atom+xml">
+    
+    
+        <link rel="icon" href="/favicon.ico">
+    
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/libs/open-sans/styles.css">
+
+    
+<link rel="stylesheet" href="/libs/source-code-pro/styles.css">
+
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<script src="/libs/jquery/2.1.3/jquery.min.js"></script>
+
+    
+<script src="/libs/jquery/plugins/cookie/1.4.1/jquery.cookie.js"></script>
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/lightgallery/css/lightgallery.min.css">
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/justified-gallery/justifiedGallery.min.css">
+
+    
+    
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110100486-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-110100486-1');
+</script>
+    
+    
+        <meta name="google-site-verification" content="D9ld5oQABBxIwNpgD_WN61p51-ZcABZ6Olt4HKcxlWw">
+    
+    
+        <script>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?fac7e69191f0847b886888aa7c794fa7";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+    
+
+
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- 字体引入 -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Noto+Serif+SC:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+<meta name="generator" content="Hexo 4.2.1"></head>
+</html>
+<body>
+    <div id="container">
+        <header id="header">
+    <div id="header-main" class="header-inner">
+        <div class="outer">
+            <a href="/" id="logo">
+                <i class="logo"></i>
+                <span class="site-title">小白维基</span>
+            </a>
+            <nav id="main-nav">
+                
+                    <a class="main-nav-link" href="/">首页</a>
+                
+                    <a class="main-nav-link" href="/archives">归档</a>
+                
+                    <a class="main-nav-link" href="/categories">分类</a>
+                
+                    <a class="main-nav-link" href="/tags">标签</a>
+                
+                    <a class="main-nav-link" href="/about">关于</a>
+                
+            </nav>
+            
+                
+                <nav id="sub-nav">
+                    <div class="profile" id="profile-nav">
+                        <a id="profile-anchor" href="javascript:;">
+                            <img class="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df">
+                            <i class="fa fa-caret-down"></i>
+                        </a>
+                    </div>
+                </nav>
+            
+            <div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="想要查找什么...">
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div>
+        </div>
+    </div>
+    <div id="main-nav-mobile" class="header-sub header-inner">
+        <table class="menu outer">
+            <tr>
+                
+                    <td><a class="main-nav-link" href="/">首页</a></td>
+                
+                    <td><a class="main-nav-link" href="/archives">归档</a></td>
+                
+                    <td><a class="main-nav-link" href="/categories">分类</a></td>
+                
+                    <td><a class="main-nav-link" href="/tags">标签</a></td>
+                
+                    <td><a class="main-nav-link" href="/about">关于</a></td>
+                
+                <td>
+                    
+    <div class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+    </div>
+
+                </td>
+            </tr>
+        </table>
+    </div>
+</header>
+
+        <div class="outer">
+            
+                
+
+<aside id="profile">
+    <div class="inner profile-inner">
+        <div class="base-info profile-block">
+            <img id="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df?s=128">
+            <h2 id="name">Ryoma</h2>
+            <h3 id="title">毕己一生，依依东望。</h3>
+            <span id="location"><i class="fa fa-map-marker"></i>Jinan, China</span>
+            <a id="follow" target="_blank" href="https://github.com/ryomahan/" rel="external nofollow noopener noreferrer">关注我</a>
+        </div>
+        <div class="article-info profile-block">
+            <div class="article-info-block">
+                25
+                <span>文章</span>
+            </div>
+            <div class="article-info-block">
+                12
+                <span>标签</span>
+            </div>
+        </div>
+        
+        <div class="profile-block social-links">
+            <table>
+                <tr>
+                    
+                    
+                    <td>
+                        <a href="https://blog.blanc.site" target="_blank" title="wordpress" class="tooltip">
+                            <i class="fa fa-wordpress"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://twitter.com/ryomahan1996" target="_blank" title="twitter" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-twitter"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://weibo.com/xiaobaidh" target="_blank" title="weibo" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-weibo"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://github.com/ryomahan" target="_blank" title="github" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-github"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="/atom.xml" target="_blank" title="rss" class="tooltip">
+                            <i class="fa fa-rss"></i>
+                        </a>
+                    </td>
+                    
+                </tr>
+            </table>
+        </div>
+        
+    </div>
+
+    
+        <div class="widget-wrap widget-list">
+            <h3 class="widget-title"><span>友情链接</span></h3>
+            <div class="widget">
+                <ul>
+                    
+                        <li>
+                            <a href="https://pythonhunter.org/" target="_blank" rel="external nofollow noopener noreferrer">捕蛇者说</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://laike9m.com/" target="_blank" rel="external nofollow noopener noreferrer">laike9m</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://www.kawabangga.com/" target="_blank" rel="external nofollow noopener noreferrer">卡瓦邦噶</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://manjusaka.itscoder.com/" target="_blank" rel="external nofollow noopener noreferrer">Manjusaka</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.evo.moe/" target="_blank" rel="external nofollow noopener noreferrer">Sparta_EN</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.blanc.site" target="_blank">一只小白</a>
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    
+</aside>
+
+            
+            
+                <aside id="sidebar">
+   
+        
+    <div class="widget-wrap" id="categories">
+        <h3 class="widget-title">
+            <span>分类</span>
+            &nbsp;
+            <a id="allExpand" href="#">
+                <i class="fa fa-angle-double-down fa-2x"></i>
+            </a>
+        </h3>
+        
+        
+        
+         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-网络笔记
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/e5187cf6.html">同步到腾讯云社区</a></li>  <li class="file"><a href="/archives/4940711f.html">8086 处理器寻址方式</a></li>  <li class="file"><a href="/archives/5c113e93.html">SSH overview</a></li>  <li class="file"><a href="/archives/c57afff6.html">记一次失败的 AI 辅助编程全历程</a></li>  <li class="file"><a href="/archives/d644d904.html">「翻译」如何组织大型 Python 项目</a></li>  <li class="file"><a href="/archives/ed42c0e4.html">「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            2-软件使用
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Chrome
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/decc86d5.html">「转载」解析谷歌 Chrome 各分支版本</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Django
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/b641d3ac.html">Django 笔记-2-源码理解-urls 篇</a></li>  <li class="file"><a href="/archives/ab18c3c3.html">Django 笔记-3-文档阅读-关于 Django 文档</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Vue
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/793400e.html">解决 Vue CSS 样式重复载入，为 Vue 添加全局 less 或 sass 基础样式库</a></li>  <li class="file"><a href="/archives/341c107a.html">Vue Router 实现动态路由和常见问题解决方案</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                    
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            3-计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            1-理论计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-数据结构和算法
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/f3c5e08e.html">数据结构笔记1-概论</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            4-编程语言和编译器
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            Python
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/7a294715.html">所谓 WSGI</a></li>  <li class="file"><a href="/archives/ffe3a081.html">Python MRO</a></li>  <li class="file"><a href="/archives/2accc063.html">WeeklyPEP-0-overview</a></li>  <li class="file"><a href="/archives/f5b4f56.html">所谓 ASGI</a></li>  <li class="file active"><a href="/archives/5823d5df.html">WeeklyPEP-2-PEP 343-with 语句-overview</a></li>  <li class="file"><a href="/archives/291be77c.html">解剖 Python 类</a></li>  <li class="file"><a href="/archives/c29b4f3b.html">WeeklyPEP-3-PEP 318-函数装饰器-overview</a></li>  <li class="file"><a href="/archives/7eaf0f5f.html">WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Shell
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/8f9d5c85.html">Shell 获取当前脚本的绝对路径</a></li>  <li class="file"><a href="/archives/dbac95ae.html">实现 echo 不换行输出</a></li>  <li class="file"><a href="/archives/b422aa7d.html">Shell 区分不同 Unix 系统</a></li>  <li class="file"><a href="/archives/3beb222a.html">Shell 基础语法</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            汇编语言
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/90a7f914.html">NASM Overview</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+    </div>
+    <script>
+        $(document).ready(function() {
+            var iconFolderOpenClass  = 'fa-folder-open';
+            var iconFolderCloseClass = 'fa-folder';
+            var iconAllExpandClass = 'fa-angle-double-down';
+            var iconAllPackClass = 'fa-angle-double-up';
+            // Handle directory-tree expansion:
+            // 左键单独展开目录
+            $(document).on('click', '#categories a[data-role="directory"]', function (event) {
+                event.preventDefault();
+
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var subtree = $(this).siblings('ul');
+                icon.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if (expanded) {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideUp({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderCloseClass);
+                } else {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideDown({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderOpenClass);
+                }
+            });
+            // 右键展开下属所有目录
+            $('#categories a[data-role="directory"]').bind("contextmenu", function(event){
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var listNode = $(this).siblings('ul');
+                var subtrees = $.merge(listNode.find('li ul'), listNode);
+                var icons = $.merge(listNode.find('.fa'), icon);
+                icons.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if(expanded) {
+                    subtrees.slideUp({ duration: 100 });
+                    icons.addClass(iconFolderCloseClass);
+                } else {
+                    subtrees.slideDown({ duration: 100 });
+                    icons.addClass(iconFolderOpenClass);
+                }
+            })
+            // 展开关闭所有目录按钮
+            $(document).on('click', '#allExpand', function (event) {
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconAllExpandClass);
+                icon.removeClass(iconAllExpandClass).removeClass(iconAllPackClass);
+                if(expanded) {
+                    $('#sidebar .fa.fa-folder').removeClass('fa-folder').addClass('fa-folder-open')
+                    $('#categories li ul').slideDown({ duration: 100 });
+                    icon.addClass(iconAllPackClass);
+                } else {
+                    $('#sidebar .fa.fa-folder-open').removeClass('fa-folder-open').addClass('fa-folder')
+                    $('#categories li ul').slideUp({ duration: 100 });
+                    icon.addClass(iconAllExpandClass);
+                }
+            });  
+        });
+    </script>
+
+    
+        
+  <div class="toc-flag"></div>
+  <div class="toc-wrap">
+      <h3>
+          <span>文章目录</span>
+      </h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#摘要"><span class="toc-number">2.</span> <span class="toc-text">摘要</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#历史背景"><span class="toc-number">3.</span> <span class="toc-text">历史背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#提案动机"><span class="toc-number">4.</span> <span class="toc-text">提案动机</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#语法规范"><span class="toc-number">5.</span> <span class="toc-text">语法规范</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#生成器装饰器"><span class="toc-number">6.</span> <span class="toc-text">生成器装饰器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#标准库中存在的上下文管理器"><span class="toc-number">7.</span> <span class="toc-text">标准库中存在的上下文管理器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#标准术语"><span class="toc-number">8.</span> <span class="toc-text">标准术语</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#如何缓存上下文管理器"><span class="toc-number">9.</span> <span class="toc-text">如何缓存上下文管理器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#被拒绝的选项"><span class="toc-number">10.</span> <span class="toc-text">被拒绝的选项</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#示例"><span class="toc-number">11.</span> <span class="toc-text">示例</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#locked：锁管理"><span class="toc-number">11.1.</span> <span class="toc-text">locked：锁管理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#opened：文件管理"><span class="toc-number">11.2.</span> <span class="toc-text">opened：文件管理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#transaction：数据库事务管理"><span class="toc-number">11.3.</span> <span class="toc-text">transaction：数据库事务管理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#class-locked：不使用生成器实现的锁管理"><span class="toc-number">11.4.</span> <span class="toc-text">class locked：不使用生成器实现的锁管理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#stdout-redirected：输出重定向管理"><span class="toc-number">11.5.</span> <span class="toc-text">stdout_redirected：输出重定向管理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#opened-w-error：文件（-enter-同时返回两个值）"><span class="toc-number">11.6.</span> <span class="toc-text">opened_w_error：文件（__enter__ 同时返回两个值）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#signal：信号拦截"><span class="toc-number">11.7.</span> <span class="toc-text">signal：信号拦截</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#decimal"><span class="toc-number">11.8.</span> <span class="toc-text">decimal</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#another-decimal"><span class="toc-number">11.9.</span> <span class="toc-text">another decimal</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#closing：object-closing-上下文管理器"><span class="toc-number">11.10.</span> <span class="toc-text">closing：object-closing 上下文管理器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#released：锁管理"><span class="toc-number">11.11.</span> <span class="toc-text">released：锁管理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#nested：嵌套使用"><span class="toc-number">11.12.</span> <span class="toc-text">nested：嵌套使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实现过程"><span class="toc-number">12.</span> <span class="toc-text">实现过程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#附录"><span class="toc-number">13.</span> <span class="toc-text">附录</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#生成器状态"><span class="toc-number">13.1.</span> <span class="toc-text">生成器状态</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#sys-exc-info"><span class="toc-number">13.2.</span> <span class="toc-text">sys.exc_info</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">14.</span> <span class="toc-text">参考</span></a></li></ol>
+  </div>
+
+    
+    <div id="toTop" class="fa fa-angle-up"></div>
+</aside>
+            
+            <section id="main"><article id="post-3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/WeeklyPEP-2-PEP 343-with 语句-overview" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+                    <div class="article-meta">
+                        
+    <div class="article-category">
+    	<i class="fa fa-folder"></i>
+        <a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/">3-计算机科学</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/">1-理论计算机科学</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/4-%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E7%BC%96%E8%AF%91%E5%99%A8/">4-编程语言和编译器</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/4-%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E7%BC%96%E8%AF%91%E5%99%A8/Python/">Python</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>, <a class="tag-link" href="/tags/WeeklyPEP/" rel="tag">WeeklyPEP</a>
+    </div>
+
+                        
+    <div class="article-date">
+        <i class="fa fa-calendar"></i>
+        <a href="/archives/5823d5df.html">
+            <time datetime="2022-02-01T00:00:00.000Z" itemprop="datePublished">2022-02-01</time>
+        </a>
+    </div>
+
+
+                        
+                            <i class="fa fa-bar-chart"></i>
+                            <span id="busuanzi_container_site_pv"><span id="busuanzi_value_page_pv"></span></span>    
+                        
+                        
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/raw/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/WeeklyPEP-2-PEP 343-with 语句-overview.md" target="_blank" rel="external nofollow noopener noreferrer"> Source </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/edit/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/WeeklyPEP-2-PEP 343-with 语句-overview.md" target="_blank" rel="external nofollow noopener noreferrer"> Edit </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/commits/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/WeeklyPEP-2-PEP 343-with 语句-overview.md" target="_blank" rel="external nofollow noopener noreferrer"> History </a>
+                            </div>
+                        
+                    </div>
+                
+                
+    
+        <h1 class="article-title" itemprop="name">
+            WeeklyPEP-2-PEP 343-with 语句-overview
+        </h1>
+    
+
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+        
+        
+            <!-- 内容失效提醒 -->
+            
+    <!-- 如果文章创建超过一年或最后一次更新时间超过一个月(默认)则提示文章过期 -->
+    
+        <div class="aging">
+            <i class="fa fa-exclamation-circle aging-icon" aria-hidden="true"></i>
+            <span class="aging-content">请注意：本文编写于 <span class="aging-content-date">2022-02-01</span>，其中某些信息可能已经失去时效性。</span>
+        </div>
+    
+
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文的主体内容大部分来自对 <a href="https://www.python.org/dev/peps/pep-0343/" target="_blank" rel="external nofollow noopener noreferrer">PEP 343</a> 原文的翻译，其余部分为本人对原文的理解，在整理过程中我没有刻意地区分翻译的部分和我个人理解的部分，这两部分内容被糅杂在一起形成了本文。因此，请不要带着「本文的内容是百分之百正确」的想法阅读。如果文中的某些内容让你产生疑惑，你可以给我留言与我讨论或者对比 <a href="https://www.python.org/dev/peps/pep-0343/" target="_blank" rel="external nofollow noopener noreferrer">PEP 343</a> 的原文加以确认。</p>
+<h2 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h2><p>本 PEP 为 Python 增加了一个新的语法：with，它能够更加简便的代替标准的 try/finally 语法。</p>
+<p>在本 PEP 中，<a href="https://docs.python.org/3/glossary.html#term-context-manager" target="_blank" rel="external nofollow noopener noreferrer">上下文管理器</a> 提供了 __enter__() 和 __exit__() 方法，分别在进入和退出 with 语句时被调用。</p>
+<h2 id="历史背景"><a href="#历史背景" class="headerlink" title="历史背景"></a>历史背景</h2><p>本 PEP 最初是由 <a href="https://gvanrossum.github.io/" target="_blank" rel="external nofollow noopener noreferrer">Guido</a> 以第一人称撰写，随后由 <a href="http://www.curiousefficiency.org/" target="_blank" rel="external nofollow noopener noreferrer">Nick Coghlan</a> 更新那些后来在 <a href="https://mail.python.org/pipermail/python-dev/" target="_blank" rel="external nofollow noopener noreferrer">python-dev</a> 上的讨论。</p>
+<p>在对 <a href="https://www.python.org/dev/peps/pep-0340/" target="_blank" rel="external nofollow noopener noreferrer">PEP 340</a> 及其代替方案进行大量讨论后，<a href="https://gvanrossum.github.io/" target="_blank" rel="external nofollow noopener noreferrer">Guido</a> 决定撤销 <a href="https://www.python.org/dev/peps/pep-0340/" target="_blank" rel="external nofollow noopener noreferrer">PEP 340</a> 并在 <a href="https://www.python.org/dev/peps/pep-0310/" target="_blank" rel="external nofollow noopener noreferrer">PEP 310</a> 的基础上提出一个新的版本。此版本增加了一个 throw() 方法用于在 <a href="#生成器状态">暂停的生成器</a> 中引发异常以及一个 close() 方法用来抛出 GeneratorExit 异常，并将语法关键字修改为 with（在 <a href="https://www.python.org/dev/peps/pep-0340/" target="_blank" rel="external nofollow noopener noreferrer">PEP 340</a> 中定义的是 block）。</p>
+<p>在 <a href="https://www.python.org/dev/peps/pep-0343/" target="_blank" rel="external nofollow noopener noreferrer">PEP 343</a> 被正式通过后，以下 PEP 由于内容重叠被驳回或撤销：</p>
+<ol>
+<li><a href="https://www.python.org/dev/peps/pep-0310/" target="_blank" rel="external nofollow noopener noreferrer">PEP 310：最初的 with 语法的提案</a></li>
+<li><a href="https://www.python.org/dev/peps/pep-0319/" target="_blank" rel="external nofollow noopener noreferrer">PEP 319：它所描述的场景可以通过提供合适的 with 语法实现</a></li>
+<li><a href="https://www.python.org/dev/peps/pep-0340/" target="_blank" rel="external nofollow noopener noreferrer">PEP 340</a></li>
+<li><a href="https://www.python.org/dev/peps/pep-0346/" target="_blank" rel="external nofollow noopener noreferrer">PEP 346</a></li>
+</ol>
+<p>在 <a href="https://wiki.python.org/moin/WithStatement" target="_blank" rel="external nofollow noopener noreferrer">Python Wiki</a> 上对本 PEP 的早期版本进行过一些讨论。</p>
+<h2 id="提案动机"><a href="#提案动机" class="headerlink" title="提案动机"></a>提案动机</h2><p><a href="https://www.python.org/dev/peps/pep-0340/" target="_blank" rel="external nofollow noopener noreferrer">PEP 340</a> 中阐述了大量优秀的想法，例如：使用生成器作为 block 语法的模板，添加异常处理和 finalization（个人感觉可以理解为析构方法） 给生成器等等。除了赞同，它也因为底层是循环结构的事实遭到了很多人的反对。使用循环结构意味着 block 语法体内的 break 和 continue 会扰乱正常的代码逻辑带来不确定性，即使它被用来作为一个非循环资源的管理工具。</p>
+<p><a href="https://twitter.com/chencravat" target="_blank" rel="external nofollow noopener noreferrer">Raymond Chen</a> 的 <a href="https://devblogs.microsoft.com/oldnewthing/20050106-00/?p=36783" target="_blank" rel="external nofollow noopener noreferrer">一篇对流程控制宏提出反对的文章</a> 让 Guido 做出了最终决定——放弃 <a href="https://www.python.org/dev/peps/pep-0340/" target="_blank" rel="external nofollow noopener noreferrer">PEP 340</a>。Raymond 的文章中有一个观点：将流程控制隐藏在宏中会让代码变得更难让人读懂也更难维护，Guido 发现这个观点在 Python 和 C 都适用，并由此意识到 <a href="https://www.python.org/dev/peps/pep-0340/" target="_blank" rel="external nofollow noopener noreferrer">PEP 340</a> 提出的 templates 会隐藏几乎所有控制流程。例如，<a href="https://www.python.org/dev/peps/pep-0340/#id15" target="_blank" rel="external nofollow noopener noreferrer">PEP 340 的 examples 4</a> 中的 auto_retry 函数只能捕获异常并且重复 block 最多三次（而这一点被隐藏在了语法的内部）。</p>
+<p>对比来看 <a href="https://www.python.org/dev/peps/pep-0310/" target="_blank" rel="external nofollow noopener noreferrer">PEP 310</a> 的 with 语法并没有隐藏流程控制，虽然 finally 会暂时地中止控制流，但在最后（finally 内的内容执行完毕后）控制流会继续执行就好像 finally 不存在一样。</p>
+<p><a href="https://www.python.org/dev/peps/pep-0310/" target="_blank" rel="external nofollow noopener noreferrer">PEP 310</a> 中粗略地提出了这样的语法（其中 VAR 是可选的）:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> VAR = EXPR:</span><br><span class="line">    BLOCK</span><br></pre></td></tr></table></figure>
+
+<p>上面的语法大致上可以翻译成这样：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">VAR = EXPR</span><br><span class="line">VAR.__enter__()</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    BLOCK</span><br><span class="line"><span class="keyword">finally</span>:</span><br><span class="line">    VAR.__exit__()</span><br></pre></td></tr></table></figure>
+
+<p>但当在 <a href="https://www.python.org/dev/peps/pep-0310/" target="_blank" rel="external nofollow noopener noreferrer">PEP 310</a> 的语法基础上实现如下代码时：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> f = open(<span class="string">"/ect/passwd"</span>):</span><br><span class="line">    BLOCK1</span><br><span class="line">BLOCK2</span><br></pre></td></tr></table></figure>
+
+<p>按照前面给的示例这段代码大致可以被翻译成这样：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">f = open(<span class="string">"/etc/passwd"</span>)</span><br><span class="line">f.__enter__()</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    BLOCK1</span><br><span class="line"><span class="keyword">finally</span>:</span><br><span class="line">    f.__exit__()</span><br><span class="line"></span><br><span class="line">BLOCK2</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码好像默认了 BLOCK1 的部分会没有异常地顺利的执行，然后 BLOCK2 部分会被紧接着调用。但如果在 BOLCK1 中有异常抛出或执行了一个 non-local goto（例如：break, continue, return），BLOCK2 就无法被顺利执行。with 语法在尾部增加的魔法（__exit__()）并不能解决这一问题。</p>
+<p>你也许会问：如果在 __exit__() 方法中抛出了一个异常会怎样？<br>如果真的发生了，那一切就都完了，但这并不会比其他情况下引发的异常更糟糕。</p>
+<p>异常的本质就是它可以在代码的任意位置被抛出，而你只能忍受这一点。即使你写的代码不会抛出任何异常，一个 KeyboardInterrupt 异常仍然会导致它在任意两个虚拟机器操作码之间退出（个人理解：哪怕你的程序没有任何问题，正在正常执行的程序也可能因为你的强制退出行为而退出，例如常见的  <code>Ctrl + c</code>）。</p>
+<p>上面的这些讨论以及 <a href="https://www.python.org/dev/peps/pep-0310/" target="_blank" rel="external nofollow noopener noreferrer">PEP 310</a> 表现出来的特性让 Guido 开始更倾向于使用 <a href="https://www.python.org/dev/peps/pep-0310/" target="_blank" rel="external nofollow noopener noreferrer">PEP 310</a> 的语法，但是他还是希望能够实现 <a href="https://www.python.org/dev/peps/pep-0340/" target="_blank" rel="external nofollow noopener noreferrer">PEP 340</a> 中提出的：使用生成器作为获取和释放锁或打开和关闭文件等抽象概念的「模板」。这是一个很有用的功能，通过 <a href="https://www.python.org/dev/peps/pep-0340/#id15" target="_blank" rel="external nofollow noopener noreferrer">PEP 340 的示例</a> 就能够有所了解。</p>
+<p>受 Phillip Eby 对 <a href="https://www.python.org/dev/peps/pep-0340/" target="_blank" rel="external nofollow noopener noreferrer">PEP 340</a> 一个反对建议的启发，Guido 尝试创建一个装饰器，将一个合适的生成器变成一个具有必要的 __enter__() 和 __exit__() 方法的对象。但在实现过程中他遇到一个障碍：处理 locking example 并不困难，但是处理 opening example 几乎是不可能的。他是这样定义语法模板的：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@contextmanager</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">opening</span><span class="params">(filename)</span>:</span></span><br><span class="line">    f = open(filename)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">yield</span> f</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        f.close()</span><br></pre></td></tr></table></figure>
+
+<p>并且可以被这样使用：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> f = opening(filename):</span><br><span class="line">    ...read data <span class="keyword">from</span> f...</span><br></pre></td></tr></table></figure>
+
+<p>问题是在 <a href="https://www.python.org/dev/peps/pep-0310/" target="_blank" rel="external nofollow noopener noreferrer">PEP 310</a> 中，EXPR 表达式的结果会被直接分配给 VAR，然后在退出 BLOCK1 时调用 VAR 的 __exit__() 方法。但在这里，VAR 显然需要得到被打开的文件对象，这就意味着 __exit__() 必须是文件对象上的一个方法。</p>
+<p>虽然这个问题可以通过代理类来解决，但这种解决方案并不优雅。在思考之后，Guido 意识到：只需要稍微改动语法模板就可以轻松地编写出所需的装饰器。这个改动就是：<strong>将 VAR 设置为 __enter__() 方法的调用结果，并且保存 EXPR 的值以便后面调用它的 __exit__() 方法</strong>。此时装饰器就能返回一个 wrapper 类的实例，实例的 __enter__() 方法调用生成器的 next() 方法返回 next() 所返回的内容。wrapper 类实例的 __exit__() 方法会再次调用生成器的 next() 方法并（期望）抛出一个 Stoplteration 异常。详情可以看下面的 <a href="#生成器装饰器">生成器装饰器一节</a>。</p>
+<p>所以现在最后的障碍是 <a href="https://www.python.org/dev/peps/pep-0310/" target="_blank" rel="external nofollow noopener noreferrer">PEP 310</a> 的语法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">with VAR &#x3D; EXPR:</span><br><span class="line">    BLOCK1</span><br></pre></td></tr></table></figure>
+
+<p>不应该使用赋值操作而应该使用隐式操作，因为本质上并不是将 EXPR 赋值给 VAR。参考 <a href="https://www.python.org/dev/peps/pep-0340/" target="_blank" rel="external nofollow noopener noreferrer">PEP 340</a> 的实现，可以修改为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">with EXPR as VAR:</span><br><span class="line">    BLOCK1</span><br></pre></td></tr></table></figure>
+
+<p>在提案的讨论中还能够看出，开发者们普遍希望能够在生成器中捕获到异常，即使仅是拿来做日志。但生成器是不允许 yield 其他值的，因为 with 语法不应该被设计成一个循环（抛出一个不同的异常是稍微能够被接受的）。</p>
+<p>为了实现这个需求，一个新的生成器方法 throw() 被提出，它将接收一到三个代表异常的可选参数（type, value, traceback）并且在 <a href="#生成器状态">生成器暂停时</a> 抛出它。</p>
+<p>在提出 throw() 方法后另一个生成器方法 close() 也自然而然地被提出了。close() 方法能够通过一个名为 GeneratorExit 的特殊异常调用 throw() 方法。这个行为相当于告诉生成器准备退出，并且在此基础上还有一个小小的改进，即在生成器被垃圾回收机制回收时会自动触发 close() 方法。</p>
+<p>自此以后，我们就可以在 try-finally 语法中插入 yield 语法了，因为我们现在能够保证 finally 语句最后一定会被执行。但还有一些关于 finalization apply 的常见警告：进程可能在没有析构任何对象的情况下突然终止，而且对象可能会因为应用中的循环或内存泄漏而永远存在（与被 GC 控制 的 Python 的循环或内存泄漏相反）。</p>
+<p>注意，我们并不能保证 finally 部分会在生成器对象无引用后被立即执行，尽管 CPython 中是这样实现的。这与自动关闭文件类似：虽然在 CPython 中对象的最后一个引用消失后会立即删除该对象，但其他的 GC 算法未必做了同样的实现。</p>
+<p>可以去 <a href="https://www.python.org/dev/peps/pep-0342/" target="_blank" rel="external nofollow noopener noreferrer">PEP 342</a> 中找那些生成器被修改的细节。</p>
+<h2 id="语法规范"><a href="#语法规范" class="headerlink" title="语法规范"></a>语法规范</h2><p>一个新的声明被提出，它的语法是：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> EXPR <span class="keyword">as</span> VAR:</span><br><span class="line">    BLOCK</span><br></pre></td></tr></table></figure>
+
+<p>其中 with 和 as 是新的关键字。EXPR 是一个任意的表达式（但不能是一个表达式列表），VAR 是一个单一的分配目标，它不能是逗号分割的变量序列，但可以被括号包裹的逗号分割的变量序列（这个限制使得未来的语法有可能拓展为多个逗号分割的资源，每个资源都有对应的 as 语句）。</p>
+<p><code>as VAR</code> 部分是可选的，上述声明被翻译为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">mgr = (EXPR)</span><br><span class="line">exit = type(mgr).__exit__ <span class="comment"># Not calling it yet</span></span><br><span class="line">value = type(mgr).__enter__(mgr)</span><br><span class="line">exc = <span class="literal">True</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        VAR = value <span class="comment"># Only if "as VAR" is present</span></span><br><span class="line">        BLOCK</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="comment"># The exceptional case is handled here</span></span><br><span class="line">        <span class="comment"># 如果 BLCOK 部分出现异常</span></span><br><span class="line">        exc = <span class="literal">False</span></span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> exit(mgr, *sys.exc_info()):</span><br><span class="line">            <span class="keyword">raise</span></span><br><span class="line">        <span class="comment"># The exception is swallowed if exit() returns true</span></span><br><span class="line">        <span class="comment"># 如果 exit() 返回 true，则异常会被忽略</span></span><br><span class="line"><span class="keyword">finally</span>:</span><br><span class="line">    <span class="comment"># The normal and non-local goto case are handled here</span></span><br><span class="line">    <span class="comment"># 如果 BLOCK 没有异常或者执行了 non-local goto</span></span><br><span class="line">    <span class="keyword">if</span> exc:</span><br><span class="line">        exit(mgr, <span class="literal">None</span>, <span class="literal">None</span>, <span class="literal">None</span>)</span><br></pre></td></tr></table></figure>
+
+<p>其中小写的变量（mgr, exit, value, exc）都是内部变量，用户不能访问，它们大概率会被实现为特殊的寄存器或 stack positions。sys.exc_info 的详细信息可以参考 <a href="#sys.exc_info">sys.exc_info 章节</a></p>
+<p>上述代码翻译细节是为了规定准确的语义。<strong>如果相关方法没有像预期那样被找到，解释器将会抛出 AttributeError 异常</strong>。同样，如果任何一个调用抛出了一个异常，其效果与上述代码一致。最后，<strong>如果 BLOCK 包含 non-local goto 语句，那么 __exit__() 方法会像 BLOCK 被正常执行完一样被调用，并带有三个 None 参数</strong>。也就是说，这些「伪异常」不会被 __exit__() 视为异常。</p>
+<p>如果 <code>as VAR</code> 部分的语法被省略，翻译中 <code>VAR =</code> 的部分也会被省略，但 <code>mgr.__enter()</code> 仍被调用。</p>
+<p>mgr.__exit__() 的调用惯例如下：</p>
+<ul>
+<li>如果 BLOCK 中的内容正常执行完毕或某个 non-local goto 被触发，执行到 finally 语法块时 mgr.__exit__() 将被调用，并带有三个 None 参数。</li>
+<li>如果 BLOCK 中的内容引发了异常，执行到 finally 语法块时，mgr.__exit__() 将被调用，并被传递三个分别代表异常 type, value 和 traceback 的参数。</li>
+</ul>
+<p>重要的是：<strong>如果 mgr.__exit__() 返回的是 True，异常就会被忽略</strong>。也就是说，如果 mgr.__exit__() 返回 True，那么在 with 语句之后的下一个语句仍会被执行，即使 with 语法内部发生了异常。</p>
+<p>然而，如果 with 语法被某个 non-local goto 中断，当 mgr.__exit__() 返回时，这个 non-local return 将在不考虑返回值的情况下被恢复。这样做的目的是使 mgr.__exit__() 能够在不被频繁误触发的情况下实现忽略异常抛出（因为 mgr.__exit__() 的默认返回值是 None 相当于 Flase，能够使异常被重新抛出）。</p>
+<p>实现忽略异常抛出功能的主要目的是使编写 @contextmanger 装饰器成为可能。在能够忽略异常抛出的情况下实现的 @contextmanger 装饰器能够使一个被装饰的生成器内部的 try/except 块的行为就像生成器的主体在 with 语法的位置上被在线拓展一样。</p>
+<p>将异常细节传递给 __exit__() 的动机，与 <a href="https://www.python.org/dev/peps/pep-0310/" target="_blank" rel="external nofollow noopener noreferrer">PEP 310</a> 中无参数的 __exit__() 一致，具体可以参考示例章节的 <a href="#transaction：数据库事务管理">transaction：数据库事务管理</a>。在本示例中，生成器函数必须根据是否发生异常来决定是否进行事物回滚。在这种情况下，传递完整异常信息要比使用一个布尔值来标记是否发生异常更具有可拓展性，例如为异常记录工具提供接口。</p>
+<p>依靠 sys.exc_info() 来获取异常信息的做法被否定了，因为 sys.exc_info() 的语义非常复杂，它完全有可能返回一个很久以前就被捕获的异常信息。还有人提议增加一个布尔值来区分顺利执行完 BLOCK 块和 BLOCK 块被 non-local goto 中断。这个提议也被否定了，因为它太过复杂且没有必要。对于数据库事务回滚的决定来说，non-local goto 应该被视为异常。</p>
+<p><strong>为了使直接操作上下文管理器的 Python 代码的上线文变得简单，__exit__() 方法不应该重新抛出传递给它们的异常。应该总是由 __exit__() 方法的调用者负责决定何时重新引发异常。</strong></p>
+<p>因此，调用者可以通过是否抛出异常来区分 __exit__() 是否执行失败：</p>
+<ul>
+<li>如果 __exit__() 未抛出异常，代表方法本身执行成功，无论被传入的异常是否被忽略；</li>
+<li>如果 __exit__() 抛出异常，代表方法本身执行失败。</li>
+</ul>
+<p>因此，在实现 __exit__() 方法时应该避免抛出异常，除非真的存在异常（不需要避免抛出那些被传入的异常）。</p>
+<h2 id="生成器装饰器"><a href="#生成器装饰器" class="headerlink" title="生成器装饰器"></a>生成器装饰器</h2><p>在 <a href="https://www.python.org/dev/peps/pep-0342/" target="_blank" rel="external nofollow noopener noreferrer">PEP 342</a> 通过后，我们就可以通过编写一个装饰器，让被此装饰器装饰的生成器可能被 with 语法使用，且此生成器刚好 yeild 一次。下面是完成此类装饰器的代码:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">GeneratorContextManager</span><span class="params">(object)</span>:</span></span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, gen)</span>:</span></span><br><span class="line">        self.gen = gen</span><br><span class="line">        </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__enter__</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="keyword">return</span> self.gen.next()</span><br><span class="line">        <span class="keyword">except</span> StopIteration:</span><br><span class="line">            <span class="keyword">raise</span> RuntimeError(<span class="string">"generator didn't yield"</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__exit__</span><span class="params">(self, type, value, traceback)</span>:</span></span><br><span class="line">        <span class="keyword">if</span> type <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                self.gen.next()</span><br><span class="line">            <span class="keyword">except</span> StopIteration:</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="keyword">raise</span> RuntimeError(<span class="string">"generator didn't stop"</span>)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                self.gen.throw(type, value, traceback)</span><br><span class="line">                <span class="keyword">raise</span> RuntimeError(<span class="string">"generator didn't stop after throw()"</span>)</span><br><span class="line">            <span class="keyword">except</span> StopIteration:</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line">            <span class="keyword">except</span>:</span><br><span class="line">                <span class="comment"># only re-raise if it's not the exception that was</span></span><br><span class="line">                <span class="comment"># passed to throw(), because __exit__() must not raise</span></span><br><span class="line">                <span class="comment"># an exception unless __exit__() itself failed. But</span></span><br><span class="line">                <span class="comment"># throw() has to raise the exception to signal</span></span><br><span class="line">                <span class="comment"># propagation, so thi fixes the impedance mismatch</span></span><br><span class="line">                <span class="comment"># between the throw() protocol and the __exit__()</span></span><br><span class="line">                <span class="comment"># protocol .</span></span><br><span class="line">                <span class="comment"># 只有当它不是传递给 throw() 的异常时才会重新被抛出，</span></span><br><span class="line">                <span class="comment"># 因为 __exit__() 只能在方法本身执行失败的时候抛出异常</span></span><br><span class="line">                <span class="comment"># 但是 throw() 必须引发异常来传递信号</span></span><br><span class="line">                <span class="comment"># 所以 thi 修复了 throw() 协议和 __exit__() 协议之间的不协调</span></span><br><span class="line">                </span><br><span class="line">                <span class="keyword">if</span> sys.exc_info()[<span class="number">1</span>] <span class="keyword">is</span> <span class="keyword">not</span> value:</span><br><span class="line">                    <span class="keyword">raise</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">contextmanager</span><span class="params">(func)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">helper</span><span class="params">(*args, **kwds)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> GeneratorContextManager(func(*args, **kwds))</span><br><span class="line">    <span class="keyword">return</span> helper</span><br></pre></td></tr></table></figure>
+
+<p>这个装饰器可以被这样使用：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@contextmanager</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">opening</span><span class="params">(filename)</span>:</span></span><br><span class="line">    f = open(filename) <span class="comment"># IOError is untouched by GeneratorContext</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">yield</span> f</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        f.close() <span class="comment"># Ditto for errors here(howere unlikely)</span></span><br></pre></td></tr></table></figure>
+
+<p>对此装饰器更加完善的实现已经成为 <a href="https://docs.python.org/zh-cn/3/library/contextlib.html#module-contextlib" target="_blank" rel="external nofollow noopener noreferrer">标准库的一部分</a>。</p>
+<h2 id="标准库中存在的上下文管理器"><a href="#标准库中存在的上下文管理器" class="headerlink" title="标准库中存在的上下文管理器"></a>标准库中存在的上下文管理器</h2><p>可以给文件、套接字和锁等等对象添加 __enter__() 和 __exit__() 方法，这样我们就可以像下面这样操作这些对象：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> locking(myLock):</span><br><span class="line">    BLOCK</span><br></pre></td></tr></table></figure>
+
+<p>也可以简写成</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> myLock:</span><br><span class="line">    BLOCK</span><br></pre></td></tr></table></figure>
+
+<p>但是使用过程中应该谨慎，它可能会导致类似的错误：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">f = open(filename)</span><br><span class="line"><span class="keyword">with</span> f:</span><br><span class="line">    BLOCK1</span><br><span class="line"><span class="keyword">with</span> f:</span><br><span class="line">    BLOCK2</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码并不会像人们想象的那样顺利的执行，因为 f 在进入 BLCOK2 之前被就已经被关闭了。</p>
+<p>还有很多类似上面示例中的错误，例如：</p>
+<ul>
+<li>使用上面提到的 @contextmanager 装饰器装饰的生成器，会在第二次被 with 语法调用 f.__enter__() 时抛出 RuntimeError 异常；</li>
+<li>如果 __enter__ 在一个 closed 文件对象上被调用，也会引发类似的错误。</li>
+</ul>
+<p>对于 Python 2.5，以下类型已经被确定为上下文管理器：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- file</span><br><span class="line">- thread.LockType</span><br><span class="line">- threading.Lock</span><br><span class="line">- threading.RLock</span><br><span class="line">- threading.Condition</span><br><span class="line">- threading.Semaphore</span><br><span class="line">- threading.BoundedSemaphore</span><br></pre></td></tr></table></figure>
+
+<p><a href="https://docs.python.org/3/library/decimal.html#context-objects" target="_blank" rel="external nofollow noopener noreferrer">一个上下文管理器也将被添加到 decimal 模块中</a>，以支持在 with 语句中使用本地 decimal arithmetic 上下文，当 with 语句退出时自动回复原始上下文。</p>
+<h2 id="标准术语"><a href="#标准术语" class="headerlink" title="标准术语"></a>标准术语</h2><p>本 PEP 提议将由 __enter__() 和 __exit__() 方法组成的协议称为「上下文管理协议」，而实现该协议的对象被称为「上下文管理器」。</p>
+<p>语句中紧跟 with 关键字的表达式是一个「上下文表达式」。</p>
+<p>with 语句主体中的代码和 as 关键字后面的变量名（或名称）没有特殊的术语。可以使用一般的术语「statement body」和「target list」，如果这些术语不清楚的话，可以用 with 或 with statement 作为前缀。</p>
+<p>鉴于 decimal 模块的算术上下文等对象的存在，使得单独使用「上下文」这个术语可能存在歧义。如果有必要，可以用「上下文管理器」来表示由上下文表达式创建的具体对象，用「运行时上下文」或（最好是）「运行时环境」来表示由上下文管理器进行的实际状态修改，从而使描述更加具体。</p>
+<p>当简单地讨论 with 语句的使用时，由于上下文表达式已经全面描述了对运行时环境所做的修改，因此此时这种模糊性不应该太重要。但在讨论 with 语句本身的机制以及如何实际实现上下文管理器时，这些名词之间的区别就尤为重要。</p>
+<h2 id="如何缓存上下文管理器"><a href="#如何缓存上下文管理器" class="headerlink" title="如何缓存上下文管理器"></a>如何缓存上下文管理器</h2><p>许多上下文管理器（如文件和基于生成器的上下文）都是一次性使用的对象。一旦 __exit__() 方法被调用，上下文管理器将不可复用 (例如，文件已被关闭，或者底层生成器已执行完毕)。</p>
+<p>为每个 with 语句创建一个新的上下文管理器对象是避免多线程代码或嵌套的 with 语句试图使用同一个上下文管理器问题的最简单的解决方案。标准库中所有可复用的上下文管理器都来自 threading 模块，它们都针对线程和嵌套使用所产生的问题进行过相应设计。</p>
+<p>这意味着，为了在多个 with 语句中重复使用一个带有特定初始化参数的上下文管理器，通常需要将其存储在一个零参数的可调用对象中，然后在每个语句的上下文表达式中调用，而不是直接缓存上下文管理器。</p>
+<p>当这种限制不适用时，受影响的上下文管理器的文档应该明确说明这一点。</p>
+<h2 id="被拒绝的选项"><a href="#被拒绝的选项" class="headerlink" title="被拒绝的选项"></a>被拒绝的选项</h2><p>几个月来，PEP 都为了避免隐藏控制流程而禁止忽略异常抛出，但在实施过程中发现这是一个很难避免的麻烦，因此 Guido 重启了这个功能。</p>
+<p>本 PEP 的另一个核心是提出了一个 __context__() 方法，类似于 iterable’s __iter__() 方法。这引起了无休止的问题和术语讨论。不断解释 __content__() 方法相关问题的过程中产生的新问题让 Guido 最终彻底删除了这个概念。</p>
+<p><a href="https://mail.python.org/pipermail/python-dev/2005-October/056969.html" target="_blank" rel="external nofollow noopener noreferrer">直接使用 PEP 342 的生成器 API 来定义 with 语法</a> 也被简短地讨论过，但很快就被否定了，因为如果这么做会使得编写非生成器的上下文管理器程序变得异常困难。</p>
+<h2 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h2><p>基于生成器的例子依赖于 <a href="https://www.python.org/dev/peps/pep-0342/" target="_blank" rel="external nofollow noopener noreferrer">PEP 342</a>。另外，有些例子在实践中是不必要的，因为现有的对象，如 threading.RLock，能够直接用于 with 语句中。</p>
+<p>示例中上下文的名称所使用的时态不是任意的：</p>
+<ul>
+<li>过去时态（ed）表示一个在 __enter__ 方法中完成，在 __eixt__ 方法中撤销的动作；</li>
+<li>进行时态（ing）表示一个在 __exit__ 方法中完成的动作。</li>
+</ul>
+<h3 id="locked：锁管理"><a href="#locked：锁管理" class="headerlink" title="locked：锁管理"></a>locked：锁管理</h3><p>在语句开始时获得锁，离开时释放锁：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@contextmanager</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">locked</span><span class="params">(lock)</span>:</span></span><br><span class="line">    lock.acquire()</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">yield</span></span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        lock.release()</span><br></pre></td></tr></table></figure>
+
+<p>可以这样使用：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> locked(myLock):</span><br><span class="line">    <span class="comment"># Code here executes with myLock held.  The lock is</span></span><br><span class="line">    <span class="comment"># guaranteed to be released when the block is left (even</span></span><br><span class="line">    <span class="comment"># if via return or by an uncaught exception).</span></span><br><span class="line">    <span class="comment"># 这里的代码是在持有 myLock 的情况下被执行的。</span></span><br><span class="line">    <span class="comment"># 这个锁被确保在离开 with 语句之后被释放，即使在执行过程中有中断或异常</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="opened：文件管理"><a href="#opened：文件管理" class="headerlink" title="opened：文件管理"></a>opened：文件管理</h3><p>在语句开始时通过特定模式打开文件，离开时关闭文件：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@contextmanager</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">opened</span><span class="params">(filename, mode=<span class="string">"r"</span>)</span>:</span></span><br><span class="line">    f = open(filename, mode)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">yield</span> f</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        f.close()</span><br></pre></td></tr></table></figure>
+
+<p>可以这样使用：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> opened(<span class="string">"/etc/passwd"</span>) <span class="keyword">as</span> f:</span><br><span class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> f:</span><br><span class="line">        <span class="keyword">print</span> line.rstrip()</span><br></pre></td></tr></table></figure>
+
+<h3 id="transaction：数据库事务管理"><a href="#transaction：数据库事务管理" class="headerlink" title="transaction：数据库事务管理"></a>transaction：数据库事务管理</h3><p>提交或回滚数据库事务：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@contextmanager</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">transaction</span><span class="params">(db)</span>:</span></span><br><span class="line">    db.begin()</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">yield</span> <span class="literal">None</span></span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        db.rollback()</span><br><span class="line">        <span class="keyword">raise</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        db.commit()</span><br></pre></td></tr></table></figure>
+
+<h3 id="class-locked：不使用生成器实现的锁管理"><a href="#class-locked：不使用生成器实现的锁管理" class="headerlink" title="class locked：不使用生成器实现的锁管理"></a>class locked：不使用生成器实现的锁管理</h3><p>在不使用生成器情况下重写 <a href="#locked：锁管理">例 1</a>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">locked</span>:</span></span><br><span class="line">   <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, lock)</span>:</span></span><br><span class="line">       self.lock = lock</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">def</span> <span class="title">__enter__</span><span class="params">(self)</span>:</span></span><br><span class="line">       self.lock.acquire()</span><br><span class="line"></span><br><span class="line">   <span class="function"><span class="keyword">def</span> <span class="title">__exit__</span><span class="params">(self, type, value, tb)</span>:</span></span><br><span class="line">       self.lock.release()</span><br></pre></td></tr></table></figure>
+
+<p>这个例子很容易修改成其他相对无状态的例子，这表明，如果不需要保留特殊状态，很容易避免对生成器的依赖。</p>
+<h3 id="stdout-redirected：输出重定向管理"><a href="#stdout-redirected：输出重定向管理" class="headerlink" title="stdout_redirected：输出重定向管理"></a>stdout_redirected：输出重定向管理</h3><p>暂时重定向 stdout：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@contextmanager</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">stdout_redirected</span><span class="params">(new_stdout)</span>:</span></span><br><span class="line">    save_stdout = sys.stdout</span><br><span class="line">    sys.stdout = new_stdout</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">yield</span> <span class="literal">None</span></span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        sys.stdout = save_stdout</span><br></pre></td></tr></table></figure>
+
+<p>可以这样使用：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> opened(filename, <span class="string">"w"</span>) <span class="keyword">as</span> f:</span><br><span class="line">    <span class="keyword">with</span> stdout_redirected(f):</span><br><span class="line">        <span class="keyword">print</span> <span class="string">"Hello world"</span></span><br></pre></td></tr></table></figure>
+
+<p>这样实现不能保证线程安全，但如果手动实现相同的动作也无法保证线程安全。在单线程程序中（例如，在脚本中），这是一种流行的处理方案。</p>
+<h3 id="opened-w-error：文件（-enter-同时返回两个值）"><a href="#opened-w-error：文件（-enter-同时返回两个值）" class="headerlink" title="opened_w_error：文件（__enter__ 同时返回两个值）"></a>opened_w_error：文件（__enter__ 同时返回两个值）</h3><p>opened() 的一个变体，能够同时返回文件句柄和异常内容：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@contextmanager</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">opened_w_error</span><span class="params">(filename, mode=<span class="string">"r"</span>)</span>:</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        f = open(filename, mode)</span><br><span class="line">    <span class="keyword">except</span> IOError, err:</span><br><span class="line">        <span class="comment"># 使用元组同时产生两个返回值</span></span><br><span class="line">        <span class="keyword">yield</span> <span class="literal">None</span>, err</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="comment"># 使用元组同时产生两个返回值</span></span><br><span class="line">            <span class="keyword">yield</span> f, <span class="literal">None</span></span><br><span class="line">        <span class="keyword">finally</span>:</span><br><span class="line">            f.close()</span><br></pre></td></tr></table></figure>
+
+<p>可以这样使用：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在 as 后使用元组接收返回值</span></span><br><span class="line"><span class="keyword">with</span> opened_w_error(<span class="string">"/etc/passwd"</span>, <span class="string">"a"</span>) <span class="keyword">as</span> (f, err):</span><br><span class="line">    <span class="keyword">if</span> err:</span><br><span class="line">        <span class="keyword">print</span> <span class="string">"IOError:"</span>, err</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        f.write(<span class="string">"guido::0:0::/:/bin/sh\n"</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="signal：信号拦截"><a href="#signal：信号拦截" class="headerlink" title="signal：信号拦截"></a>signal：信号拦截</h3><p>另一个有用的例子是阻断信号的操作，实现代码如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> signal</span><br><span class="line"></span><br><span class="line"><span class="keyword">with</span> signal.blocked():</span><br><span class="line">    <span class="comment"># code executed without worrying about signals</span></span><br><span class="line">    <span class="comment"># 执行的代码不用担心信号问题</span></span><br></pre></td></tr></table></figure>
+
+<p>可以传入一个要屏蔽的信号列表，默认情况下，会屏蔽所有的信号。</p>
+<h3 id="decimal"><a href="#decimal" class="headerlink" title="decimal"></a>decimal</h3><p>decimal 上下文，这里有一个简单的例子：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> decimal</span><br><span class="line"></span><br><span class="line"><span class="meta">@contextmanager</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">extra_precision</span><span class="params">(places=<span class="number">2</span>)</span>:</span></span><br><span class="line">    c = decimal.getcontext()</span><br><span class="line">    saved_prec = c.prec</span><br><span class="line">    c.prec += places</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">yield</span> <span class="literal">None</span></span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        c.prec = saved_prec</span><br></pre></td></tr></table></figure>
+
+<p>使用示例（改编自 Python Library Reference）:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sin</span><span class="params">(x)</span>:</span></span><br><span class="line">    <span class="comment"># Return the sine of x as measured in radians.</span></span><br><span class="line">    <span class="comment"># 返回以弧度为单位的x的正弦。</span></span><br><span class="line">    <span class="keyword">with</span> extra_precision():</span><br><span class="line">        i, lasts, s, fact, num, sign = <span class="number">1</span>, <span class="number">0</span>, x, <span class="number">1</span>, x, <span class="number">1</span></span><br><span class="line">        <span class="keyword">while</span> s != lasts:</span><br><span class="line">            lasts = s</span><br><span class="line">            i += <span class="number">2</span></span><br><span class="line">            fact *= i * (i<span class="number">-1</span>)</span><br><span class="line">            num *= x * x</span><br><span class="line">            sign *= <span class="number">-1</span></span><br><span class="line">            s += num / fact * sign</span><br><span class="line">    <span class="comment"># The "+s" rounds back to the original precision,</span></span><br><span class="line">    <span class="comment"># so this must be outside the with-statement:</span></span><br><span class="line">    <span class="keyword">return</span> +s</span><br></pre></td></tr></table></figure>
+
+<h3 id="another-decimal"><a href="#another-decimal" class="headerlink" title="another decimal"></a>another decimal</h3><p>一个简单的 decimal 模块的上下文管理器：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@contextmanager</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">localcontext</span><span class="params">(ctx=None)</span>:</span></span><br><span class="line">    <span class="string">"""Set a new local decimal context for the block"""</span></span><br><span class="line">    <span class="comment"># Default to using the current context</span></span><br><span class="line">    <span class="keyword">if</span> ctx <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">        ctx = getcontext()</span><br><span class="line">    <span class="comment"># We set the thread context to a copy of this context</span></span><br><span class="line">    <span class="comment"># to ensure that changes within the block are kept</span></span><br><span class="line">    <span class="comment"># local to the block.</span></span><br><span class="line">    newctx = ctx.copy()</span><br><span class="line">    oldctx = decimal.getcontext()</span><br><span class="line">    decimal.setcontext(newctx)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">yield</span> newctx</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="comment"># Always restore the original context</span></span><br><span class="line">        decimal.setcontext(oldctx)</span><br></pre></td></tr></table></figure>
+
+<p>使用案例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> decimal <span class="keyword">import</span> localcontext, ExtendedContext</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sin</span><span class="params">(x)</span>:</span></span><br><span class="line">    <span class="keyword">with</span> localcontext() <span class="keyword">as</span> ctx:</span><br><span class="line">        ctx.prec += <span class="number">2</span></span><br><span class="line">        <span class="comment"># Rest of sin calculation algorithm</span></span><br><span class="line">        <span class="comment"># uses a precision 2 greater than normal</span></span><br><span class="line">    <span class="keyword">return</span> +s <span class="comment"># Convert result to normal precision</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">sin</span><span class="params">(x)</span>:</span></span><br><span class="line">    <span class="keyword">with</span> localcontext(ExtendedContext):</span><br><span class="line">        <span class="comment"># Rest of sin calculation algorithm</span></span><br><span class="line">        <span class="comment"># uses the Extended Context from the</span></span><br><span class="line">        <span class="comment"># General Decimal Arithmetic Specification</span></span><br><span class="line">    <span class="keyword">return</span> +s <span class="comment"># Convert result to normal context</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="closing：object-closing-上下文管理器"><a href="#closing：object-closing-上下文管理器" class="headerlink" title="closing：object-closing 上下文管理器"></a>closing：object-closing 上下文管理器</h3><p>通用「object-closing」上下文管理器：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">closing</span><span class="params">(object)</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, obj)</span>:</span></span><br><span class="line">        self.obj = obj</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__enter__</span><span class="params">(self)</span>:</span></span><br><span class="line">        <span class="keyword">return</span> self.obj</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__exit__</span><span class="params">(self, *exc_info)</span>:</span></span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            close_it = self.obj.close</span><br><span class="line">        <span class="keyword">except</span> AttributeError:</span><br><span class="line">            <span class="keyword">pass</span></span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            close_it()</span><br></pre></td></tr></table></figure>
+
+<p>可以用来确切地关闭任何有 close 方法的对象，无论是文件、生成器还是其他东西。它也可以在不确定对象是否需要关闭时使用（例如，一个接受任意 iterable 的函数）：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># emulate opening():</span></span><br><span class="line"><span class="keyword">with</span> closing(open(<span class="string">"argument.txt"</span>)) <span class="keyword">as</span> contradiction:</span><br><span class="line">   <span class="keyword">for</span> line <span class="keyword">in</span> contradiction:</span><br><span class="line">       <span class="keyword">print</span> line</span><br><span class="line"></span><br><span class="line"><span class="comment"># deterministically finalize an iterator:</span></span><br><span class="line"><span class="keyword">with</span> closing(iter(data_source)) <span class="keyword">as</span> data:</span><br><span class="line">   <span class="keyword">for</span> datum <span class="keyword">in</span> data:</span><br><span class="line">       process(datum)</span><br></pre></td></tr></table></figure>
+
+<p>Python 2.5 的 contextlib 模块包含 <a href="https://docs.python.org/zh-cn/3/library/contextlib.html#contextlib.closing" target="_blank" rel="external nofollow noopener noreferrer">这个上下文管理器的实现（3.x 版本也保留了）</a>。</p>
+<h3 id="released：锁管理"><a href="#released：锁管理" class="headerlink" title="released：锁管理"></a>released：锁管理</h3><p><a href="https://www.python.org/dev/peps/pep-0319/" target="_blank" rel="external nofollow noopener noreferrer">PEP 319</a> 给出了一个用例，即使用 release 上下文来暂时释放先前获得的锁。</p>
+<p>可以通过交换 acquisition() 和 release() 的调用顺序，实现上面的 <a href="#locked：锁管理">locked：锁管理</a> 。</p>
+<p>实现代码如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">released</span>:</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, lock)</span>:</span></span><br><span class="line">      self.lock = lock</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">__enter__</span><span class="params">(self)</span>:</span></span><br><span class="line">      self.lock.release()</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">__exit__</span><span class="params">(self, type, value, tb)</span>:</span></span><br><span class="line">      self.lock.acquire()</span><br></pre></td></tr></table></figure>
+
+<p>使用案例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> my_lock:</span><br><span class="line">    <span class="comment"># Operations with the lock held</span></span><br><span class="line">    <span class="keyword">with</span> released(my_lock):</span><br><span class="line">        <span class="comment"># Operations without the lock</span></span><br><span class="line">        <span class="comment"># e.g. blocking I/O</span></span><br><span class="line">    <span class="comment"># Lock is held again here</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="nested：嵌套使用"><a href="#nested：嵌套使用" class="headerlink" title="nested：嵌套使用"></a>nested：嵌套使用</h3><p>一个「嵌套」的上下文管理器，它能自动地将提供的上下文从左到右嵌套，以避免过度缩进：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@contextmanager</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">nested</span><span class="params">(*contexts)</span>:</span></span><br><span class="line">    exits = []</span><br><span class="line">    vars = []</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="keyword">for</span> context <span class="keyword">in</span> contexts:</span><br><span class="line">                exit = context.__exit__</span><br><span class="line">                enter = context.__enter__</span><br><span class="line">                vars.append(enter())</span><br><span class="line">                exits.append(exit)</span><br><span class="line">            <span class="keyword">yield</span> vars</span><br><span class="line">        <span class="keyword">except</span>:</span><br><span class="line">            exc = sys.exc_info()</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            exc = (<span class="literal">None</span>, <span class="literal">None</span>, <span class="literal">None</span>)</span><br><span class="line">    <span class="keyword">finally</span>:</span><br><span class="line">        <span class="keyword">while</span> exits:</span><br><span class="line">            exit = exits.pop()</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                exit(*exc)</span><br><span class="line">            <span class="keyword">except</span>:</span><br><span class="line">                exc = sys.exc_info()</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                exc = (<span class="literal">None</span>, <span class="literal">None</span>, <span class="literal">None</span>)</span><br><span class="line">        <span class="keyword">if</span> exc != (<span class="literal">None</span>, <span class="literal">None</span>, <span class="literal">None</span>):</span><br><span class="line">            <span class="comment"># sys.exc_info() may have been</span></span><br><span class="line">            <span class="comment"># changed by one of the exit methods</span></span><br><span class="line">            <span class="comment"># so provide explicit exception info</span></span><br><span class="line">            <span class="keyword">raise</span> exc[<span class="number">0</span>], exc[<span class="number">1</span>], exc[<span class="number">2</span>]</span><br></pre></td></tr></table></figure>
+
+<p>使用案例</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> nested(a, b, c) <span class="keyword">as</span> (x, y, z):</span><br><span class="line">    <span class="comment"># Perform operation</span></span><br></pre></td></tr></table></figure>
+
+<p>等同于：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> a <span class="keyword">as</span> x:</span><br><span class="line">    <span class="keyword">with</span> b <span class="keyword">as</span> y:</span><br><span class="line">        <span class="keyword">with</span> c <span class="keyword">as</span> z:</span><br><span class="line">            <span class="comment"># Perform operation</span></span><br></pre></td></tr></table></figure>
+
+<p>Python 2.5的 contextlib 模块包含这个上下文管理器的实现（没有在 3.x 的文档中找到同名方法）。</p>
+<h2 id="实现过程"><a href="#实现过程" class="headerlink" title="实现过程"></a>实现过程</h2><p>本 PEP 最初是由 Guido 在 2005.06.27 的 EuroPython 主题演讲中接受的。后来它被再次接受，并加入了 __context__ 方法。</p>
+<p>本 PEP 是在 Python 2.5a1 的 Subversion 中实现的，在 Python 2.5b1 中删除了 __context__()方法。</p>
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><h3 id="生成器状态"><a href="#生成器状态" class="headerlink" title="生成器状态"></a>生成器状态</h3><p>可以通过 <code>inspect.getgeneratorstate(generator)</code> 查看生成器状态：</p>
+<p>GEN_CREATED: Waiting to start execution.<br>GEN_RUNNING: Currently being executed by the interpreter.<br>GEN_SUSPENDED: Currently suspended at a yield expression.<br>GEN_CLOSED: Execution has completed.</p>
+<h3 id="sys-exc-info"><a href="#sys-exc-info" class="headerlink" title="sys.exc_info"></a>sys.exc_info</h3><p>本函数返回的元组包含三个值，它们给出当前正在处理的异常的信息。返回的信息仅限于当前线程和当前堆栈帧。如果当前堆栈帧没有正在处理的异常，则信息将从下级被调用的堆栈帧或上级调用者等位置获取，依此类推，直到找到正在处理异常的堆栈帧为止。此处的「处理异常」指的是「执行 except 子句」。任何堆栈帧都只能访问当前正在处理的异常的信息。</p>
+<p>如果整个堆栈都没有正在处理的异常，则返回包含三个 None 值的元组。否则返回值为 (type, value, traceback)。它们的含义是：</p>
+<ul>
+<li>type：正在处理的异常类型（它是 BaseException 的子类）；</li>
+<li>value：异常实例（异常类型的实例）；</li>
+<li>traceback：一个 回溯对象，该对象封装了最初发生异常时的调用堆栈。</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li><a href="https://www.python.org/dev/peps/pep-0343/" target="_blank" rel="external nofollow noopener noreferrer">PEP 343 原文</a></li>
+<li><a href="https://www.python.org/dev/peps/pep-0310/" target="_blank" rel="external nofollow noopener noreferrer">PEP 310 原文</a></li>
+<li><a href="https://www.python.org/dev/peps/pep-0340/" target="_blank" rel="external nofollow noopener noreferrer">PEP 340 原文</a></li>
+<li><a href="https://devblogs.microsoft.com/oldnewthing/20050106-00/?p=36783" target="_blank" rel="external nofollow noopener noreferrer">Raymond: A rant against flow control macros</a></li>
+<li><a href="https://snarky.ca/unravelling-the-with-statement/" target="_blank" rel="external nofollow noopener noreferrer">Brett Cannon: Unravelling the `with` statement</a></li>
+<li><a href="https://docs.python.org/zh-cn/3/library/sys.html#module-sys" target="_blank" rel="external nofollow noopener noreferrer">Python 官方文档-Python标准库-sys 库</a></li>
+<li><a href="https://docs.python.org/zh-cn/3/reference/datamodel.html#traceback-objects" target="_blank" rel="external nofollow noopener noreferrer">Python 官方文档-数据模型-回溯对象</a></li>
+</ol>
+
+        
+        <footer class="article-footer">
+        </footer>
+    </div>
+</div></article>
+
+
+    
+<nav id="article-nav">
+    
+        <a href="/archives/291be77c.html" id="article-nav-newer" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">上一篇</strong>
+            <div class="article-nav-title">
+                
+                    解剖 Python 类
+                
+            </div>
+        </a>
+    
+    
+        <a href="/archives/f5b4f56.html" id="article-nav-older" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">下一篇</strong>
+            <div class="article-nav-title">所谓 ASGI</div>
+        </a>
+    
+</nav>
+
+
+
+
+
+    
+    
+        <section id="comments"> <div id="vcomments"></div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        appId: 'sz7ny95XiYWkxht3H3YDs2GX-gzGzoHsz',
+        appKey: 'T8JJugDkbqtFLONIIzcPWW76',
+        placeholder: '不要吝啬赞美的语句ヾﾉ≧∀≦)o!',
+        avatar: 'mp',
+        meta: ['nick','mail','link'],
+        pageSize: 10,
+        visitor: true,
+        notify: true,
+        verify: true
+    })
+    let info = document.querySelectorAll('#vcomments>.info')[0]
+    if (info) { info.style.display = 'none' }
+</script> </section>
+    
+
+
+
+
+<!-- baidu url auto push script -->
+<script type="text/javascript">
+    !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=window.location.href,o=document.referrer;if(!e.test(r)){var n="//api.share.baidu.com/s.gif";o?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var t=new Image;t.src=n}}(window);
+</script>     
+</section>
+        </div>
+        <footer id="footer">
+    <div class="outer">
+        <div id="footer-info" class="inner">
+            ryomahan &copy; 2024 
+            <a rel="external nofollow noopener noreferrer" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png"></a>
+            <br> Powered by <a href="http://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. Comment By <a href="https://valine.js.org/" target="_blank" rel="external nofollow noopener noreferrer">valine</a>. Theme - <a href="https://github.com/zthxxx/hexo-theme-Wikitten" target="_blank" rel="external nofollow noopener noreferrer">wikitten</a>
+            
+                <br>
+                <span id="busuanzi_container_site_pv"><i class="fa fa-eye"></i> <span id="busuanzi_value_site_pv"></span></span>
+                &nbsp;|&nbsp;
+                <span id="busuanzi_container_site_pv"><i class="fa fa-user"></i> <span id="busuanzi_value_site_uv"></span></span>
+            
+        </div>
+    </div>
+</footer>
+
+        
+    
+        
+<script src="/libs/lightgallery/js/lightgallery.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-thumbnail.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-pager.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-autoplay.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-fullscreen.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-zoom.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-hash.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-share.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-video.min.js"></script>
+
+    
+    
+        
+<script src="/libs/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+    
+    
+        <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true,
+            TeX: {
+                equationNumbers: {
+                  autoNumber: 'AMS'
+                }
+            }
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+
+
+<!-- Custom Scripts -->
+
+<script src="/js/main.js"></script>
+
+
+    </div>
+</body>

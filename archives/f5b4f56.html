@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    
+    <title>所谓 ASGI | 小白维基</title>
+    
+    
+        <meta name="keywords" content="Python">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="前言本文的主体内容大部分来自对 ASGI Documentation 原文的翻译，其余部分为本人对原文的理解，在整理过程中我没有刻意地区分翻译的部分和我个人理解的部分，这两部分内容被糅杂在一起形成了本文。因此，请不要带着「本文的内容是百分之百正确」的想法阅读。如果文中的某些内容让你产生疑惑，你可以给我留言与我讨论或者对比 ASGI Documentation 的原文加以确认。 本人在之前整理过一篇">
+<meta property="og:type" content="article">
+<meta property="og:title" content="所谓 ASGI">
+<meta property="og:url" content="https://wiki.blanc.site/archives/f5b4f56.html">
+<meta property="og:site_name" content="小白维基">
+<meta property="og:description" content="前言本文的主体内容大部分来自对 ASGI Documentation 原文的翻译，其余部分为本人对原文的理解，在整理过程中我没有刻意地区分翻译的部分和我个人理解的部分，这两部分内容被糅杂在一起形成了本文。因此，请不要带着「本文的内容是百分之百正确」的想法阅读。如果文中的某些内容让你产生疑惑，你可以给我留言与我讨论或者对比 ASGI Documentation 的原文加以确认。 本人在之前整理过一篇">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.blanc.site//wiki/img202208041805019.png">
+<meta property="article:published_time" content="2022-01-31T00:00:00.000Z">
+<meta property="article:modified_time" content="2024-11-10T15:39:52.936Z">
+<meta property="article:author" content="ryomahan">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.blanc.site//wiki/img202208041805019.png">
+    
+
+    
+        <link rel="alternate" href="/atom.xml" title="小白维基" type="application/atom+xml">
+    
+    
+        <link rel="icon" href="/favicon.ico">
+    
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/libs/open-sans/styles.css">
+
+    
+<link rel="stylesheet" href="/libs/source-code-pro/styles.css">
+
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<script src="/libs/jquery/2.1.3/jquery.min.js"></script>
+
+    
+<script src="/libs/jquery/plugins/cookie/1.4.1/jquery.cookie.js"></script>
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/lightgallery/css/lightgallery.min.css">
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/justified-gallery/justifiedGallery.min.css">
+
+    
+    
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110100486-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-110100486-1');
+</script>
+    
+    
+        <meta name="google-site-verification" content="D9ld5oQABBxIwNpgD_WN61p51-ZcABZ6Olt4HKcxlWw">
+    
+    
+        <script>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?fac7e69191f0847b886888aa7c794fa7";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+    
+
+
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- 字体引入 -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Noto+Serif+SC:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+<meta name="generator" content="Hexo 4.2.1"></head>
+</html>
+<body>
+    <div id="container">
+        <header id="header">
+    <div id="header-main" class="header-inner">
+        <div class="outer">
+            <a href="/" id="logo">
+                <i class="logo"></i>
+                <span class="site-title">小白维基</span>
+            </a>
+            <nav id="main-nav">
+                
+                    <a class="main-nav-link" href="/">首页</a>
+                
+                    <a class="main-nav-link" href="/archives">归档</a>
+                
+                    <a class="main-nav-link" href="/categories">分类</a>
+                
+                    <a class="main-nav-link" href="/tags">标签</a>
+                
+                    <a class="main-nav-link" href="/about">关于</a>
+                
+            </nav>
+            
+                
+                <nav id="sub-nav">
+                    <div class="profile" id="profile-nav">
+                        <a id="profile-anchor" href="javascript:;">
+                            <img class="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df">
+                            <i class="fa fa-caret-down"></i>
+                        </a>
+                    </div>
+                </nav>
+            
+            <div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="想要查找什么...">
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div>
+        </div>
+    </div>
+    <div id="main-nav-mobile" class="header-sub header-inner">
+        <table class="menu outer">
+            <tr>
+                
+                    <td><a class="main-nav-link" href="/">首页</a></td>
+                
+                    <td><a class="main-nav-link" href="/archives">归档</a></td>
+                
+                    <td><a class="main-nav-link" href="/categories">分类</a></td>
+                
+                    <td><a class="main-nav-link" href="/tags">标签</a></td>
+                
+                    <td><a class="main-nav-link" href="/about">关于</a></td>
+                
+                <td>
+                    
+    <div class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+    </div>
+
+                </td>
+            </tr>
+        </table>
+    </div>
+</header>
+
+        <div class="outer">
+            
+                
+
+<aside id="profile">
+    <div class="inner profile-inner">
+        <div class="base-info profile-block">
+            <img id="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df?s=128">
+            <h2 id="name">Ryoma</h2>
+            <h3 id="title">毕己一生，依依东望。</h3>
+            <span id="location"><i class="fa fa-map-marker"></i>Jinan, China</span>
+            <a id="follow" target="_blank" href="https://github.com/ryomahan/" rel="external nofollow noopener noreferrer">关注我</a>
+        </div>
+        <div class="article-info profile-block">
+            <div class="article-info-block">
+                25
+                <span>文章</span>
+            </div>
+            <div class="article-info-block">
+                12
+                <span>标签</span>
+            </div>
+        </div>
+        
+        <div class="profile-block social-links">
+            <table>
+                <tr>
+                    
+                    
+                    <td>
+                        <a href="https://blog.blanc.site" target="_blank" title="wordpress" class="tooltip">
+                            <i class="fa fa-wordpress"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://twitter.com/ryomahan1996" target="_blank" title="twitter" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-twitter"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://weibo.com/xiaobaidh" target="_blank" title="weibo" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-weibo"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://github.com/ryomahan" target="_blank" title="github" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-github"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="/atom.xml" target="_blank" title="rss" class="tooltip">
+                            <i class="fa fa-rss"></i>
+                        </a>
+                    </td>
+                    
+                </tr>
+            </table>
+        </div>
+        
+    </div>
+
+    
+        <div class="widget-wrap widget-list">
+            <h3 class="widget-title"><span>友情链接</span></h3>
+            <div class="widget">
+                <ul>
+                    
+                        <li>
+                            <a href="https://pythonhunter.org/" target="_blank" rel="external nofollow noopener noreferrer">捕蛇者说</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://laike9m.com/" target="_blank" rel="external nofollow noopener noreferrer">laike9m</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://www.kawabangga.com/" target="_blank" rel="external nofollow noopener noreferrer">卡瓦邦噶</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://manjusaka.itscoder.com/" target="_blank" rel="external nofollow noopener noreferrer">Manjusaka</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.evo.moe/" target="_blank" rel="external nofollow noopener noreferrer">Sparta_EN</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.blanc.site" target="_blank">一只小白</a>
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    
+</aside>
+
+            
+            
+                <aside id="sidebar">
+   
+        
+    <div class="widget-wrap" id="categories">
+        <h3 class="widget-title">
+            <span>分类</span>
+            &nbsp;
+            <a id="allExpand" href="#">
+                <i class="fa fa-angle-double-down fa-2x"></i>
+            </a>
+        </h3>
+        
+        
+        
+         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-网络笔记
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/e5187cf6.html">同步到腾讯云社区</a></li>  <li class="file"><a href="/archives/4940711f.html">8086 处理器寻址方式</a></li>  <li class="file"><a href="/archives/5c113e93.html">SSH overview</a></li>  <li class="file"><a href="/archives/c57afff6.html">记一次失败的 AI 辅助编程全历程</a></li>  <li class="file"><a href="/archives/d644d904.html">「翻译」如何组织大型 Python 项目</a></li>  <li class="file"><a href="/archives/ed42c0e4.html">「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            2-软件使用
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Chrome
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/decc86d5.html">「转载」解析谷歌 Chrome 各分支版本</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Django
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/b641d3ac.html">Django 笔记-2-源码理解-urls 篇</a></li>  <li class="file"><a href="/archives/ab18c3c3.html">Django 笔记-3-文档阅读-关于 Django 文档</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Vue
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/793400e.html">解决 Vue CSS 样式重复载入，为 Vue 添加全局 less 或 sass 基础样式库</a></li>  <li class="file"><a href="/archives/341c107a.html">Vue Router 实现动态路由和常见问题解决方案</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                    
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            3-计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            1-理论计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-数据结构和算法
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/f3c5e08e.html">数据结构笔记1-概论</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            4-编程语言和编译器
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            Python
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/7a294715.html">所谓 WSGI</a></li>  <li class="file"><a href="/archives/ffe3a081.html">Python MRO</a></li>  <li class="file"><a href="/archives/2accc063.html">WeeklyPEP-0-overview</a></li>  <li class="file active"><a href="/archives/f5b4f56.html">所谓 ASGI</a></li>  <li class="file"><a href="/archives/5823d5df.html">WeeklyPEP-2-PEP 343-with 语句-overview</a></li>  <li class="file"><a href="/archives/291be77c.html">解剖 Python 类</a></li>  <li class="file"><a href="/archives/c29b4f3b.html">WeeklyPEP-3-PEP 318-函数装饰器-overview</a></li>  <li class="file"><a href="/archives/7eaf0f5f.html">WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Shell
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/8f9d5c85.html">Shell 获取当前脚本的绝对路径</a></li>  <li class="file"><a href="/archives/dbac95ae.html">实现 echo 不换行输出</a></li>  <li class="file"><a href="/archives/b422aa7d.html">Shell 区分不同 Unix 系统</a></li>  <li class="file"><a href="/archives/3beb222a.html">Shell 基础语法</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            汇编语言
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/90a7f914.html">NASM Overview</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+    </div>
+    <script>
+        $(document).ready(function() {
+            var iconFolderOpenClass  = 'fa-folder-open';
+            var iconFolderCloseClass = 'fa-folder';
+            var iconAllExpandClass = 'fa-angle-double-down';
+            var iconAllPackClass = 'fa-angle-double-up';
+            // Handle directory-tree expansion:
+            // 左键单独展开目录
+            $(document).on('click', '#categories a[data-role="directory"]', function (event) {
+                event.preventDefault();
+
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var subtree = $(this).siblings('ul');
+                icon.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if (expanded) {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideUp({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderCloseClass);
+                } else {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideDown({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderOpenClass);
+                }
+            });
+            // 右键展开下属所有目录
+            $('#categories a[data-role="directory"]').bind("contextmenu", function(event){
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var listNode = $(this).siblings('ul');
+                var subtrees = $.merge(listNode.find('li ul'), listNode);
+                var icons = $.merge(listNode.find('.fa'), icon);
+                icons.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if(expanded) {
+                    subtrees.slideUp({ duration: 100 });
+                    icons.addClass(iconFolderCloseClass);
+                } else {
+                    subtrees.slideDown({ duration: 100 });
+                    icons.addClass(iconFolderOpenClass);
+                }
+            })
+            // 展开关闭所有目录按钮
+            $(document).on('click', '#allExpand', function (event) {
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconAllExpandClass);
+                icon.removeClass(iconAllExpandClass).removeClass(iconAllPackClass);
+                if(expanded) {
+                    $('#sidebar .fa.fa-folder').removeClass('fa-folder').addClass('fa-folder-open')
+                    $('#categories li ul').slideDown({ duration: 100 });
+                    icon.addClass(iconAllPackClass);
+                } else {
+                    $('#sidebar .fa.fa-folder-open').removeClass('fa-folder-open').addClass('fa-folder')
+                    $('#categories li ul').slideUp({ duration: 100 });
+                    icon.addClass(iconAllExpandClass);
+                }
+            });  
+        });
+    </script>
+
+    
+        
+  <div class="toc-flag"></div>
+  <div class="toc-wrap">
+      <h3>
+          <span>文章目录</span>
+      </h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#字典参照"><span class="toc-number">2.</span> <span class="toc-text">字典参照</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#何为-ASGI"><span class="toc-number">3.</span> <span class="toc-text">何为 ASGI</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ASGI-vs-WSGI：宏观"><span class="toc-number">4.</span> <span class="toc-text">ASGI vs WSGI：宏观</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ASGI-简介"><span class="toc-number">5.</span> <span class="toc-text">ASGI 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#与-WSGI-的兼容性"><span class="toc-number">6.</span> <span class="toc-text">与 WSGI 的兼容性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ASGI-规范（V-3-0）"><span class="toc-number">7.</span> <span class="toc-text">ASGI 规范（V 3.0）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#摘要"><span class="toc-number">7.1.</span> <span class="toc-text">摘要</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#提出理由"><span class="toc-number">7.2.</span> <span class="toc-text">提出理由</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#概述"><span class="toc-number">7.3.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#规范细节"><span class="toc-number">7.4.</span> <span class="toc-text">规范细节</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Connection-Scope-连接范围"><span class="toc-number">7.4.1.</span> <span class="toc-text">Connection Scope | 连接范围</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Events-事件"><span class="toc-number">7.4.2.</span> <span class="toc-text">Events | 事件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Applications-应用"><span class="toc-number">7.4.3.</span> <span class="toc-text">Applications | 应用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Legacy-Application-Application-的历史版本"><span class="toc-number">7.4.4.</span> <span class="toc-text">Legacy Application | Application 的历史版本</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Protocol-Specifications-协议规范"><span class="toc-number">7.4.5.</span> <span class="toc-text">Protocol Specifications | 协议规范</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Middleware-中间件"><span class="toc-number">7.4.6.</span> <span class="toc-text">Middleware | 中间件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Error-Handling-异常处理"><span class="toc-number">7.4.7.</span> <span class="toc-text">Error Handling | 异常处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Extra-Coroutins-额外的协程"><span class="toc-number">7.4.8.</span> <span class="toc-text">Extra Coroutins | 额外的协程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Extensions-协议拓展"><span class="toc-number">7.4.9.</span> <span class="toc-text">Extensions | 协议拓展</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Strings-and-Unicode"><span class="toc-number">7.4.10.</span> <span class="toc-text">Strings and Unicode</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HTTP-Protocol"><span class="toc-number">8.</span> <span class="toc-text">HTTP Protocol</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#HTTP-Connection-Scope"><span class="toc-number">8.1.</span> <span class="toc-text">HTTP Connection Scope</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Request-receive-event"><span class="toc-number">8.2.</span> <span class="toc-text">Request - receive event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Response-Start-send-event"><span class="toc-number">8.3.</span> <span class="toc-text">Response Start - send event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Response-Body-send-event"><span class="toc-number">8.4.</span> <span class="toc-text">Response Body - send event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Disconnect-receive-event"><span class="toc-number">8.5.</span> <span class="toc-text">Disconnect - receive event</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#WebSocket-Protocol"><span class="toc-number">9.</span> <span class="toc-text">WebSocket Protocol</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#WebSocket-Connection-Scope"><span class="toc-number">9.1.</span> <span class="toc-text">WebSocket Connection Scope</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Connect-receive-event"><span class="toc-number">9.2.</span> <span class="toc-text">Connect - receive event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Accept-send-event"><span class="toc-number">9.3.</span> <span class="toc-text">Accept - send event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Receive-receive-event"><span class="toc-number">9.4.</span> <span class="toc-text">Receive - receive event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Send-send-event"><span class="toc-number">9.5.</span> <span class="toc-text">Send - send event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Disconnect-reveive-event"><span class="toc-number">9.6.</span> <span class="toc-text">Disconnect - reveive event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Close-send-event"><span class="toc-number">9.7.</span> <span class="toc-text">Close - send event</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#WSGI-Compatibility-WSGI-兼容性"><span class="toc-number">10.</span> <span class="toc-text">WSGI Compatibility | WSGI 兼容性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#WSGI-encoding-differences-WSGI-编码异同"><span class="toc-number">11.</span> <span class="toc-text">WSGI encoding differences | WSGI 编码异同</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Lifespan-Protocol"><span class="toc-number">12.</span> <span class="toc-text">Lifespan Protocol</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Scope"><span class="toc-number">12.1.</span> <span class="toc-text">Scope</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Startup-reveive-event"><span class="toc-number">12.2.</span> <span class="toc-text">Startup - reveive event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Startup-Complete-send-event"><span class="toc-number">12.3.</span> <span class="toc-text">Startup Complete - send event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Startup-Failed-send-event"><span class="toc-number">12.4.</span> <span class="toc-text">Startup Failed - send event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Shutdown-reveive-event"><span class="toc-number">12.5.</span> <span class="toc-text">Shutdown - reveive event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Shutdown-Complete-send-event"><span class="toc-number">12.6.</span> <span class="toc-text">Shutdown Complete - send event</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Shutdown-Failed-send-event"><span class="toc-number">12.7.</span> <span class="toc-text">Shutdown Failed - send event</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ASGI-TLS-Extension"><span class="toc-number">13.</span> <span class="toc-text">ASGI TLS Extension</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#The-Base-Protocol-基础协议"><span class="toc-number">13.1.</span> <span class="toc-text">The Base Protocol | 基础协议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#When-to-use-this-extension"><span class="toc-number">13.2.</span> <span class="toc-text">When to use this extension</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TLS-Connection-Scope"><span class="toc-number">13.3.</span> <span class="toc-text">TLS Connection Scope</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Events"><span class="toc-number">13.4.</span> <span class="toc-text">Events</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Rational-Informative"><span class="toc-number">13.5.</span> <span class="toc-text">Rational(Informative)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#已有实现"><span class="toc-number">14.</span> <span class="toc-text">已有实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Server"><span class="toc-number">14.1.</span> <span class="toc-text">Server</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Daphne"><span class="toc-number">14.1.1.</span> <span class="toc-text">Daphne</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Uvicorn"><span class="toc-number">14.1.2.</span> <span class="toc-text">Uvicorn</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Hypercorn"><span class="toc-number">14.1.3.</span> <span class="toc-text">Hypercorn</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Application-Frameworks"><span class="toc-number">14.2.</span> <span class="toc-text">Application Frameworks</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Django-Channels"><span class="toc-number">14.2.1.</span> <span class="toc-text">Django&#x2F;Channels</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#FastAPI"><span class="toc-number">14.2.2.</span> <span class="toc-text">FastAPI</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Quart"><span class="toc-number">14.2.3.</span> <span class="toc-text">Quart</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Sanic"><span class="toc-number">14.2.4.</span> <span class="toc-text">Sanic</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Starlette"><span class="toc-number">14.2.5.</span> <span class="toc-text">Starlette</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#rpc-py"><span class="toc-number">14.2.6.</span> <span class="toc-text">rpc.py</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Tools"><span class="toc-number">14.3.</span> <span class="toc-text">Tools</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#a2wsgi"><span class="toc-number">14.3.1.</span> <span class="toc-text">a2wsgi</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#后记"><span class="toc-number">15.</span> <span class="toc-text">后记</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">16.</span> <span class="toc-text">参考</span></a></li></ol>
+  </div>
+
+    
+    <div id="toTop" class="fa fa-angle-up"></div>
+</aside>
+            
+            <section id="main"><article id="post-3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/所谓 ASGI" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+                    <div class="article-meta">
+                        
+    <div class="article-category">
+    	<i class="fa fa-folder"></i>
+        <a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/">3-计算机科学</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/">1-理论计算机科学</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/4-%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E7%BC%96%E8%AF%91%E5%99%A8/">4-编程语言和编译器</a><i class="fa fa-angle-right"></i><a class="article-category-link" href="/categories/3-%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/1-%E7%90%86%E8%AE%BA%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A7%91%E5%AD%A6/4-%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E7%BC%96%E8%AF%91%E5%99%A8/Python/">Python</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/Python/" rel="tag">Python</a>
+    </div>
+
+                        
+    <div class="article-date">
+        <i class="fa fa-calendar"></i>
+        <a href="/archives/f5b4f56.html">
+            <time datetime="2022-01-31T00:00:00.000Z" itemprop="datePublished">2022-01-31</time>
+        </a>
+    </div>
+
+
+                        
+                            <i class="fa fa-bar-chart"></i>
+                            <span id="busuanzi_container_site_pv"><span id="busuanzi_value_page_pv"></span></span>    
+                        
+                        
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/raw/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/所谓 ASGI.md" target="_blank" rel="external nofollow noopener noreferrer"> Source </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/edit/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/所谓 ASGI.md" target="_blank" rel="external nofollow noopener noreferrer"> Edit </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/commits/main/source/_posts/3-计算机科学/1-理论计算机科学/4-编程语言和编译器/Python/所谓 ASGI.md" target="_blank" rel="external nofollow noopener noreferrer"> History </a>
+                            </div>
+                        
+                    </div>
+                
+                
+    
+        <h1 class="article-title" itemprop="name">
+            所谓 ASGI
+        </h1>
+    
+
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+        
+        
+            <!-- 内容失效提醒 -->
+            
+    <!-- 如果文章创建超过一年或最后一次更新时间超过一个月(默认)则提示文章过期 -->
+    
+        <div class="aging">
+            <i class="fa fa-exclamation-circle aging-icon" aria-hidden="true"></i>
+            <span class="aging-content">请注意：本文编写于 <span class="aging-content-date">2022-01-31</span>，其中某些信息可能已经失去时效性。</span>
+        </div>
+    
+
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文的主体内容大部分来自对 <a href="https://asgi.readthedocs.io/en/latest/" target="_blank" rel="external nofollow noopener noreferrer">ASGI Documentation</a> 原文的翻译，其余部分为本人对原文的理解，在整理过程中我没有刻意地区分翻译的部分和我个人理解的部分，这两部分内容被糅杂在一起形成了本文。因此，请不要带着「本文的内容是百分之百正确」的想法阅读。如果文中的某些内容让你产生疑惑，你可以给我留言与我讨论或者对比 <a href="https://asgi.readthedocs.io/en/latest/" target="_blank" rel="external nofollow noopener noreferrer">ASGI Documentation</a> 的原文加以确认。</p>
+<p>本人在之前整理过一篇 <a href="https://wiki.blanc.site/archives/7a294715.html">何为 WSGI</a> 是对 <a href="https://www.python.org/dev/peps/pep-333/" target="_blank" rel="external nofollow noopener noreferrer">PEP 333</a> 和 <a href="https://www.python.org/dev/peps/pep-3333/" target="_blank" rel="external nofollow noopener noreferrer">PEP 3333</a> 的翻译和整理，感兴趣的话可以结合起来一起阅读。</p>
+<h2 id="字典参照"><a href="#字典参照" class="headerlink" title="字典参照"></a>字典参照</h2><p>注：仅代表本人理解，在涉及到这些单词的地方均使用英文单词。</p>
+<table>
+<thead>
+<tr>
+<th>英文</th>
+<th>中文</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ASGI</td>
+<td>异步服务器网关接口</td>
+<td></td>
+</tr>
+<tr>
+<td>WSGI</td>
+<td>Web 服务器网关接口</td>
+<td></td>
+</tr>
+<tr>
+<td>Server</td>
+<td>服务器</td>
+<td>Web 软件中面向 Client 提供具体服务的部分</td>
+</tr>
+<tr>
+<td>Application</td>
+<td>应用（应用框架）</td>
+<td>Web 软件中面向 Server 提供具体应用服务的部分</td>
+</tr>
+<tr>
+<td>Connection</td>
+<td>连接</td>
+<td>一个满足某种协议的 Socket 连接</td>
+</tr>
+<tr>
+<td>Event</td>
+<td>事件</td>
+<td>连接中发生的事件的抽象</td>
+</tr>
+<tr>
+<td>scope</td>
+<td>\</td>
+<td>存放连接细节的容器</td>
+</tr>
+<tr>
+<td>send</td>
+<td>发送器</td>
+<td>应用发送事件消息的工具</td>
+</tr>
+<tr>
+<td>receive</td>
+<td>接收器</td>
+<td>应用接受事件消息的工具</td>
+</tr>
+</tbody></table>
+<h2 id="何为-ASGI"><a href="#何为-ASGI" class="headerlink" title="何为 ASGI"></a>何为 ASGI</h2><blockquote>
+<p>ASGI (Asynchronous Server Gateway Interface) is a spiritual successor to WSGI, intended to provide a standard interface between async-capable Python web servers, frameworks, and applications.</p>
+<p>ASGI（异步服务器网关接口）是 WSGI 的精神续作，目的是为具有异步功能的 Python Web 服务器、框架和应用之间提供一个标准接口。</p>
+<p>from <a href="https://asgi.readthedocs.io/en/latest/" target="_blank" rel="external nofollow noopener noreferrer">ASGI Documentation</a></p>
+</blockquote>
+<h2 id="ASGI-vs-WSGI：宏观"><a href="#ASGI-vs-WSGI：宏观" class="headerlink" title="ASGI vs WSGI：宏观"></a>ASGI vs WSGI：宏观</h2><ol>
+<li>ASGI 并非由某个具体 PEP 提出，而是由 Django 开源团队提出并维护的一套对 WSGI 向下兼容的精神续作；</li>
+<li>在异步、长连接盛行的今天，WSGI 所描述的由单一同步可调用对象组成的 Web Application 已经无法平滑地满足现在的开发需求。</li>
+</ol>
+<h2 id="ASGI-简介"><a href="#ASGI-简介" class="headerlink" title="ASGI 简介"></a>ASGI 简介</h2><p>一个 ASGI Application 是一个单一异步可调用对象，它包含三个参数：</p>
+<ol>
+<li>scope：一个存放着 Connection 细节的 Python 字典；</li>
+<li>send：一个异步可调用对象，使得 Appliction 可以发送 Event 消息到 Client；</li>
+<li>receive：一个异步可调用对象，能够让 Application 从 Client 接收 Event 消息。</li>
+</ol>
+<p>在这种结构下，ASGI 下的每个 Application 不仅能同时处理多个 incoming Event 和 outcoming Event，在协程的加持下 Application 还可以做更多的事情，例如监听像 Redis 队列一样的外部的 trigger Event。</p>
+<p>下面是一个最简单的 ASGI Application 模型：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">application</span><span class="params">(scope, receive, send)</span>:</span></span><br><span class="line">    event = <span class="keyword">await</span> receive()</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">await</span> send(&#123;<span class="string">"tpye"</span>: <span class="string">"websocket.send"</span>, ...&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>所有的 Event 都是通过一个特定格式的 Python 字典被 send 和 receive 进行处理，正是这些 Event formats 构成了 ASGI 标准的基础，使得 Application 能够适应不同的 Servers。</p>
+<p>所有的 Event formats 都有一个用来决定自身结构的 type 键值对，下面就是一个 ASGI 中 HTTP 协议发送请求的 Event format 示例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="string">"type"</span>: <span class="string">"http.request"</span>,</span><br><span class="line">    <span class="string">"body"</span>: <span class="string">b"Hello World"</span>,</span><br><span class="line">    <span class="string">"more_body"</span>: <span class="literal">False</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面则是一个 ASGI 中通过 WebSocket 协议发送消息的 Event format：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="string">"type"</span>: <span class="string">"websocket.send"</span>,</span><br><span class="line">    <span class="string">"text"</span>: <span class="string">"Hello world!"</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="与-WSGI-的兼容性"><a href="#与-WSGI-的兼容性" class="headerlink" title="与 WSGI 的兼容性"></a>与 WSGI 的兼容性</h2><p>ASGI 被设计成 WSGI 的超集，并且给出了一个两者之间的转换方式，允许 WSGI Application 通过一个 <a href="https://github.com/django/asgiref/blob/main/asgiref/wsgi.py" target="_blank" rel="external nofollow noopener noreferrer">translation wrapper</a> 在 ASGI Server 中运行。</p>
+<p>一个线程池可以在 async event loop 之外运行同步的 WSGI Applications。</p>
+<p><strong>注：这里的原话是 <code>A threadpool can be used to run the synchronous WSGI applications away from the async event loop.</code>，不太清楚是想表示一种并列还是异或关系。</strong></p>
+<h2 id="ASGI-规范（V-3-0）"><a href="#ASGI-规范（V-3-0）" class="headerlink" title="ASGI 规范（V 3.0）"></a>ASGI 规范（V 3.0）</h2><h3 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h3><p>本规范提出了一种 Network Protocol Servers（尤其是 Web Servers） 和 Python Applications 之间通讯的标准接口，旨在允许通过一套协议同时处理多种常见协议，例如：HTTP、HTTP/2、和 WebSocket。</p>
+<p>本规范期望通过固定一套 API，满足 Server 与 Server 之间和 Server 与 Application 之间的交互需要。每一个被支持的协议都有一个子规范，子规范描述了如何将该协议编码或解码为 Event 消息。</p>
+<h3 id="提出理由"><a href="#提出理由" class="headerlink" title="提出理由"></a>提出理由</h3><p>WSGI 规范自推出以来一直运行良好，它的出现使得 Python Framework 和 Web Server 之间的对接变得更加灵活和简便。然而，它的设计过分依赖于 HTTP 风格的 Request/Response 循环，但现在越来越多不遵循这种交互模式的协议正在网络编程时被普遍使用，其中最明显的就是 WebSocket。</p>
+<p>ASGI 便在这种情况下应运而生，它试图维护一个简单 Application API，同时提供一套抽象方法，允许来自不同 Appliction 线程或进程的数据在任何时刻被发送和接受。</p>
+<p>基于「将不同协议转换为 Python 兼容且异步友好的消息集」的原则，ASGI 可以概括为两部分：</p>
+<ul>
+<li>用于构建 Servers 的标准化通信接口；</li>
+<li>一套支持不同协议的标准消息格式。</li>
+</ul>
+<p>ASGI 的核心目的是提供一种方法在能够处理 HTTP/2 和 WebSocket 协议的同时正常处理 HTTP 协议。然而要实现这个功能就必然意味着需要一个简单快捷的方式来支持现有的 WSGI Servers 和 Applications。因为目前大部分的 Python Web 服务都依赖于 WSGI。这部分内容被放在了 <a href>HTTP 子协议</a>。</p>
+<h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>ASGI 由两个不同的组件组成：</p>
+<ul>
+<li>Protocol Server：用于终止 sockets 并将其转换为 connections 和相关 event messages；</li>
+<li>Application：寄生在 Protocol Server 中，会在每个 connection 中被调用一次并在调用时处理相关 event messages，在必要时将处理好的相关 event messages 返回。</li>
+</ul>
+<p>与 WSGI 相同的是，Server 会在内部处理 Application 并以标准化的格式向其分派请求。不同的是，ASGI 中的 Application 是异步的可调用对象，而不是简单的可调用对象，它通过接收和发送异步事件与 Server 进行通信，而不是接收单一的输入流并返回单一的可迭代对象。</p>
+<p>ASGI Applications 必须以 async/await 兼容的协程程序运行，及兼容 asyncio。如果需要使用同步代码可以在主线程自由的使用线程或其他进程。</p>
+<p>与 WSGI 的另一个不同之处是，ASGI 的 connection 有两个独立的部分：</p>
+<ul>
+<li>Connection Scope：代表与用户进行的 Protocol Connection，它会一直存在直到 Connection 关闭；</li>
+<li>Events：它表示当 Connection 有事情发生时发送到 Application 中的信息，以及由 Application 发送给 Server 的消息（其中包括传送给 Client 的的数据）。</li>
+</ul>
+<p>Application 通过一个 Connection Spoce 和两个异步的可调用对象被调用的阻塞（await）来接收和返回事件消息。所有的这些都发生在异步事件循环（async event loop）中。</p>
+<p>每一次对 Application 可调用对象的调用都会映射到一个传入的 socket 或 Connection，并会延续该 Connection 的寿命，如果有 cleanup 则 Connection 会持续更长时间。</p>
+<p>一些协议可能不使用传统的 sockets，ASGI 在规定这些协议时会定义 Scope 合适过期以及合适关闭。</p>
+<h3 id="规范细节"><a href="#规范细节" class="headerlink" title="规范细节"></a>规范细节</h3><h4 id="Connection-Scope-连接范围"><a href="#Connection-Scope-连接范围" class="headerlink" title="Connection Scope | 连接范围"></a>Connection Scope | 连接范围</h4><p>用户对 ASGI Application 的每个请求都会对应一个 Connection 并引发对 Application 可调用对象的调用，来完整地处理此 Connection。对特定 Connection 信息的描述和生命周期的记录被称为 Connection Scope。</p>
+<p>第一个被传入 Application 可调用对象的参数就是一个存放特定 Connection 信息的 Scope 字典。</p>
+<p>例如，在 HTTP 协议下，Connection Scope 仅持续一个请求，但是这个被传递的 Scope 包含了大多数钱请求数据（除了 HTTP Request Body，因为这部分内容是通过事件流传输的）。</p>
+<p>但是，在 WebSocket 协议下，只要 socket 被接通 Connection Scope 就会维持下去。并且 Scope 会传递包含 WebSocket path 在内的信息，不过像消息等细节内容则是作为 Events 传递的。</p>
+<p>一些协议可能会给定一个信息非常有限的 Scope，因为它们封装了类似握手之类的内容。但是每个协议的定义都必须包含 Connection Spoce 的持续时间和你将在这个 Scope 参数中获取那些信息。</p>
+<p>根据协议细节不同，Applications 在与 Client 通讯之前可能需要等待一个初始的启动信息。</p>
+<h4 id="Events-事件"><a href="#Events-事件" class="headerlink" title="Events | 事件"></a>Events | 事件</h4><p>ASGI 将协议分解为一系列 Application 必须接收和反应的的 Events，以及 Application 可能在响应中发送的 Events。对于 HTTP 来说，就是简单的按顺序接收两个 Events：<code>http.request</code> 和 <code>http.disconnect</code> 并且发送相应的 Event 消息。而对于像 WebSocket 之类的协议，它可能更多的会是：先接收一个 <code>websocket.connect</code>，再发送一个 <code>websocket.send</code>，在接收一个 <code>websocket.receive</code> 最后接收一个 <code>websocket.disconnect</code>。</p>
+<p>每个 Event 都是一个带有 top-level type key 的字典，它包含一个关于消息类型的 Unicode 字符串。用户可以自由的创造属于他们自己的消息类型并且在高级 Events Applications 实例之间发送它们，例如：一个了解 Application 可能会通过一个 <code>mychat.message</code> 的 user tpye 发送聊天信息。Applications 应该能够处理一个关于 Events 的混合集合，它们一些来自 Incoming Client Connection，一些来自 Application 的其他部分。</p>
+<p>Events 中的信息可以通过网络发送，因此，它们需要被序列化，所以只能以以下类型进行传播：</p>
+<ul>
+<li>Byte strings | 二进制字符串</li>
+<li>Unicode strings | Unicode 字符串</li>
+<li>Integers (within the signed 64-bit range) | 整数</li>
+<li>Floating point numbers (within the IEEE 754 double precision range; no Nan or infinities) | 浮点数</li>
+<li>Lists (tuples should be encoded as lists) | 列表（元组应该被转换为列表）</li>
+<li>Dicts (keys must be Unicode strings) | 字典（键必须是 Unicode 字符串）</li>
+<li>Booleans | 布尔值</li>
+<li>None</li>
+</ul>
+<h4 id="Applications-应用"><a href="#Applications-应用" class="headerlink" title="Applications | 应用"></a>Applications | 应用</h4><p>在 3.0 版本中，Application 格式改变为使用一个单一的可调用对象，而不是之前的双可调用对象。双可调用的写法在后面的 [Legacy Application](#Legacy Application) 中有所记载。服务器可以使用 <code>asgiref.compatibility</code> 库轻松地实现对它的支持，并且应该尽可能支持它。</p>
+<p>ASGI Application 应该是一个单一的异步可调用对象：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">coroutine application(scope, receive, send)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>scope：存放 Connection Scope 信息，是一个至少包含指定传入协议的的字典；</li>
+<li>receive：一个能够在 Event 字典 available 时产出一个新 Event 字典的异步可调用对象；</li>
+<li>send：一个异步可调用对象，接收一个 Event 字典作为位置参数，并在发送完成或 Connection 关闭时 return。</li>
+</ul>
+<p>Application 会在每个 Connection 中被调用一次。Conection 的定义以及其生命周期由协议规范决定。例如，对于 HTTP 来说一个 Connection 就是一次请求，而对于 WebSocket 来说一个 Connection 是一个 WebSocket 连接。</p>
+<p>你发送和接收的 Scope 和 Event 消息的格式都是由 Application 协议之一定义的。Scope 必须是一个字典。<code>scope[&quot;type&quot;]</code> 必然存在，可以用它来判断那个协议被传入。<code>scope[&quot;asgi&quot;]</code> 也会以字典的形式存在，其中 <code>scope[&quot;asgi&quot;][&quot;version&quot;]</code> 代表了 Server 支持的 ASGI 的版本。如果这个值不存在，则默认为 <code>&quot;2.0&quot;</code>。</p>
+<p>也可能有一些特殊的版本信息存放在 <code>scope[&quot;asgi&quot;][&quot;spec_version&quot;]</code>。这样做能够允许各个协议规范进行增强而不影响整个 ASGI 版本。</p>
+<p>在本规范的具体协议子规范中给出了详细的 Scope 和 Event 消息的格式，它们就类似于 <a href="https://www.python.org/dev/peps/pep-3333/#environ-variables" target="_blank" rel="external nofollow noopener noreferrer">WSGI 的 environ 字典中的 keys 的规范</a>。</p>
+<h4 id="Legacy-Application-Application-的历史版本"><a href="#Legacy-Application-Application-的历史版本" class="headerlink" title="Legacy Application | Application 的历史版本"></a>Legacy Application | Application 的历史版本</h4><p>ASGI v2.0 Application 被定义成一个可调用对象：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">application(scope)</span><br></pre></td></tr></table></figure>
+
+<p>它能够返回另一个异步的可调用对象：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">coroutine application_instance(receive, send)</span><br></pre></td></tr></table></figure>
+
+<p>其中 scope, receive 和 send 的含义与新版本一致，但注意：第一个可调用对象是同步的。</p>
+<p>第一个可调用对象会在 Connection 开始时被调用，然后第二个可调用对象紧接着会被调用或阻塞。</p>
+<p>这种书写风格在 v3.0 中已经被淘汰了，使用两个可调用对象的布局方案被认为是没必要的。现在它们已经成为旧时代的遗物被用来支持一些仍旧以这种风格编写的程序。</p>
+<p><a href="https://github.com/django/asgiref/blob/main/asgiref/compatibility.py" target="_blank" rel="external nofollow noopener noreferrer">asgiref.compatibility</a> 模块中有一个兼容性套件，你可以用它来检测旧版风格的应用程序，并将其无缝切换为新版但可调用对象的风格。虽然现在这种遗留的风格仍被支持，但它终究会随着时间的推移而被放弃，所以请尽可能使用新版的风格进行代码开发。</p>
+<h4 id="Protocol-Specifications-协议规范"><a href="#Protocol-Specifications-协议规范" class="headerlink" title="Protocol Specifications | 协议规范"></a>Protocol Specifications | 协议规范</h4><p>具体的协议规范描述了在指定协议下 Scope 和 Event 消息格式的标准化规范。</p>
+<p>所有协议中的 Scope 和 Event 消息中都存在的一个键就是 type，它的值代表了 Scope 或 Event 消息的类型（协议类型）。</p>
+<p>在 Scope 中，type 的值必须是一个 Unicode 字符串，例如 <code>&quot;http&quot;</code> 或 <code>&quot;webscoket</code>，具体参考相关协议子规范的规定。</p>
+<p>在消息中，type 应该被命名为 <code>protocol.message_type</code> 其中 protocol 与 Scope 中的 type 相匹配，message_type 由协议子规范定义。消息类型值的示例包括：<code>http.request</code>，<code>websocket.send</code>。</p>
+<p>注意：Application 应该主动拒绝任何未被定义（无法理解）的协议，并给出一个任意类型的异常。如果不这么做，可能会导致服务器认为你支持一个你并不支持的协议，这在于 Lifespan 协议一起使用时可能会产生混淆，因为 Server 会等你主动启动它。</p>
+<p>当前支持的协议子规范有：</p>
+<ul>
+<li><a href="#HTTPandWebScoketprotocol">HTTP and WebSocket</a></li>
+<li><a href="#Lifespan">Lifespan</a></li>
+</ul>
+<h4 id="Middleware-中间件"><a href="#Middleware-中间件" class="headerlink" title="Middleware | 中间件"></a>Middleware | 中间件</h4><p>ASGI 同样拥有中间件这个概念，中间件同时拥有 Server 和 Application 的功能，能够接收一个 Scope，也能发送或接收异步可调用对象，可以对其内部进行修改并执行内部的 Application。</p>
+<p>当中间件修改 Scope 的时候，它应该在改变 Scope 并将其传递给 Application 之前制作一个备份，以防止 Scope 的改变向上层泄漏。我们在构建中间件时不能想当然的认为中间件发送的 Scope 就是最终版本，因为这中间可能有其他的中间件阻挡。正因如此，不要在中间件中保持对 Scope（包括副本）的引用，更不要尝试在 ASGI app 的外围去改变它。修改 Scope 最好的时机就是将控制权交给子 Application（中间件中的 Application） 之前。</p>
+<h4 id="Error-Handling-异常处理"><a href="#Error-Handling-异常处理" class="headerlink" title="Error Handling | 异常处理"></a>Error Handling | 异常处理</h4><p>如果 Server 接收到一个错误的 Event 字典，例如：包含一个未知类型的、缺少 Event type 必要键的或者对象有错误 Python 类型（例如 HTTP 头信息的 Unicode 字符串），这种情况下应该引发一个异常，从异步可调用对象到 Application。</p>
+<p>如果一个 Application 从 receive 接收到一个无效的事件字典，也应该有引发一个异常。</p>
+<p>但如果是字典中存在额外的键，则不应该引发异常。这就允许在后续过程中对协议规范进行非破坏性的升级或定制。</p>
+<p>Server 可以自由地处理运行在其中的 Application 抛出的异常——记录到控制台，发送到 syslog 或其他自定义操作——但一旦发生异常 Server 就必须终止 Application 实例和其中的相关 Connection。</p>
+<p>注意在 Connection 关闭后 Server 接收到的 message 不被视为错误，在这种情况下 send 异步可调用对象应该充当一个 no-op。</p>
+<h4 id="Extra-Coroutins-额外的协程"><a href="#Extra-Coroutins-额外的协程" class="headerlink" title="Extra Coroutins | 额外的协程"></a>Extra Coroutins | 额外的协程</h4><p>Frameworks 或 Applications 可能会希望在为每个 Application 启动协同程序外运行额外的协同程序。但由于在 Python 3.7 中无法将额外的程序设置为实例的协同程序的父级，Application 应该确保所有在 Application 运行时启动的协程与 Application 对应的协程同时关闭或在此之前关闭。</p>
+<p>任何在 Application 对应协程关闭后仍在运行的协程都不能保证它能够被顺利执行完毕，因为它可能在任意时间被强制退出。</p>
+<h4 id="Extensions-协议拓展"><a href="#Extensions-协议拓展" class="headerlink" title="Extensions | 协议拓展"></a>Extensions | 协议拓展</h4><p>在有些情况下，我们可能想在核心 ASGI 规范之外提供特定的拓展，或在某个规范推出之前对其进行测试。</p>
+<p>为了应对这些场景，ASGI 定义了一种常见的拓展模式——可以对协议规范进行选择性补充，Server 可以利用这个机制使 Application 获得更多的功能。</p>
+<p>这一切都是通过 scope 词典的 extensions 条目实现的，它本身对应的也是一个字典。Extensions 字典中的 Unicode 字符串名称是由 Server 和 Application 共同约定而成的。</p>
+<p>如果 Server 想要支持一个拓展，需要在 extensions 字典中增加一个条目，并且增加的条目的值也应该是一个字典。Server 可以用这个字典中提供任对 scope 的拓展信息，如果 extension 仅用来表明 Server 的 send 可调用对象允许额外 events，只需要给相关 extension 条目附上一个空字典的值就可以了。</p>
+<p>假设一个提供共 HTTP 服务的 Server 希望提供一个允许某个新 event 被返回的拓展，这个事件会导致刷新操作系统级别的网络发送缓冲区，那就可以通过一下格式进行拓展：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">scope = &#123;</span><br><span class="line">    <span class="string">"type"</span>: <span class="string">"http"</span>,</span><br><span class="line">    <span class="string">"method"</span>: <span class="string">"GET"</span>,</span><br><span class="line">    ...</span><br><span class="line">    <span class="string">"extensions"</span>: &#123;</span><br><span class="line">        <span class="string">"fullflush"</span>: &#123;&#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当某个 Application 接收到包含此 scope 的请求后，它就能在调用指定可调用对象时触发相关自定义事件（本例中就是 http.fullflush）。</p>
+<h4 id="Strings-and-Unicode"><a href="#Strings-and-Unicode" class="headerlink" title="Strings and Unicode"></a>Strings and Unicode</h4><p>在本文档以及所有相关子规范中：<br>byte string：<a href="https://docs.python.org/3/library/stdtypes.html#str" target="_blank" rel="external nofollow noopener noreferrer">Python3 中的 bytes 类型</a>；<br>Unicode string：<a href="https://docs.python.org/3/library/stdtypes.html#bytes" target="_blank" rel="external nofollow noopener noreferrer">Python3 中的 str 类型</a>。</p>
+<p>本文档永远不会使用 string 来模糊两者之间的表达，在涉及这两个概念的地方都使用了 str 和 bytes 作为区分。</p>
+<p>本文档中所有字典的键（包括 scopes 和 events 中的字典）都是 Unicode string。</p>
+<h2 id="HTTP-Protocol"><a href="#HTTP-Protocol" class="headerlink" title="HTTP Protocol"></a>HTTP Protocol</h2><p>HTTP 格式涵盖了 HTTP/1.0 HTTP/1.1 HTTP/2，HTTP/2 的变动主要集中在传输层。支持 HTTP/2 的 ASGI Server 应该为同一个 HTTP/2 上的不同请求生成不同的 scopes，并且能够将来自同一个流的响应正确地复用。HTTP 版本会在 scope 中以字符串的形式存在。</p>
+<p>处理HTTP 协议中具有相同名字的 header 字段是很复杂的。RFC 7230 规定：在处理任何可重复出现的 header 字段时，都视作只发送一次该 header 字段并将所有的值使用逗号连接。</p>
+<p>但同时 RFC 7239 和 RFC 6265 也明确指出，这一规则不适用于 HTTP Cookie 相关的 header 字段（Cookie 和 Set-Cookie）。Cookie header 字段只能由 user-agent 发送一次，但是 Set-Cookie header 字段可以重复出现并且不能使用逗号连接。</p>
+<p>ASGI 协议的抉择是将请求和响应头分为两组 <code>[name, value]</code> 列表并且不对传入的值做任何其他处理。</p>
+<p>ASGI Server 需要在向 ASGI Application 发出请求时通过一个值为 http 的 tpye 字段表明使用的协议。</p>
+<h3 id="HTTP-Connection-Scope"><a href="#HTTP-Connection-Scope" class="headerlink" title="HTTP Connection Scope"></a>HTTP Connection Scope</h3><p>HTTP Connection 拥有一个唯一的 Request Connection Scope，也就是说，ASGI Application 会在请求开始时被调用，并持续到特定的请求结束后，即使底层的 Socket 仍然处于开启状态并且持续有请求进入。</p>
+<p>Connection Scope Message 包括：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode string</td>
+<td>“http”</td>
+</tr>
+<tr>
+<td>asgi[“version”]</td>
+<td>Unicode string</td>
+<td>使用的 ASGI 规范版本</td>
+</tr>
+<tr>
+<td>asgi[“spec_version”]</td>
+<td>Unicode string</td>
+<td>Server 支持的 ASGI HTTP 规范版本，可选值：”2.0”，”2.1”，”2.2” 或 “2.3”，默认”2.0”</td>
+</tr>
+<tr>
+<td>http_version</td>
+<td>Unicode string</td>
+<td>可选值：”1.0”，”1.1” 或 “2”</td>
+</tr>
+<tr>
+<td>method</td>
+<td>Unicode string</td>
+<td>HTTP 方法名称，大写</td>
+</tr>
+<tr>
+<td>scheme</td>
+<td>Unicode string</td>
+<td>URL 协议，可选值：”http” 或 “https”，默认为 “http”</td>
+</tr>
+<tr>
+<td>path</td>
+<td>Unicode string</td>
+<td>HTTP 请求目标，不包括任何查询字符串，由百分号编码和 UTF-8 字节序解码成字符</td>
+</tr>
+<tr>
+<td>raw_path</td>
+<td>byte string</td>
+<td>原始的未被修改的 HTTP path，来自 Web Server，可能缺省，默认为 None</td>
+</tr>
+<tr>
+<td>query_string</td>
+<td>byte string</td>
+<td>url 中 ? 后的部分，百分号编码</td>
+</tr>
+<tr>
+<td>root_path</td>
+<td>Unicode string</td>
+<td>Application 被绑定到的根路径，和 WSGI 中的 SCRIIPT_PATH 一致，默认为 “”</td>
+</tr>
+<tr>
+<td>headers</td>
+<td>Iterable[[byte string, byte string]]</td>
+<td>一个由 [name, value] 两个子项组成的可迭代对象，name 应尽可能是小写</td>
+</tr>
+<tr>
+<td>client</td>
+<td>Iterable[Unicode string, int]</td>
+<td>一个 [host, port] 可迭代对象，默认为 None</td>
+</tr>
+<tr>
+<td>server</td>
+<td>Iterable[Unicode string, Optional[int]]</td>
+<td>可以是 [host, port] 可迭代对象，也可以是 [path, None]，其中 path 是 unix 套接字路径，缺省为 None</td>
+</tr>
+</tbody></table>
+<p>ASGI Server 应该负责处理所有入站和出站的分块传输编码。当一个带有 chunked encoded body 的请求通过 ASGI Server 时，它应该自动去掉请求的分块以 plain body bytes 的形式提供给 ASGI Application。当一个没有 Content-Length 的响应被提供给 ASGI Server 时，它可以按照合适的方式进行 chunked。</p>
+<h3 id="Request-receive-event"><a href="#Request-receive-event" class="headerlink" title="Request - receive event"></a>Request - receive event</h3><p>由 ASGI Server 发送给 ASGI Application 以标识一个入站请求。关于这个请求的大部分信息都在对应的  Connection Scope 内。</p>
+<p>Receive 中的 body message 是一种传输大量大的入站 HTTP body 块的方式，并且是判断何时执行「实际处理请求的代码」的触发器（因此不应该在仅有一个 Connection Scope 打开时就触发「实际处理请求的代码」）。</p>
+<p>注意：如果请求发送时附带了 <code>Transfer-Encoding: chunked</code> 头，ASGI Server 需要负责处理这种编码。http.request message 应该只包含每个 chunk 的解码信息。</p>
+<p>Request Receive Event Message 包含：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“http.request”</td>
+</tr>
+<tr>
+<td>body</td>
+<td>Byte String</td>
+<td>请求主体，默认为 b””，如果设置了 more_body = True，则将其视为 body chunk 链的一部分，并与后续的 chunks 进行关联</td>
+</tr>
+<tr>
+<td>more_body</td>
+<td>Bool</td>
+<td>标志着是否还有额外的 body 内容，如果是 True 表示还有 body 内容，ASGI Application 需要等待，知道有一个为 False 的 chunk 到达</td>
+</tr>
+</tbody></table>
+<h3 id="Response-Start-send-event"><a href="#Response-Start-send-event" class="headerlink" title="Response Start - send event"></a>Response Start - send event</h3><p>由 ASGI Application 发送给 ASGI Server，用于标识开始向 Web Client 发送响应。在此之后需要紧跟至少一个 response content message。ASGI Server 在接收到至少一个 Response Body 之前不得向 Web Client 发送响应。</p>
+<p>ASGI Application 可能会在消息中发送一个 Transfer-Encoding header，但是 ASGI Server 必须忽略它。ASGI Server 需要自己处理 Transfer-Encoding，如果应用程序呈现的响应没有设置 Content-Length，可以选择使用 <code>Transfer-Encoding: chunked</code>。</p>
+<p>Response Start Send Event Message 包含：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“http.response.start”</td>
+</tr>
+<tr>
+<td>status</td>
+<td>int</td>
+<td>HTTP 状态码</td>
+</tr>
+<tr>
+<td>headers</td>
+<td>Iterable[[byte string, byte string]]</td>
+<td>一个 [name, vlaue] 迭代器，必须与 HTTP Response 中的顺序一致且 Header names 都必须是小写的。默认是 []。不能存在 Pseudo headers（HTTP/2 和 HTTP/3 中的）</td>
+</tr>
+</tbody></table>
+<h3 id="Response-Body-send-event"><a href="#Response-Body-send-event" class="headerlink" title="Response Body - send event"></a>Response Body - send event</h3><p>由 ASGI Application 发送给 ASGI Server，用于继续向 Web Client 发送响应。ASGI Server 必须在 send 返回前将传递给它的全部数据传输到发送缓冲区。如果 more_body 被设置为 False，这个 Connection 将被关闭。</p>
+<p>Response Body Send Event Message 包含：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“http.response.body”</td>
+</tr>
+<tr>
+<td>body</td>
+<td>byte string</td>
+<td></td>
+</tr>
+<tr>
+<td>more_body</td>
+<td>bool</td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="Disconnect-receive-event"><a href="#Disconnect-receive-event" class="headerlink" title="Disconnect - receive event"></a>Disconnect - receive event</h3><p>由 ASGI Server 发送给 ASIG Application，在 HTTP Connection 关闭或在响应被发送后调用。主要适用于长轮询（long-polling），如果连接被提前关闭，希望触发某些清理代码时。</p>
+<p>Disconnect Receive Event Message 包含：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“http.disconnect”</td>
+</tr>
+</tbody></table>
+<h2 id="WebSocket-Protocol"><a href="#WebSocket-Protocol" class="headerlink" title="WebSocket Protocol"></a>WebSocket Protocol</h2><p>WebSockets 与 HTTP 存在某些一致的细节：它们都有 path 和 headers，但是也有一些独特的状态。同样，大部分状态都在 Scope 中，只要 socket 存在它们就会一直存在。</p>
+<p>WebSocket 协议服务器（后简称：ASGI Server）应该自行处理 PING/PONG 消息，并在必要时发送 PING 消息以确保 Connection 是有活性的。</p>
+<p>ASGI Server 应该自行处理 message fragmentation，并且将完整的消息传递给 ASGI Application。</p>
+<p>ASGI Server 需要在向 ASGI Application 发出请求时通过一个值为 websocket 的 tpye 字段表明使用的协议。</p>
+<h3 id="WebSocket-Connection-Scope"><a href="#WebSocket-Connection-Scope" class="headerlink" title="WebSocket Connection Scope"></a>WebSocket Connection Scope</h3><p>WebSocket Connection Scope 应该与 socket 共存，如果连接中断，socket 应该被同时关闭，反之亦然。</p>
+<p>WebSocket Connection Scope Message 包含：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“websocket”</td>
+</tr>
+<tr>
+<td>asgi[“version”]</td>
+<td>Unicode String</td>
+<td>使用的 ASGI 规范版本</td>
+</tr>
+<tr>
+<td>asgi[“spec_version”]</td>
+<td>Unicode String</td>
+<td>Server 支持的 ASGI HTTP 规范版本，可选值：”2.0”，”2.1”，”2.2” 或 “2.3”，默认”2.0”</td>
+</tr>
+<tr>
+<td>http_version</td>
+<td>Unicode String</td>
+<td>“1.1” 或 “2” 默认是 “1.1”</td>
+</tr>
+<tr>
+<td>scheme</td>
+<td>Unicode String</td>
+<td>URL 协议，可选值：”ws” 或 “wss”，默认为 “ws”</td>
+</tr>
+<tr>
+<td>path</td>
+<td>Unicode string</td>
+<td>HTTP 请求目标，不包括任何查询字符串，由百分号编码和 UTF-8 字节序解码成字符</td>
+</tr>
+<tr>
+<td>raw_path</td>
+<td>byte string</td>
+<td>原始的未被修改的 HTTP path，来自 Web Server，可能缺省，默认为 None</td>
+</tr>
+<tr>
+<td>query_string</td>
+<td>byte string</td>
+<td>url 中 ? 后的部分，百分号编码</td>
+</tr>
+<tr>
+<td>root_path</td>
+<td>Unicode string</td>
+<td>Application 被绑定到的根路径，和 WSGI 中的 SCRIIPT_PATH 一致，默认为 “”</td>
+</tr>
+<tr>
+<td>headers</td>
+<td>Iterable[[byte string, byte string]]</td>
+<td>一个由 [name, value] 两个子项组成的可迭代对象，name 应尽可能是小写</td>
+</tr>
+<tr>
+<td>client</td>
+<td>Iterable[Unicode string, int]</td>
+<td>一个 [host, port] 可迭代对象，默认为 None</td>
+</tr>
+<tr>
+<td>server</td>
+<td>Iterable[Unicode string, Optional[int]]</td>
+<td>可以是 [host, port] 可迭代对象，也可以是 [path, None]，其中 path 是 unix 套接字路径，缺省为 None</td>
+</tr>
+<tr>
+<td>subprotocols</td>
+<td>Iterable[Unicode string]</td>
+<td>客户端公布的子协议，默认是 []</td>
+</tr>
+</tbody></table>
+<h3 id="Connect-receive-event"><a href="#Connect-receive-event" class="headerlink" title="Connect - receive event"></a>Connect - receive event</h3><p>此事件是在 Web Client 打开一个 connection 并即将完成 WebSocket 握手的时候，由 ASGI Server 发送给 ASGI Application 的。</p>
+<p>本事件的消息体必须被一个 Accept 事件消息或一个 Close 事件消息响应，在对应 socket 将要传递 websocket.receive 事件消息之前。ASGI Server 必须在 WebSocket 握手阶段发送本事件消息，并且在得到回复之前不能完成握手，如果 connection 被拒绝，则返回 HTTP 403。</p>
+<p>Connect Receive Event Message 包括：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“websocket.connect”</td>
+</tr>
+</tbody></table>
+<h3 id="Accept-send-event"><a href="#Accept-send-event" class="headerlink" title="Accept - send event"></a>Accept - send event</h3><p>此事件是在 ASGI Application 期望接受一个 incoming connection 时由 ASGI Application 向 ASGI Server 发送的。</p>
+<p>Accept Send Event Message 包括：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“websocket.accept”</td>
+</tr>
+<tr>
+<td>subprotocol</td>
+<td>Unicode String</td>
+<td>ASGI Server 期望接受的子协议，可选值，默认为 None</td>
+</tr>
+<tr>
+<td>headers</td>
+<td>Iterable[[byte string, byte string]]</td>
+<td>一个 [name, value] 的可迭代对象。更多描述请看原文。</td>
+</tr>
+</tbody></table>
+<h3 id="Receive-receive-event"><a href="#Receive-receive-event" class="headerlink" title="Receive - receive event"></a>Receive - receive event</h3><p>此事件是在收到来自 Web Client 的数据消息时由 ASGI Server 发送给 ASGI Application 的。</p>
+<p>Receive Event Message 包括：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“websocket.receive”</td>
+</tr>
+<tr>
+<td>bytes</td>
+<td>Byte String</td>
+<td>message content，binary 模式，可选项，默认为 None</td>
+</tr>
+<tr>
+<td>text</td>
+<td>Unicode String</td>
+<td>message content， text 模式，可选项，默认为 None</td>
+</tr>
+</tbody></table>
+<p>bytes 或 text 至少要存在一个，也可以两个都存在。</p>
+<h3 id="Send-send-event"><a href="#Send-send-event" class="headerlink" title="Send - send event"></a>Send - send event</h3><p>由 ASGI Application 发送给 ASGI Server，为 Web Client 发送一条数据信息。</p>
+<p>Send Event Message 包括：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“websocket.send”</td>
+</tr>
+<tr>
+<td>bytes</td>
+<td>Byte String</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>text</td>
+<td>Unicode String</td>
+<td>同上</td>
+</tr>
+</tbody></table>
+<p>bytes 或 text 至少要存在一个，也可以两个都存在。</p>
+<h3 id="Disconnect-reveive-event"><a href="#Disconnect-reveive-event" class="headerlink" title="Disconnect - reveive event"></a>Disconnect - reveive event</h3><p>此事件是在任何一个与 Web Client 的链接断开时（包括 Web Client 关闭连接、ASGI Server 关闭连接或 socket 丢失）由 ASGI Server 发送给 ASGI Application 的。</p>
+<p>Disconnect Reveive Event Message 包括：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“websocket.disconnect”</td>
+</tr>
+<tr>
+<td>code</td>
+<td>int</td>
+<td>websocket close code</td>
+</tr>
+</tbody></table>
+<h3 id="Close-send-event"><a href="#Close-send-event" class="headerlink" title="Close - send event"></a>Close - send event</h3><p>由 ASGI Application 发送给 ASGI Server 告知 connection 关闭。</p>
+<p>如果在 socket 被接受之前发送，ASGI Server 必须以 HTTP 403 错误代码关闭 connection，并且不完成 WebSocket 握手，这在某些浏览器上可能表现为不同的 WebSocket 错误代码（例如 1006，异常关闭）。</p>
+<p>如果在 socket 被接受后发送，ASGI Server 必须通过传递 message 关闭 socket（默认 code 是 1000）。</p>
+<p>Close Send Event Message 包括：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“websocket.close”</td>
+</tr>
+<tr>
+<td>code</td>
+<td>int</td>
+<td>websocket close code，可选项，默认为 1000</td>
+</tr>
+<tr>
+<td>reason</td>
+<td>Unicode String</td>
+<td>close 原因，可选项，默认为空字符串</td>
+</tr>
+</tbody></table>
+<h2 id="WSGI-Compatibility-WSGI-兼容性"><a href="#WSGI-Compatibility-WSGI-兼容性" class="headerlink" title="WSGI Compatibility | WSGI 兼容性"></a>WSGI Compatibility | WSGI 兼容性</h2><p>HTTP 子协议的设计有一部分是为了确保它能够与 WSGI 规范保持一致，以降低兼容两种规范的难度，并且使得 ASGI Server 搭配 WSGI Application 成为可能。</p>
+<p>WSGI Application 是同步的，必须运行在线程池中才能被驱动，否则它的 runtime 就会映射到 HTTP Connection Scope 的 lifetime 上。</p>
+<p>WSGI 的 environ 变量中的各种特殊 key 几乎都可以直接映射到 HTTP Connection Scope 上：</p>
+<table>
+<thead>
+<tr>
+<th>WSGI environ</th>
+<th>ASGI HTTP Scope</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>REQUEST_METHOD</td>
+<td>method</td>
+</tr>
+<tr>
+<td>SCRIPT_NAME</td>
+<td>root_path</td>
+</tr>
+<tr>
+<td>PATH_INFO</td>
+<td>从 root 中剥离 root_path 获得</td>
+</tr>
+<tr>
+<td>QUERY_STRING</td>
+<td>query_string</td>
+</tr>
+<tr>
+<td>CONTENT_TYPE</td>
+<td>从 headers 中剥离</td>
+</tr>
+<tr>
+<td>CONTENT_LENGTH</td>
+<td>从 headers 中剥离</td>
+</tr>
+<tr>
+<td>SERVER_NAME and SERVER_PORT</td>
+<td>server</td>
+</tr>
+<tr>
+<td>REMOTE_HOST/REMOTE_ADDR and REMOTE_PORT</td>
+<td>client</td>
+</tr>
+<tr>
+<td>SERVER_PROTOCOL</td>
+<td>http_version</td>
+</tr>
+<tr>
+<td>wsgi.url_scheme</td>
+<td>scheme</td>
+</tr>
+<tr>
+<td>wsgi.input</td>
+<td>一个基于 http.request 的 StringIO</td>
+</tr>
+<tr>
+<td>wsgi.errors</td>
+<td>directed by the wrapper as needed</td>
+</tr>
+</tbody></table>
+<p>WSGI 中的 start_response 可调用对象与 http.response.start 类似：</p>
+<ul>
+<li>status argument 变成了 status，并且去掉了 reason phrase。</li>
+<li>response_headers 映射到了 headers 上。</li>
+</ul>
+<p><img src="https://img.blanc.site//wiki/img202208041805019.png" alt="WSGI start_response"></p>
+<p>从 WSGI Application 中产生的内容映射到了 http.response.body 的 message 中。</p>
+<h2 id="WSGI-encoding-differences-WSGI-编码异同"><a href="#WSGI-encoding-differences-WSGI-编码异同" class="headerlink" title="WSGI encoding differences | WSGI 编码异同"></a>WSGI encoding differences | WSGI 编码异同</h2><p>WSGI 规范（如 <a href="https://www.python.org/dev/peps/pep-3333/" target="_blank" rel="external nofollow noopener noreferrer">PEP 3333</a> 所定义）规定：所有发送或来自 WSGI Server 的 strings 必须是 str 类型，但值包括 ISO-8859-1(“lantin-1”) 范围内的 codepoints。这是因为它最迟是为 Python2 以及不同的 set of string types 设计的。</p>
+<p>ASGI 的 HTTP 和 WebSocket 子规范将 Scope 字典的每个条目指定为 byte string 或 Unicode String 的其中一种。HTTP 作为一个早期协议，在编码制定上存在一些不完善的地方，所以在何处使用 Unicode 何处使用 byte 并没有明确的说明。</p>
+<ul>
+<li>path：URL 可以同时拥有 percent-encoded 或 UTF-8 编码。这部分的解码行为通常是在底层服务器或传播过程中的服务器进行的，因此这个字段被设置成了 Unicode String，由 UTF-8 和 percent 编码同时构成。</li>
+<li>headers：这些是由 Web Client 或 Server 发送的确切字节序的字节字符串。虽然现在的 HTTP 标准规定 headers 应该是 ASCII 码，但是旧的标准并没有规定，而是允许尽可能多的编码选择。Framework 或 Application 应该按照他们认为合适的方式进行 headers 的解码。</li>
+<li>query_string：不像 path，它不会收到 Server 的干扰，因此使用 raw byte sring 呈现，使用 percent-encode 编码。</li>
+<li>root_path：为了与 path 匹配同样使用 Unicode String。</li>
+</ul>
+<h2 id="Lifespan-Protocol"><a href="#Lifespan-Protocol" class="headerlink" title="Lifespan Protocol"></a>Lifespan Protocol</h2><p>Lifesapn ASGI 子规范概括了如何在 ASGI Application 中传递像 startup 或 shutdown 之类的 lifespan events。</p>
+<p>Lifespan message 允许 ASGI Application 在一个运行中的事件循环的上下文中初始化或停止。这方面的一个例子是创建一个连接池，随后关闭连接池释放连接。</p>
+<p>Lifespan 应该在处理请求的每个事件循环中执行一次。在多进程环境中，每个进程都会有  Lifespan event。重要的是，lifespan 和 request 是在同一个事件循环中运行的，以确保像数据库连接池这样的对象不会在循环中被移除或共享。</p>
+<p>一个 lifespan 实现举例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">app</span><span class="params">(scope, receive, send)</span>:</span></span><br><span class="line">    <span class="keyword">if</span> scope[<span class="string">"type"</span>] == <span class="string">"lifespan"</span>:</span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            message = <span class="keyword">await</span> receive()</span><br><span class="line">            <span class="keyword">if</span> message[<span class="string">"type"</span>] == <span class="string">"lifespan.startup"</span>:</span><br><span class="line">                <span class="comment"># Do some startup here</span></span><br><span class="line">                <span class="keyword">await</span> send(&#123;<span class="string">"type"</span>: <span class="string">"lifespan.startup.complete"</span>&#125;)</span><br><span class="line">            <span class="keyword">elif</span> message[<span class="string">"type"</span>] == <span class="string">"lifespan.shutdown"</span>:</span><br><span class="line">                <span class="comment"># Do some shutdown here</span></span><br><span class="line">                <span class="keyword">await</span> send(&#123;<span class="string">"type"</span>: <span class="string">"lifespan.shutdown.complete"</span>&#125;)</span><br><span class="line">                <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="comment"># Handle other</span></span><br><span class="line">        <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Scope"><a href="#Scope" class="headerlink" title="Scope"></a>Scope</h3><p>Lifespan Scope 会持续存在直到事件循环结束。</p>
+<p>Lifespan Scope Message 包含：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“lifespan”</td>
+</tr>
+<tr>
+<td>asgi[“version”]</td>
+<td>Unicode String</td>
+<td>ASGI 协议版本</td>
+</tr>
+<tr>
+<td>asgi[“spec_version”]</td>
+<td>Unicode String</td>
+<td>子协议版本，默认 “1.0”</td>
+</tr>
+</tbody></table>
+<p>如果在调用带有 lifespan.startup 消息的 Application 或处理 type 是 lifespan 的 Scope 时抛出了异常，ASGI Server 需要继续执行但不 send any lifespan events。</p>
+<p>这允许兼容不支持 lifespan 的 ASGI Application。如果需要记录在 lifespan 启动过程中发生的错误并阻止 ASGI Server 的启动过程，可以通过发送 lifespan.startup.filed 来实现。</p>
+<h3 id="Startup-reveive-event"><a href="#Startup-reveive-event" class="headerlink" title="Startup - reveive event"></a>Startup - reveive event</h3><p>此事件是在 ASGI Server 准备好处理 startup 和 receive connection 但还没开始处理的时候，由 ASGI Server 发送给 ASGI Application 的。</p>
+<p>Startup Receive Event Message 包括：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“lifespan.startup”</td>
+</tr>
+</tbody></table>
+<h3 id="Startup-Complete-send-event"><a href="#Startup-Complete-send-event" class="headerlink" title="Startup Complete - send event"></a>Startup Complete - send event</h3><p>此事件是在 ASGI Application 处理完 startup 后，由 ASGI Application 发送给 ASGI Server 的。<strong>ASGI Server 在开始处理 connection 之前必须等待这个事件</strong>。</p>
+<p>Startup Complete Send Event Message 包括：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“lifespan.startup.complete”</td>
+</tr>
+</tbody></table>
+<h3 id="Startup-Failed-send-event"><a href="#Startup-Failed-send-event" class="headerlink" title="Startup Failed - send event"></a>Startup Failed - send event</h3><p>此事件是在 ASGI Application 未能完成 startup 时，由 ASGI Application 发送给 ASGI Server 的。ASGI Server 应该在接收到事件消息后记录或打印消息所提供的内容，然后退出。</p>
+<p>Startup Failed Send Event Message 包括：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“lifespan.startup.failed”</td>
+</tr>
+<tr>
+<td>message</td>
+<td>Unicode String</td>
+<td>默认为 “”</td>
+</tr>
+</tbody></table>
+<h3 id="Shutdown-reveive-event"><a href="#Shutdown-reveive-event" class="headerlink" title="Shutdown - reveive event"></a>Shutdown - reveive event</h3><p>此事件是在 ASGI Server 停止接受 connection 并关闭所有正在处理的 connection 后，由 ASGI Server 发送给 ASGI Application 的。</p>
+<p>Shutdown Reveive Event 包括：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“lifespan.shutdown”</td>
+</tr>
+</tbody></table>
+<h3 id="Shutdown-Complete-send-event"><a href="#Shutdown-Complete-send-event" class="headerlink" title="Shutdown Complete - send event"></a>Shutdown Complete - send event</h3><p>此事件是在 ASGI Application 完成 cleanup 之后，由 ASGI Application 发送给 ASGI Server 的。ASGI Server 在终止前必须等待此事件消息。</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“lifespan.shutdown.complete”</td>
+</tr>
+</tbody></table>
+<h3 id="Shutdown-Failed-send-event"><a href="#Shutdown-Failed-send-event" class="headerlink" title="Shutdown Failed - send event"></a>Shutdown Failed - send event</h3><p>此事件是在 ASGI Application 未能正常处理 cleanup 之后，由 ASGI Application  发送给 ASGI Server 的。ASGI Server 应该在接收到事件消息后记录或打印消息所提供的内容，然后退出。</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>type</td>
+<td>Unicode String</td>
+<td>“lifespan.shutdown.failed”</td>
+</tr>
+<tr>
+<td>message</td>
+<td>Unicode String</td>
+<td>默认 “”</td>
+</tr>
+</tbody></table>
+<h2 id="ASGI-TLS-Extension"><a href="#ASGI-TLS-Extension" class="headerlink" title="ASGI TLS Extension"></a>ASGI TLS Extension</h2><p>本规范概述了如何在 ASGI connection scope 对象中传递 TLS（或 SSL）connection 信息。</p>
+<h3 id="The-Base-Protocol-基础协议"><a href="#The-Base-Protocol-基础协议" class="headerlink" title="The Base Protocol | 基础协议"></a>The Base Protocol | 基础协议</h3><p>TSL 是无法单独使用的，它总是包裹着另一个协议。因此，此规范并非用来规定如何单独使用 TSL 的，它必须作为一个其他 ASGI 子协议的拓展来使用。与 TSL 搭配的其他 ASGI 子协议被称为基础协议。</p>
+<p>对于 HTTP-over-TLS(HTTPS) 来说，需要联合使用 TLS 子规范和 ASGI HTTP 子规范，其中基础协议是 ASGI HTTP 子规范。</p>
+<p>对于 WebSockets-over-TLS(wss:// protocol) 来说，需要联合使用 TLS 子规范和 ASGI WebSocket 子规范，其中基础协议是 ASGI WebSocket 子规范。</p>
+<p>在搭配基础协议使用此拓展协议时需要注意：基础协议中必须定义 Connection Scope 以确保它最多包含一个 TLS 连接，否则，就不能使用此拓展协议。</p>
+<h3 id="When-to-use-this-extension"><a href="#When-to-use-this-extension" class="headerlink" title="When to use this extension"></a>When to use this extension</h3><p>此拓展仅限于在 TLS Connection 中使用。</p>
+<p>对于非 TLS Connection，ASGI Server 禁止提供此拓展。</p>
+<p>ASGI Application 可以在 Connection Scope 的 extensions 字典中检查是否存在 tls 拓展。如果存在，说明 ASGI Server 支持此拓展，并且 Connection 是建立在 TLS 上的。如果不存在，说明 ASGI Server 不支持这个拓展或 Connection 不是建立在 TLS 上的。</p>
+<h3 id="TLS-Connection-Scope"><a href="#TLS-Connection-Scope" class="headerlink" title="TLS Connection Scope"></a>TLS Connection Scope</h3><p>基础协议的 Connection Scope 中包含一个 extensions 键值对，它的值是一个字典。在该字典中的 tls 键值即是 TLS Connection Scope：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>server_cert</td>
+<td>Unicode String or None</td>
+<td>ASGI Server 在建立 TLS 连接时发送的 x509 证书的 PEM 编码版本。一些 ASGI Server 的实现可能无法提供这一点（例如，如果 TLS 是由一个单独的代理或负载平衡服务器终止的），在这种情况下应该是 None。必须存在的。</td>
+</tr>
+<tr>
+<td>client_cert_chain</td>
+<td>Iterable[Unicode string]</td>
+<td>每个字符串都是一个 PEM 编码的 x509 证书。第一个证书是客户端证书。任何后续证书都是客户端发送的证书链的一部分，每个证书都会签署前面的证书。如果客户端没有提供证书，那么它就是一个空的可迭代对象。可选的，如果缺失默认为空的可迭代对象。</td>
+</tr>
+<tr>
+<td>client_cert_name</td>
+<td>Unicode String or None</td>
+<td>客户端证书主题的 x509 标识名（DN），按照 RFC 4514 中定义进行编码的单一字符串。如果客户端没有提供证书，则为 None。如果 client_cert_chain 被提供且不是空可迭代对象，那么这个字段必须要被提供，并且必须包含与 client_cert_chain[0] 一致的信息。可选的，如缺失默认为 None。</td>
+</tr>
+<tr>
+<td>client_cert_error</td>
+<td>Unicode String or None</td>
+<td>如果提供了客户端证书并验证成功，或没有提供客户端证书都为 None。如果提供了客户端证书但验证失败，则是一个非空字符串，包含一个错误信息或错误代码，表明验证失败的原因。大多数 Web Server 会在客户端证书验证失败后直接拒绝而非设置这个值。可选的，默认为 None。</td>
+</tr>
+<tr>
+<td>tls_version</td>
+<td>Integer or None</td>
+<td>正在使用的 TLS 版本。这是在 TLS 规范中定义的版本号之一，是一个无符号整数。常见值包括：0x0303 for TLS 1.2 或 0x0304 for TLS 1.3，如果 TLS 没有被使用则设置为 None。必须存在。</td>
+</tr>
+<tr>
+<td>cipher_suite</td>
+<td>Integer or None</td>
+<td>正在使用的 TLS cipher suite。一个 16  位无符号证书，按照网络字节序对相关 RFC 中规定的一对 8 位证书进行编码。一些 Web Server 无法提供这个功能，这种情况下，设置为 None。必须存在。</td>
+</tr>
+</tbody></table>
+<h3 id="Events"><a href="#Events" class="headerlink" title="Events"></a>Events</h3><p>所有的 Event 都是基于基础协议的。</p>
+<h3 id="Rational-Informative"><a href="#Rational-Informative" class="headerlink" title="Rational(Informative)"></a>Rational(Informative)</h3><p>略</p>
+<h2 id="已有实现"><a href="#已有实现" class="headerlink" title="已有实现"></a>已有实现</h2><h3 id="Server"><a href="#Server" class="headerlink" title="Server"></a>Server</h3><h4 id="Daphne"><a href="#Daphne" class="headerlink" title="Daphne"></a>Daphne</h4><p><a href="http://github.com/django/daphne" target="_blank" rel="external nofollow noopener noreferrer">Stable / http://github.com/django/daphne</a></p>
+<p>当前 ASGI 的参考 Server 实现（亲儿子），使用 <a href="https://twistedmatrix.com/trac/" target="_blank" rel="external nofollow noopener noreferrer">Twisted</a> 编写，作为 <a href="https://channels.readthedocs.io/en/stable/" target="_blank" rel="external nofollow noopener noreferrer">Django Channel</a> 项目组的一部分。支持 HTTP/1, HTTP/2 和 WebSockets。</p>
+<h4 id="Uvicorn"><a href="#Uvicorn" class="headerlink" title="Uvicorn"></a>Uvicorn</h4><p><a href="https://www.uvicorn.org/" target="_blank" rel="external nofollow noopener noreferrer">Stable / https://www.uvicorn.org/</a></p>
+<p>一个基于 <a href="https://github.com/MagicStack/uvloop" target="_blank" rel="external nofollow noopener noreferrer">uvloop</a> 和 <a href="https://github.com/MagicStack/httptools" target="_blank" rel="external nofollow noopener noreferrer">httptools</a> 的 ASGI Server。支持 HTTP/1 和 WebSockets。</p>
+<h4 id="Hypercorn"><a href="#Hypercorn" class="headerlink" title="Hypercorn"></a>Hypercorn</h4><p><a href="https://pgjones.gitlab.io/hypercorn/index.html" target="_blank" rel="external nofollow noopener noreferrer">Beta / https://pgjones.gitlab.io/hypercorn/index.html</a></p>
+<p>一个基于 <a href="https://sans-io.readthedocs.io/" target="_blank" rel="external nofollow noopener noreferrer">sans-io hyper</a>, <a href="https://github.com/python-hyper/h11" target="_blank" rel="external nofollow noopener noreferrer">h11</a>, <a href="https://github.com/python-hyper/h2" target="_blank" rel="external nofollow noopener noreferrer">h2</a> 和 <a href="https://python-hyper.org/projects/wsproto/en/stable/" target="_blank" rel="external nofollow noopener noreferrer">wsproto</a> 库的 ASGI Server。支持 HTTP/1, HTTP/2 和 WebSockets。</p>
+<h3 id="Application-Frameworks"><a href="#Application-Frameworks" class="headerlink" title="Application Frameworks"></a>Application Frameworks</h3><h4 id="Django-Channels"><a href="#Django-Channels" class="headerlink" title="Django/Channels"></a>Django/Channels</h4><p><a href="http://channels.readthedocs.io" target="_blank" rel="external nofollow noopener noreferrer">Stable / http://channels.readthedocs.io</a></p>
+<p>Channels 是 Django 项目的一部分，旨在为 Django 提供异步支持能力，是 ASGI 项目的发起者。为 Django 整合了处理 HTTP，WebSocket 以及任何满足 ASGI-native 代码实现协议的能力。</p>
+<h4 id="FastAPI"><a href="#FastAPI" class="headerlink" title="FastAPI"></a>FastAPI</h4><p><a href="https://github.com/tiangolo/fastapi" target="_blank" rel="external nofollow noopener noreferrer">Beta / https://github.com/tiangolo/fastapi</a></p>
+<p>FastPI 是一个在 Starlette 框架基础上进一步封装的 ASGI Web 框架，它整合了标准 Python 类型注释、OpenAPI、JSON Schema、OAuth 等特性。支持 HTTP 和 WebSocket 协议。</p>
+<h4 id="Quart"><a href="#Quart" class="headerlink" title="Quart"></a>Quart</h4><p><a href="https://github.com/pgjones/quart" target="_blank" rel="external nofollow noopener noreferrer">Beta / https://github.com/pgjones/quart</a></p>
+<p>Quart 是一个 Python ASGI 微框架。它专注于使用最简单的 asyncio 特性为 Web 应用提供异步能力，常被用在 Flask apps 中。支持 HTTP 协议。</p>
+<h4 id="Sanic"><a href="#Sanic" class="headerlink" title="Sanic"></a>Sanic</h4><p><a href="https://sanicframework.org" target="_blank" rel="external nofollow noopener noreferrer">Beta / https://sanicframework.org</a></p>
+<p>Sanic 是一个灵活的框架，它既能够作为 ASGI Server 使用也能够作为 ASGI Application 使用。支持 HTTP 和 WebSockets 协议。</p>
+<h4 id="Starlette"><a href="#Starlette" class="headerlink" title="Starlette"></a>Starlette</h4><p><a href="https://github.com/encode/starlette" target="_blank" rel="external nofollow noopener noreferrer">Beta / https://github.com/encode/starlette</a></p>
+<p>Starlette 是一个提供了编写基础但强大请求或响应对象的极简的 ASGI 库。支持 HTTP 和 WebSockets 协议。</p>
+<h4 id="rpc-py"><a href="#rpc-py" class="headerlink" title="rpc.py"></a>rpc.py</h4><p><a href="https://github.com/abersheeran/rpc.py" target="_blank" rel="external nofollow noopener noreferrer">Beta / https://github.com/abersheeran/rpc.py</a></p>
+<p>一个易于使用的强大的 RPC 框架。RPC Server 基于 WSGI 和 ASGI，Client 基于 <a href="https://www.python-httpx.org/" target="_blank" rel="external nofollow noopener noreferrer">httpx</a>。支持同步、异步、同步生成器和异步生成器，并提供可选的类型注释和 OpenAPI 文档生成特性。</p>
+<h3 id="Tools"><a href="#Tools" class="headerlink" title="Tools"></a>Tools</h3><h4 id="a2wsgi"><a href="#a2wsgi" class="headerlink" title="a2wsgi"></a>a2wsgi</h4><p><a href="https://github.com/abersheeran/a2wsgi" target="_blank" rel="external nofollow noopener noreferrer">Stable / https://github.com/abersheeran/a2wsgi</a></p>
+<p>将一个 WSGI Application 转换为一个 ASGI Application 的工具。纯 Python 实现，仅依赖于原生库。</p>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>我在整理 <a href="#已有实现">已有实现章节</a> 的时候发现，<a href="https://github.com/encode" target="_blank" rel="external nofollow noopener noreferrer">encode</a> 这个 Github Group 有点强，Django-REST-Framework, Starlette, Uvicorn, httpx 都是出自这一个组织。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ol>
+<li><a href="https://asgi.readthedocs.io/en/latest/" target="_blank" rel="external nofollow noopener noreferrer">ASGI Documentation</a></li>
+</ol>
+
+        
+        <footer class="article-footer">
+        </footer>
+    </div>
+</div></article>
+
+
+    
+<nav id="article-nav">
+    
+        <a href="/archives/5823d5df.html" id="article-nav-newer" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">上一篇</strong>
+            <div class="article-nav-title">
+                
+                    WeeklyPEP-2-PEP 343-with 语句-overview
+                
+            </div>
+        </a>
+    
+    
+        <a href="/archives/2accc063.html" id="article-nav-older" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">下一篇</strong>
+            <div class="article-nav-title">WeeklyPEP-0-overview</div>
+        </a>
+    
+</nav>
+
+
+
+
+
+    
+    
+        <section id="comments"> <div id="vcomments"></div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        appId: 'sz7ny95XiYWkxht3H3YDs2GX-gzGzoHsz',
+        appKey: 'T8JJugDkbqtFLONIIzcPWW76',
+        placeholder: '不要吝啬赞美的语句ヾﾉ≧∀≦)o!',
+        avatar: 'mp',
+        meta: ['nick','mail','link'],
+        pageSize: 10,
+        visitor: true,
+        notify: true,
+        verify: true
+    })
+    let info = document.querySelectorAll('#vcomments>.info')[0]
+    if (info) { info.style.display = 'none' }
+</script> </section>
+    
+
+
+
+
+<!-- baidu url auto push script -->
+<script type="text/javascript">
+    !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=window.location.href,o=document.referrer;if(!e.test(r)){var n="//api.share.baidu.com/s.gif";o?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var t=new Image;t.src=n}}(window);
+</script>     
+</section>
+        </div>
+        <footer id="footer">
+    <div class="outer">
+        <div id="footer-info" class="inner">
+            ryomahan &copy; 2024 
+            <a rel="external nofollow noopener noreferrer" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png"></a>
+            <br> Powered by <a href="http://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. Comment By <a href="https://valine.js.org/" target="_blank" rel="external nofollow noopener noreferrer">valine</a>. Theme - <a href="https://github.com/zthxxx/hexo-theme-Wikitten" target="_blank" rel="external nofollow noopener noreferrer">wikitten</a>
+            
+                <br>
+                <span id="busuanzi_container_site_pv"><i class="fa fa-eye"></i> <span id="busuanzi_value_site_pv"></span></span>
+                &nbsp;|&nbsp;
+                <span id="busuanzi_container_site_pv"><i class="fa fa-user"></i> <span id="busuanzi_value_site_uv"></span></span>
+            
+        </div>
+    </div>
+</footer>
+
+        
+    
+        
+<script src="/libs/lightgallery/js/lightgallery.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-thumbnail.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-pager.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-autoplay.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-fullscreen.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-zoom.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-hash.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-share.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-video.min.js"></script>
+
+    
+    
+        
+<script src="/libs/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+    
+    
+        <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true,
+            TeX: {
+                equationNumbers: {
+                  autoNumber: 'AMS'
+                }
+            }
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+
+
+<!-- Custom Scripts -->
+
+<script src="/js/main.js"></script>
+
+
+    </div>
+</body>

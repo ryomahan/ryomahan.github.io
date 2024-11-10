@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    
+    <title>记一次失败的 AI 辅助编程全历程 | 小白维基</title>
+    
+    
+        <meta name="keywords" content="小白,一只小白,依依东望,小白维基,操作系统,数据库,科学上网,编程思维,编程框架,编程语言,网络笔记,软件使用">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="前言最近公司的一个新项目上马，我被安排来做项目初始化，前端初始化的时候使用了 Vue3 + Tailwind CSS + NaiveUI，在搞基础布局的主题变化时出现了本次插曲。 基础背景 我使用的 AI 工具是安装在自己 Slack 频道的 Claude App； 我对 Tailwind CSS 的实现原理一无所知，我只知道简单的使用方法。  具体问题按照设计，Web PC 端的左侧边栏有一排导">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记一次失败的 AI 辅助编程全历程">
+<meta property="og:url" content="https://wiki.blanc.site/archives/c57afff6.html">
+<meta property="og:site_name" content="小白维基">
+<meta property="og:description" content="前言最近公司的一个新项目上马，我被安排来做项目初始化，前端初始化的时候使用了 Vue3 + Tailwind CSS + NaiveUI，在搞基础布局的主题变化时出现了本次插曲。 基础背景 我使用的 AI 工具是安装在自己 Slack 频道的 Claude App； 我对 Tailwind CSS 的实现原理一无所知，我只知道简单的使用方法。  具体问题按照设计，Web PC 端的左侧边栏有一排导">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-05-20T00:00:00.000Z">
+<meta property="article:modified_time" content="2024-11-10T15:39:52.936Z">
+<meta property="article:author" content="ryomahan">
+<meta property="article:tag" content="小白">
+<meta property="article:tag" content="一只小白">
+<meta property="article:tag" content="依依东望">
+<meta property="article:tag" content="小白维基">
+<meta property="article:tag" content="操作系统">
+<meta property="article:tag" content="数据库">
+<meta property="article:tag" content="科学上网">
+<meta property="article:tag" content="编程思维">
+<meta property="article:tag" content="编程框架">
+<meta property="article:tag" content="编程语言">
+<meta property="article:tag" content="网络笔记">
+<meta property="article:tag" content="软件使用">
+<meta name="twitter:card" content="summary">
+    
+
+    
+        <link rel="alternate" href="/atom.xml" title="小白维基" type="application/atom+xml">
+    
+    
+        <link rel="icon" href="/favicon.ico">
+    
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/libs/open-sans/styles.css">
+
+    
+<link rel="stylesheet" href="/libs/source-code-pro/styles.css">
+
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<script src="/libs/jquery/2.1.3/jquery.min.js"></script>
+
+    
+<script src="/libs/jquery/plugins/cookie/1.4.1/jquery.cookie.js"></script>
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/lightgallery/css/lightgallery.min.css">
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/justified-gallery/justifiedGallery.min.css">
+
+    
+    
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110100486-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-110100486-1');
+</script>
+    
+    
+        <meta name="google-site-verification" content="D9ld5oQABBxIwNpgD_WN61p51-ZcABZ6Olt4HKcxlWw">
+    
+    
+        <script>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?fac7e69191f0847b886888aa7c794fa7";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+    
+
+
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- 字体引入 -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Noto+Serif+SC:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+<meta name="generator" content="Hexo 4.2.1"></head>
+</html>
+<body>
+    <div id="container">
+        <header id="header">
+    <div id="header-main" class="header-inner">
+        <div class="outer">
+            <a href="/" id="logo">
+                <i class="logo"></i>
+                <span class="site-title">小白维基</span>
+            </a>
+            <nav id="main-nav">
+                
+                    <a class="main-nav-link" href="/">首页</a>
+                
+                    <a class="main-nav-link" href="/archives">归档</a>
+                
+                    <a class="main-nav-link" href="/categories">分类</a>
+                
+                    <a class="main-nav-link" href="/tags">标签</a>
+                
+                    <a class="main-nav-link" href="/about">关于</a>
+                
+            </nav>
+            
+                
+                <nav id="sub-nav">
+                    <div class="profile" id="profile-nav">
+                        <a id="profile-anchor" href="javascript:;">
+                            <img class="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df">
+                            <i class="fa fa-caret-down"></i>
+                        </a>
+                    </div>
+                </nav>
+            
+            <div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="想要查找什么...">
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div>
+        </div>
+    </div>
+    <div id="main-nav-mobile" class="header-sub header-inner">
+        <table class="menu outer">
+            <tr>
+                
+                    <td><a class="main-nav-link" href="/">首页</a></td>
+                
+                    <td><a class="main-nav-link" href="/archives">归档</a></td>
+                
+                    <td><a class="main-nav-link" href="/categories">分类</a></td>
+                
+                    <td><a class="main-nav-link" href="/tags">标签</a></td>
+                
+                    <td><a class="main-nav-link" href="/about">关于</a></td>
+                
+                <td>
+                    
+    <div class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+    </div>
+
+                </td>
+            </tr>
+        </table>
+    </div>
+</header>
+
+        <div class="outer">
+            
+                
+
+<aside id="profile">
+    <div class="inner profile-inner">
+        <div class="base-info profile-block">
+            <img id="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df?s=128">
+            <h2 id="name">Ryoma</h2>
+            <h3 id="title">毕己一生，依依东望。</h3>
+            <span id="location"><i class="fa fa-map-marker"></i>Jinan, China</span>
+            <a id="follow" target="_blank" href="https://github.com/ryomahan/" rel="external nofollow noopener noreferrer">关注我</a>
+        </div>
+        <div class="article-info profile-block">
+            <div class="article-info-block">
+                25
+                <span>文章</span>
+            </div>
+            <div class="article-info-block">
+                12
+                <span>标签</span>
+            </div>
+        </div>
+        
+        <div class="profile-block social-links">
+            <table>
+                <tr>
+                    
+                    
+                    <td>
+                        <a href="https://blog.blanc.site" target="_blank" title="wordpress" class="tooltip">
+                            <i class="fa fa-wordpress"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://twitter.com/ryomahan1996" target="_blank" title="twitter" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-twitter"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://weibo.com/xiaobaidh" target="_blank" title="weibo" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-weibo"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://github.com/ryomahan" target="_blank" title="github" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-github"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="/atom.xml" target="_blank" title="rss" class="tooltip">
+                            <i class="fa fa-rss"></i>
+                        </a>
+                    </td>
+                    
+                </tr>
+            </table>
+        </div>
+        
+    </div>
+
+    
+        <div class="widget-wrap widget-list">
+            <h3 class="widget-title"><span>友情链接</span></h3>
+            <div class="widget">
+                <ul>
+                    
+                        <li>
+                            <a href="https://pythonhunter.org/" target="_blank" rel="external nofollow noopener noreferrer">捕蛇者说</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://laike9m.com/" target="_blank" rel="external nofollow noopener noreferrer">laike9m</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://www.kawabangga.com/" target="_blank" rel="external nofollow noopener noreferrer">卡瓦邦噶</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://manjusaka.itscoder.com/" target="_blank" rel="external nofollow noopener noreferrer">Manjusaka</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.evo.moe/" target="_blank" rel="external nofollow noopener noreferrer">Sparta_EN</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.blanc.site" target="_blank">一只小白</a>
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    
+</aside>
+
+            
+            
+                <aside id="sidebar">
+   
+        
+    <div class="widget-wrap" id="categories">
+        <h3 class="widget-title">
+            <span>分类</span>
+            &nbsp;
+            <a id="allExpand" href="#">
+                <i class="fa fa-angle-double-down fa-2x"></i>
+            </a>
+        </h3>
+        
+        
+        
+         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            1-网络笔记
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/e5187cf6.html">同步到腾讯云社区</a></li>  <li class="file"><a href="/archives/4940711f.html">8086 处理器寻址方式</a></li>  <li class="file"><a href="/archives/5c113e93.html">SSH overview</a></li>  <li class="file active"><a href="/archives/c57afff6.html">记一次失败的 AI 辅助编程全历程</a></li>  <li class="file"><a href="/archives/d644d904.html">「翻译」如何组织大型 Python 项目</a></li>  <li class="file"><a href="/archives/ed42c0e4.html">「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            2-软件使用
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Chrome
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/decc86d5.html">「转载」解析谷歌 Chrome 各分支版本</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Django
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/b641d3ac.html">Django 笔记-2-源码理解-urls 篇</a></li>  <li class="file"><a href="/archives/ab18c3c3.html">Django 笔记-3-文档阅读-关于 Django 文档</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Vue
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/793400e.html">解决 Vue CSS 样式重复载入，为 Vue 添加全局 less 或 sass 基础样式库</a></li>  <li class="file"><a href="/archives/341c107a.html">Vue Router 实现动态路由和常见问题解决方案</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            3-计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-理论计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-数据结构和算法
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/f3c5e08e.html">数据结构笔记1-概论</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            4-编程语言和编译器
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Python
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/7a294715.html">所谓 WSGI</a></li>  <li class="file"><a href="/archives/ffe3a081.html">Python MRO</a></li>  <li class="file"><a href="/archives/2accc063.html">WeeklyPEP-0-overview</a></li>  <li class="file"><a href="/archives/f5b4f56.html">所谓 ASGI</a></li>  <li class="file"><a href="/archives/5823d5df.html">WeeklyPEP-2-PEP 343-with 语句-overview</a></li>  <li class="file"><a href="/archives/291be77c.html">解剖 Python 类</a></li>  <li class="file"><a href="/archives/c29b4f3b.html">WeeklyPEP-3-PEP 318-函数装饰器-overview</a></li>  <li class="file"><a href="/archives/7eaf0f5f.html">WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Shell
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/8f9d5c85.html">Shell 获取当前脚本的绝对路径</a></li>  <li class="file"><a href="/archives/dbac95ae.html">实现 echo 不换行输出</a></li>  <li class="file"><a href="/archives/b422aa7d.html">Shell 区分不同 Unix 系统</a></li>  <li class="file"><a href="/archives/3beb222a.html">Shell 基础语法</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            汇编语言
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/90a7f914.html">NASM Overview</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+    </div>
+    <script>
+        $(document).ready(function() {
+            var iconFolderOpenClass  = 'fa-folder-open';
+            var iconFolderCloseClass = 'fa-folder';
+            var iconAllExpandClass = 'fa-angle-double-down';
+            var iconAllPackClass = 'fa-angle-double-up';
+            // Handle directory-tree expansion:
+            // 左键单独展开目录
+            $(document).on('click', '#categories a[data-role="directory"]', function (event) {
+                event.preventDefault();
+
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var subtree = $(this).siblings('ul');
+                icon.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if (expanded) {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideUp({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderCloseClass);
+                } else {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideDown({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderOpenClass);
+                }
+            });
+            // 右键展开下属所有目录
+            $('#categories a[data-role="directory"]').bind("contextmenu", function(event){
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var listNode = $(this).siblings('ul');
+                var subtrees = $.merge(listNode.find('li ul'), listNode);
+                var icons = $.merge(listNode.find('.fa'), icon);
+                icons.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if(expanded) {
+                    subtrees.slideUp({ duration: 100 });
+                    icons.addClass(iconFolderCloseClass);
+                } else {
+                    subtrees.slideDown({ duration: 100 });
+                    icons.addClass(iconFolderOpenClass);
+                }
+            })
+            // 展开关闭所有目录按钮
+            $(document).on('click', '#allExpand', function (event) {
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconAllExpandClass);
+                icon.removeClass(iconAllExpandClass).removeClass(iconAllPackClass);
+                if(expanded) {
+                    $('#sidebar .fa.fa-folder').removeClass('fa-folder').addClass('fa-folder-open')
+                    $('#categories li ul').slideDown({ duration: 100 });
+                    icon.addClass(iconAllPackClass);
+                } else {
+                    $('#sidebar .fa.fa-folder-open').removeClass('fa-folder-open').addClass('fa-folder')
+                    $('#categories li ul').slideUp({ duration: 100 });
+                    icon.addClass(iconAllExpandClass);
+                }
+            });  
+        });
+    </script>
+
+    
+        
+  <div class="toc-flag"></div>
+  <div class="toc-wrap">
+      <h3>
+          <span>文章目录</span>
+      </h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#基础背景"><span class="toc-number">2.</span> <span class="toc-text">基础背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#具体问题"><span class="toc-number">3.</span> <span class="toc-text">具体问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#开始踩坑"><span class="toc-number">4.</span> <span class="toc-text">开始踩坑</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#直接提问"><span class="toc-number">4.1.</span> <span class="toc-text">直接提问</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#从原理提问"><span class="toc-number">4.2.</span> <span class="toc-text">从原理提问</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#从原理理解"><span class="toc-number">4.3.</span> <span class="toc-text">从原理理解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#自我救赎"><span class="toc-number">4.4.</span> <span class="toc-text">自我救赎</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#结语"><span class="toc-number">5.</span> <span class="toc-text">结语</span></a></li></ol>
+  </div>
+
+    
+    <div id="toTop" class="fa fa-angle-up"></div>
+</aside>
+            
+            <section id="main"><article id="post-1-网络笔记/记一次失败的 AI 辅助编程全历程" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+                    <div class="article-meta">
+                        
+    <div class="article-category">
+    	<i class="fa fa-folder"></i>
+        <a class="article-category-link" href="/categories/1-%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/">1-网络笔记</a>
+    </div>
+
+                        
+                        
+    <div class="article-date">
+        <i class="fa fa-calendar"></i>
+        <a href="/archives/c57afff6.html">
+            <time datetime="2023-05-20T00:00:00.000Z" itemprop="datePublished">2023-05-20</time>
+        </a>
+    </div>
+
+
+                        
+                            <i class="fa fa-bar-chart"></i>
+                            <span id="busuanzi_container_site_pv"><span id="busuanzi_value_page_pv"></span></span>    
+                        
+                        
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/raw/main/source/_posts/1-网络笔记/记一次失败的 AI 辅助编程全历程.md" target="_blank" rel="external nofollow noopener noreferrer"> Source </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/edit/main/source/_posts/1-网络笔记/记一次失败的 AI 辅助编程全历程.md" target="_blank" rel="external nofollow noopener noreferrer"> Edit </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/commits/main/source/_posts/1-网络笔记/记一次失败的 AI 辅助编程全历程.md" target="_blank" rel="external nofollow noopener noreferrer"> History </a>
+                            </div>
+                        
+                    </div>
+                
+                
+    
+        <h1 class="article-title" itemprop="name">
+            记一次失败的 AI 辅助编程全历程
+        </h1>
+    
+
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+        
+        
+            <!-- 内容失效提醒 -->
+            
+    <!-- 如果文章创建超过一年或最后一次更新时间超过一个月(默认)则提示文章过期 -->
+    
+        <div class="aging">
+            <i class="fa fa-exclamation-circle aging-icon" aria-hidden="true"></i>
+            <span class="aging-content">请注意：本文编写于 <span class="aging-content-date">2023-05-20</span>，其中某些信息可能已经失去时效性。</span>
+        </div>
+    
+
+            <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近公司的一个新项目上马，我被安排来做项目初始化，前端初始化的时候使用了 Vue3 + Tailwind CSS + NaiveUI，在搞基础布局的主题变化时出现了本次插曲。</p>
+<h2 id="基础背景"><a href="#基础背景" class="headerlink" title="基础背景"></a>基础背景</h2><ul>
+<li>我使用的 AI 工具是安装在自己 Slack 频道的 Claude App；</li>
+<li>我对 Tailwind CSS 的实现原理一无所知，我只知道简单的使用方法。</li>
+</ul>
+<h2 id="具体问题"><a href="#具体问题" class="headerlink" title="具体问题"></a>具体问题</h2><p>按照设计，Web PC 端的左侧边栏有一排导航按钮，这些导航按钮在 light 模式下应该是白底，在 dark 模式下应该是 Naive UI 的默认底色。按照需求描述，只需要使用 Tailwind CSS 来实现「仅在 light 模式下修改指定按钮背景色为白色」就行了。</p>
+<p>可坑爹的是 Tailwind CSS 只提供了 <code>dark:bg-white</code> 的写法而没有类似 <code>light:bg-white</code> 的写法，按照正常写法可以使用 <code>class=&quot;bg-white dark:bg-[#需要的颜色]&quot;</code> 来处理。但是我不希望这样写，因为 dark 模式下 UI 按钮组件默认的底色就是我所需的，所以我没理由再去强调 dark 模式下的底色是什么，我只需要使用类似 <code>light:!bg-white</code> 的写法来强制覆盖 light 模式下 UI 按钮组件的底色就行。</p>
+<h2 id="开始踩坑"><a href="#开始踩坑" class="headerlink" title="开始踩坑"></a>开始踩坑</h2><p>于是我开始了无休止的 AI 辅助编程：</p>
+<h3 id="直接提问"><a href="#直接提问" class="headerlink" title="直接提问"></a>直接提问</h3><p>注：这一步我的诉求是让 AI 帮忙直接生成解决方案。</p>
+<p>我最开始的思路是直接将问题描述清楚，让 AI 帮忙生成解决方案，于是：</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">ryomahan  [5:26 PM]</span><br><span class="line"></span><br><span class="line">Tailwind CSS 有没有类似 light:bg-white 的写法</span><br><span class="line"></span><br><span class="line">ClaudeAPP  [5:26 PM]</span><br><span class="line"></span><br><span class="line">在 Tailwind CSS 中,确实有类似 light:bg-white 这样的写法。这叫做 variant。Tailwind CSS 支持几种 variant:- responsive:用于响应式设计,如 sm:bg-white 表示在小屏幕上使用 bg-white 类  </span><br><span class="line"><span class="bullet">- </span>hover/focus/active:用于鼠标交互状态,如 hover:bg-white 表示鼠标悬停时使用 bg-white 类  </span><br><span class="line"><span class="bullet">- </span>dark:用于暗色模式,如 dark:bg-white 表示在暗色模式下使用 bg-white 类  </span><br><span class="line"><span class="bullet">- </span>light:用于亮色模式,如 light:bg-white 表示在亮色模式下使用 bg-white 类所以,如果你想在亮色模式下应用 bg-white 类,可以写成:</span><br><span class="line"></span><br><span class="line">html</span><br><span class="line"><span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"light:bg-white bg-gray-800"</span>&gt;</span></span>...<span class="xml"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"></span><br><span class="line">这个 div 在亮色模式下会有 bg-white 类,在暗色模式下会有 bg-gray-800 类。除此之外,Tailwind CSS 还有很多其他的 variant,可以在官方文档中找到:[<span class="string">https://tailwindcss.com/docs/variants</span>](<span class="link">https://tailwindcss.com/docs/variants</span>)希望这个解释可以帮助你!有任何其他问题 feel free 问我。</span><br></pre></td></tr></table></figure>
+
+<p>马后炮：其实这里已经将问题的核心点出来了，即 Tailwind CSS 实现类似 <code>dark:</code> 的写法是通过一种叫做 <code>variant</code> 的概念来实现的，Tailwind CSS 本身提供了一些基础写法，并且给出了文档。</p>
+<p>我当时着急直接得到解决方案，便以为 <code>&lt;div class=&quot;light:bg-white bg-gray-800&quot;&gt;...&lt;/div&gt;</code> 就是我想要的答案，但是拿到项目代码中测试发现不管用。于是便开始了下一次问答，而无视了这条答案中最重要的那句话：<code>在 Tailwind CSS 中,确实有类似 light:bg-white 这样的写法。这叫做 variant。</code></p>
+<p>在直接提问这个思路下我又尝试问过如下几个问题：</p>
+<ul>
+<li>Tailwind CSS 中与 dark:bg-whtie 对立的表达是什么</li>
+<li>Tailwind CSS 怎样才能使得 bg-white 仅对 light theme 有效对 dark mode 无效</li>
+<li>tailwind css how to make style invalid in drak mode</li>
+</ul>
+<p>得到的答案都不是我想要的东西，于是我开始转换思路。</p>
+<h3 id="从原理提问"><a href="#从原理提问" class="headerlink" title="从原理提问"></a>从原理提问</h3><p>注：这一步我的诉求是让 AI 帮忙直接生成解决方案。</p>
+<p>经过直接提问发现无法得到我想要的答案，于是我开始尝试从实现原理层面进行引导，让 AI 帮忙生成解决方案，我尝试过如下提问：</p>
+<ul>
+<li>如何创建类似 dark:* 的自定义形式</li>
+<li>Tailwind CSS 如何自定义实现类似 dark:* 的效果</li>
+<li>Tailwind CSS 如何自定义实现类似 dark:* 的功能，例如 custom:*</li>
+<li>Tailwind CSS 如何自定义实现类似 dark:* 的功能实现 light:* 使得其后面跟随的 style 仅在 light mode 生效</li>
+<li>Tailwind CSS 中如何实现类似 dark:bg-white 的效果使得 bg-white 仅在 light mode 生效</li>
+</ul>
+<p>经过这几次提问之后我发现其中多个答案都在配置文件中提到了 variants 这项配置，于是：</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">ryomahan  [7:09 PM]</span><br><span class="line"></span><br><span class="line">variants 是什么</span><br><span class="line"></span><br><span class="line">ClaudeAPP  [7:09 PM]</span><br><span class="line"></span><br><span class="line">variants 是 Tailwind CSS 一个很强大的功能。它允许你为某些类定义不同的变体(variants),然后在使用这些类时,可以通过如 dark: 前缀来选择使用哪个变体。比如说,对于背景颜色 bg-blue 这个类,你可以定义两个变体:</span><br><span class="line"></span><br><span class="line">js</span><br><span class="line">variants: &#123;</span><br><span class="line">  backgroundColor: ['responsive', 'dark']</span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line">这定义了 responsive 和 dark 两个变体。然后在使用时,可以这样写:</span><br><span class="line"><span class="bullet">- </span>bg-blue - 选择默认的变体  </span><br><span class="line"><span class="bullet">- </span>dark:bg-blue - 选择 dark 变体  </span><br><span class="line"><span class="bullet">- </span>responsive:bg-blue - 选择 responsive 变体所以通过 variants,一个类可以有多种样式,你可以根据需要选择使用哪个变体。variants 常见的使用场景有:- 定义 light/dark 模式下的样式  </span><br><span class="line"><span class="bullet">- </span>定义不同 breakpoint 下的响应式样式  </span><br><span class="line"><span class="bullet">- </span>定义不同互动状态(hover/focus/active)下的样式  </span><br><span class="line"><span class="bullet">- </span>...可以说,variants 是 Tailwind CSS 实现高度可定制和条件化样式的基石功能之一。掌握好了 variants,可以极大提高在 Tailwind 中写 CSS 的能力。总之,variants 是一个非常强大而又重要的 Tailwind CSS 功能,值得深入学习和使用。</span><br></pre></td></tr></table></figure>
+
+<p>马后炮：这个回答其实已经讲了很多有用的信息了。</p>
+<p>我还是执着于让 AI 直接给我生成方案，所以我粗略看了一下之后又进行了如下提问：</p>
+<ul>
+<li>如何为默认变体提供 alias 到 light</li>
+<li>在 Tailwind  CSS 中如何使用 variants 使得 light:bg-white</li>
+<li>在 Tailwind CSS 中如何使用 variants 使得 light:bg-white 等同于 bg-white</li>
+<li>在 Tailwind CSS 中如何使用 variants 使得 <code>&lt;div class=&quot;bg-white&quot;&gt;</code> 等同于 <code>&lt;div class=&quot;light:bg-white&quot;&gt;</code></li>
+<li>如何应用到全部 style 上（因为上一个回答我感觉有点靠谱所以又追问这个问题）</li>
+<li>没用（因为我发现它的上个回答并没有生效所以我希望它能够自动修改，结果新生成的内容依旧是没用的）</li>
+<li>Tailwind CSS variants 的作用是什么（这里我觉得还需要再理解一下实现原理）</li>
+<li>dark class mode 是如何生效的</li>
+<li>如何自定义一套 .light 类使得样式仅在 light 模式下生效（不死心，还想再尝试一下）</li>
+<li>lightMode 对应的 class 类是什么（这是针对上个问题的追问）</li>
+<li>没有效果（哈哈，生成的内容依旧是无效的）</li>
+<li>必须叫 lightMode 吗（针对上个问题的追问）</li>
+<li>Tailwind css 如何自定义 dark mode class name（因为上面的回答都无效所以我又开了一个新的会话继续提问）</li>
+<li>没用（依旧没用）</li>
+<li>按照你的描述修改了配置文件后并不能生效（还是没用）</li>
+<li>使用上面的配置文件，在 <code>.light</code> class 下 dark:bg-white 没有生效（这里我把我使用的配置文件贴上去了，因为内容太长就不复制过来了）</li>
+<li>使用 Tailwind CSS 时如何使得 <code>bg-white</code> 可以仅在 light mode 生效在 dark mode 不生效（又开了一个新的会话，这已经是第二天了，昨天晚上感觉这是个坑所以就去忙别的了）</li>
+</ul>
+<p>其实这一步的所有提问基本都是在做无用功，因为我太执着于直接获取解决方案而忽略了解决问题的正确流程，我把 AI 想象的过于强大了。</p>
+<h3 id="从原理理解"><a href="#从原理理解" class="headerlink" title="从原理理解"></a>从原理理解</h3><p>注：这一步我的诉求是让 AI 帮忙解释这一类功能的实现原理，在从原理引导 AI 帮忙生成解决方案。</p>
+<p>经过了漫长的无效提问后我开始反思，我在处理问题的过程中太执着于让 AI 直接帮忙生成解决方案了，于是我又转换思路：先让 AI 帮忙阐述实现原理，再从原理入手生成解决方案。</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">ryomahan  [9:40 AM]</span><br><span class="line">Tailwind CSS dark mode 实现原理</span><br><span class="line"></span><br><span class="line">ClaudeAPP  [9:40 AM]</span><br><span class="line"></span><br><span class="line">Tailwind CSS 的 dark mode 实现原理主要有以下几点:1. 定义 dark 模式的颜色变量。Tailwind 在 colors.js 文件中定义了 dark 模式下的颜色变量,例如:</span><br><span class="line"></span><br><span class="line">js</span><br><span class="line">colors: &#123;</span><br><span class="line">  // ...</span><br><span class="line">  gray: &#123;</span><br><span class="line"><span class="code">    900: '#202225',</span></span><br><span class="line"><span class="code">    800: '#2f303d',</span></span><br><span class="line"><span class="code">    700: '#353646',</span></span><br><span class="line"><span class="code">    // ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line">这些颜色变量会在 build 过程中生成对应的 utility。2. 定义 prefers-color-scheme 相关的 variants。在 variants.js 中定义了:</span><br><span class="line"></span><br><span class="line">js</span><br><span class="line">variants: &#123;</span><br><span class="line">  // ...</span><br><span class="line">  prefersColorScheme: ['dark']</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">这表示 dark mode 下会生成 .dark 等 class。3. 在 build 过程中生成 dark mode 的样式。在 build 过程的 variants 阶段,会根据 prefers-color-scheme 的 variants 生成 .dark 等 class,并使用 dark mode 的颜色变量填充这些 class。4. 在 HTML 中使用 prefers-color-scheme media query 加载相应的样式。例如:</span><br><span class="line"></span><br><span class="line">html</span><br><span class="line"><span class="xml"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">"stylesheet"</span> <span class="attr">href</span>=<span class="string">"tailwind.css"</span>&gt;</span></span></span><br><span class="line"><span class="xml"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">"stylesheet"</span> <span class="attr">media</span>=<span class="string">"prefers-color-scheme: dark"</span> <span class="attr">href</span>=<span class="string">"tailwind.dark.css"</span>&gt;</span></span></span><br><span class="line"></span><br><span class="line">tailwind.dark.css 是 dark mode 的样式,会在 prefers-color-scheme: dark 条件下被加载。5. 可选:使用 JavaScript 切换模式。可以使用 matchMedia 检测 prefers-color-scheme 的变化,并动态加载样式来实现模式切换。所以总体来说,Tailwind 通过定义 variants、颜色变量和生成不同模式的样式文件来实现 dark mode。hope this helps!</span><br></pre></td></tr></table></figure>
+
+<p>马后炮：回过头来看，这个回答完全没有参考价值，甚至不如前面提到 variants 的那几个回答有价值，所以说 AI 的生成式回答的随机性还是比较坑的。</p>
+<p>然后我问了：</p>
+<ul>
+<li>Tailwind CSS 如何表达 .abc .bg-white</li>
+<li>Tailwind CSS 如何匹配父 class</li>
+<li>Tailwind CSS 如何实现父 class 选择器</li>
+</ul>
+<p>这里我是想：在当前项目中所谓的主题模式是通过控制 Layout 根 DOM 的 class name 来实现的，当 class 是 dark 时为 dark mode，是 light 时为 light mode。所以只需匹配父类就能够实现我想要的东西。事实证明这个思路确实是没问题的，但是并不是通过简单的 class 实现的。</p>
+<p>最终在 Tailwind CSS 的官方文档的引导下我发出了如下提问：</p>
+<ul>
+<li>Tailwind CSS plugin addVariant 如何使用</li>
+<li>我希望使用 addVariant 实现 <code>class=&quot;light:bg-white&quot;</code> 能够转换为如下 CSS  <code>.light .light:bg-white { background: #fff }</code></li>
+<li>如何让它更加泛化，使得无论 light: 后面跟什么都能转换为对应的 Tailwind CSS</li>
+<li>我希望最终实现的效果与 dark:* 类似，当有 .light 的父类 css class 时触发 light:*</li>
+<li>仅保留 .light 就可以了，其他的删掉</li>
+</ul>
+<p>经过这四连问之后，我以为找到了解决这个问题的正确途径，因为这几个问题最终得到的结果虽然不能生效但是看上去像是那么回事，于是我整理了之前的问题继续发问：</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">ryomahan  [9:58 AM]</span><br><span class="line"></span><br><span class="line">在 Tailwind CSS 中使用 addVariant 实现如下效果使得 <span class="code">`class="light:*"`</span> 能够与 <span class="code">`class="dark:*"`</span> 类似在有 .light 父 css class 时生效</span><br><span class="line"></span><br><span class="line">ClaudeAPP  [9:58 AM]</span><br><span class="line"></span><br><span class="line">你可以这样使用 Tailwind 的 addVariant 功能来实现这个效果:</span><br><span class="line"></span><br><span class="line">js</span><br><span class="line">addVariant('light', (&#123; modifySelectors, separator &#125;) =&gt; &#123;</span><br><span class="line">  modifySelectors((&#123; className &#125;) =&gt; &#123;</span><br><span class="line"><span class="code">    return `.light $&#123;className&#125;`</span></span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">这段代码会添加一个 light 变体,使得任何使用 light: 作为前缀的类都会在 .light 父元素下生效。例如:</span><br><span class="line"></span><br><span class="line">html</span><br><span class="line"><span class="xml"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"light"</span>&gt;</span></span></span><br><span class="line">  <span class="xml"><span class="tag">&lt;<span class="name">p</span> <span class="attr">class</span>=<span class="string">"light:bg-blue-500"</span>&gt;</span></span>...<span class="xml"><span class="tag">&lt;/<span class="name">p</span>&gt;</span></span></span><br><span class="line"><span class="xml"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span></span><br><span class="line"></span><br><span class="line">这个 p 元素会具有 bg-blue-500 这个类,因为 light:bg-blue-500 在 .light 元素下生效了。如果没有 .light 父元素,light: 类就不会生效,和 Tailwind 的 dark: 变体一致。所以这给你实现了和 dark: 类似的机制,来根据父元素开启某些样式。Hope this helps! Let me know if you have any other questions. (edited)</span><br></pre></td></tr></table></figure>
+
+<p>这是 AI 给我的方案中距离正确答案最近的一次 ，但是仍旧无效，我又在这个问题的基础上尝试了十几轮的询问，得到的答案都是无效的。</p>
+<h3 id="自我救赎"><a href="#自我救赎" class="headerlink" title="自我救赎"></a>自我救赎</h3><p>在经历昨天下午两个小时外加今天上午两个小时的 AI 问询无果后，我悟了：就当从来没有 AI，早些时候我怎么解决问题现在还怎么解决，于是：</p>
+<ol>
+<li>我在一些前端群里发求助信息，与人交流；</li>
+<li>同时我开始下载 Tailwind CSS 源码开始审查源码看源码是如何实现 dark mode 的。</li>
+</ol>
+<p>整个流程大概持续了十分钟左右的时间，我解决了这个问题，其实如果不去群里发求助信息一上来就看源码的话应该三两分钟就能解决问题。</p>
+<p>完整搜索路径：先在 Tailwind CSS 中全局搜索 dark，看了一些结果发现都不是，好多都是测试用例或者其他无关文件中的。于是将搜索范围调整到 src 目录，大概视察了一下后定位在了一个叫 darkVariants 的变量上，跳转到指定文件后果然就是 dark mode 的定义原文，原文如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">darkVariants: <span class="function">(<span class="params">&#123; config, addVariant &#125;</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">let</span> [mode, className = <span class="string">'.dark'</span>] = [].concat(config(<span class="string">'darkMode'</span>, <span class="string">'media'</span>))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (mode === <span class="literal">false</span>) &#123;</span><br><span class="line">    mode = <span class="string">'media'</span></span><br><span class="line">    log.warn(<span class="string">'darkmode-false'</span>, [</span><br><span class="line">      <span class="string">'The `darkMode` option in your Tailwind CSS configuration is set to `false`, which now behaves the same as `media`.'</span>,</span><br><span class="line">      <span class="string">'Change `darkMode` to `media` or remove it entirely.'</span>,</span><br><span class="line">      <span class="string">'https://tailwindcss.com/docs/upgrade-guide#remove-dark-mode-configuration'</span>,</span><br><span class="line">    ])</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (mode === <span class="string">'class'</span>) &#123;</span><br><span class="line">    addVariant(<span class="string">'dark'</span>, <span class="string">`:is(<span class="subst">$&#123;className&#125;</span> &amp;)`</span>)</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (mode === <span class="string">'media'</span>) &#123;</span><br><span class="line">    addVariant(<span class="string">'dark'</span>, <span class="string">'@media (prefers-color-scheme: dark)'</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它被放在一个 variantPlugins 变量中，然后我通过引用查看发现使用该变量的地方是项目初始化内部 plugin，然后我参考这个思路定义了一个自定义插件：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** <span class="doctag">@type <span class="type">&#123;import('tailwindcss').Config&#125;</span> </span>*/</span></span><br><span class="line"><span class="keyword">import</span> plugin <span class="keyword">from</span> <span class="string">"tailwindcss/plugin"</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  darkMode: <span class="string">"class"</span>,</span><br><span class="line">  content: [</span><br><span class="line">    <span class="string">"./index.html"</span>,</span><br><span class="line">    <span class="string">"./src/**/*.&#123;vue,js,ts,jsx,tsx&#125;"</span>,</span><br><span class="line">  ],</span><br><span class="line">  theme: &#123;&#125;,</span><br><span class="line">  plugins: [</span><br><span class="line">    plugin(<span class="function"><span class="keyword">function</span> (<span class="params">&#123; addVariant &#125;</span>) </span>&#123;</span><br><span class="line">      addVariant(<span class="string">"light"</span>, <span class="string">":is(.light &amp;)"</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>问题解决。</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>经过这一次折磨人的使用经历后我觉得我需要重新审视一下 AI 在我日常编程时的定位，或者说我在编程时应该如何使用 AI。一下是基于本次经历我的几点感悟：</p>
+<ol>
+<li>解决问题的第一步是动脑子而不是动键盘；</li>
+<li>解决问题的最好思路永远在源码中而不在 AI 的回答里；</li>
+<li>在与 AI 对话时不要期望重复问题或者微调问题就能得到正确的答案；</li>
+<li>在不熟悉的领域内提问时尽量不要期望一开始就能生成完整的解决方案。</li>
+</ol>
+
+        
+        <footer class="article-footer">
+        </footer>
+    </div>
+</div></article>
+
+
+    
+<nav id="article-nav">
+    
+        <a href="/archives/d644d904.html" id="article-nav-newer" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">上一篇</strong>
+            <div class="article-nav-title">
+                
+                    「翻译」如何组织大型 Python 项目
+                
+            </div>
+        </a>
+    
+    
+        <a href="/archives/291be77c.html" id="article-nav-older" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">下一篇</strong>
+            <div class="article-nav-title">解剖 Python 类</div>
+        </a>
+    
+</nav>
+
+
+
+
+
+    
+    
+        <section id="comments"> <div id="vcomments"></div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        appId: 'sz7ny95XiYWkxht3H3YDs2GX-gzGzoHsz',
+        appKey: 'T8JJugDkbqtFLONIIzcPWW76',
+        placeholder: '不要吝啬赞美的语句ヾﾉ≧∀≦)o!',
+        avatar: 'mp',
+        meta: ['nick','mail','link'],
+        pageSize: 10,
+        visitor: true,
+        notify: true,
+        verify: true
+    })
+    let info = document.querySelectorAll('#vcomments>.info')[0]
+    if (info) { info.style.display = 'none' }
+</script> </section>
+    
+
+
+
+
+<!-- baidu url auto push script -->
+<script type="text/javascript">
+    !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=window.location.href,o=document.referrer;if(!e.test(r)){var n="//api.share.baidu.com/s.gif";o?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var t=new Image;t.src=n}}(window);
+</script>     
+</section>
+        </div>
+        <footer id="footer">
+    <div class="outer">
+        <div id="footer-info" class="inner">
+            ryomahan &copy; 2024 
+            <a rel="external nofollow noopener noreferrer" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png"></a>
+            <br> Powered by <a href="http://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. Comment By <a href="https://valine.js.org/" target="_blank" rel="external nofollow noopener noreferrer">valine</a>. Theme - <a href="https://github.com/zthxxx/hexo-theme-Wikitten" target="_blank" rel="external nofollow noopener noreferrer">wikitten</a>
+            
+                <br>
+                <span id="busuanzi_container_site_pv"><i class="fa fa-eye"></i> <span id="busuanzi_value_site_pv"></span></span>
+                &nbsp;|&nbsp;
+                <span id="busuanzi_container_site_pv"><i class="fa fa-user"></i> <span id="busuanzi_value_site_uv"></span></span>
+            
+        </div>
+    </div>
+</footer>
+
+        
+    
+        
+<script src="/libs/lightgallery/js/lightgallery.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-thumbnail.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-pager.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-autoplay.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-fullscreen.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-zoom.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-hash.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-share.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-video.min.js"></script>
+
+    
+    
+        
+<script src="/libs/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+    
+    
+        <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true,
+            TeX: {
+                equationNumbers: {
+                  autoNumber: 'AMS'
+                }
+            }
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+
+
+<!-- Custom Scripts -->
+
+<script src="/js/main.js"></script>
+
+
+    </div>
+</body>

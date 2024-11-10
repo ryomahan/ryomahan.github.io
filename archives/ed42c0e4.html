@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    
+    <title>「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine | 小白维基</title>
+    
+    
+        <meta name="keywords" content="翻译">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="原文：Agentic RAG With Llama-index | Router Query Engine #01 作者：Prince Krampah 翻译：RyomaHan | 小白 提示：本文有对应的 YouTube 视频，本文中的我代指原作者  前言你是否也厌倦了我在博文中经常提到的老式 RAG(Retrieval Augmented Generation | 检索增强生成) 系统？反正我">
+<meta property="og:type" content="article">
+<meta property="og:title" content="「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine">
+<meta property="og:url" content="https://wiki.blanc.site/archives/ed42c0e4.html">
+<meta property="og:site_name" content="小白维基">
+<meta property="og:description" content="原文：Agentic RAG With Llama-index | Router Query Engine #01 作者：Prince Krampah 翻译：RyomaHan | 小白 提示：本文有对应的 YouTube 视频，本文中的我代指原作者  前言你是否也厌倦了我在博文中经常提到的老式 RAG(Retrieval Augmented Generation | 检索增强生成) 系统？反正我">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456782.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456803.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456816.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456830.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456843.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456857.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456872.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456902.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456926.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456941.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456956.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456972.png">
+<meta property="og:image" content="https://img.blanc.site/wiki/img/202406140456988.png">
+<meta property="article:published_time" content="2024-06-14T00:00:00.000Z">
+<meta property="article:modified_time" content="2024-11-10T15:39:52.936Z">
+<meta property="article:author" content="ryomahan">
+<meta property="article:tag" content="翻译">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.blanc.site/wiki/img/202406140456782.png">
+    
+
+    
+        <link rel="alternate" href="/atom.xml" title="小白维基" type="application/atom+xml">
+    
+    
+        <link rel="icon" href="/favicon.ico">
+    
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/libs/open-sans/styles.css">
+
+    
+<link rel="stylesheet" href="/libs/source-code-pro/styles.css">
+
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    
+<script src="/libs/jquery/2.1.3/jquery.min.js"></script>
+
+    
+<script src="/libs/jquery/plugins/cookie/1.4.1/jquery.cookie.js"></script>
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/lightgallery/css/lightgallery.min.css">
+
+    
+    
+        
+<link rel="stylesheet" href="/libs/justified-gallery/justifiedGallery.min.css">
+
+    
+    
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-110100486-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-110100486-1');
+</script>
+    
+    
+        <meta name="google-site-verification" content="D9ld5oQABBxIwNpgD_WN61p51-ZcABZ6Olt4HKcxlWw">
+    
+    
+        <script>
+var _hmt = _hmt || [];
+(function() {
+    var hm = document.createElement("script");
+    hm.src = "//hm.baidu.com/hm.js?fac7e69191f0847b886888aa7c794fa7";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+    
+
+
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- 字体引入 -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700;1,800&family=Noto+Serif+SC:wght@200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+<meta name="generator" content="Hexo 4.2.1"></head>
+</html>
+<body>
+    <div id="container">
+        <header id="header">
+    <div id="header-main" class="header-inner">
+        <div class="outer">
+            <a href="/" id="logo">
+                <i class="logo"></i>
+                <span class="site-title">小白维基</span>
+            </a>
+            <nav id="main-nav">
+                
+                    <a class="main-nav-link" href="/">首页</a>
+                
+                    <a class="main-nav-link" href="/archives">归档</a>
+                
+                    <a class="main-nav-link" href="/categories">分类</a>
+                
+                    <a class="main-nav-link" href="/tags">标签</a>
+                
+                    <a class="main-nav-link" href="/about">关于</a>
+                
+            </nav>
+            
+                
+                <nav id="sub-nav">
+                    <div class="profile" id="profile-nav">
+                        <a id="profile-anchor" href="javascript:;">
+                            <img class="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df">
+                            <i class="fa fa-caret-down"></i>
+                        </a>
+                    </div>
+                </nav>
+            
+            <div id="search-form-wrap">
+
+    <form class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+        <button type="submit" class="search-form-submit"></button>
+    </form>
+    <div class="ins-search">
+    <div class="ins-search-mask"></div>
+    <div class="ins-search-container">
+        <div class="ins-input-wrapper">
+            <input type="text" class="ins-search-input" placeholder="想要查找什么...">
+            <span class="ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: '文章',
+            PAGES: '页面',
+            CATEGORIES: '分类',
+            TAGS: '标签',
+            UNTITLED: '(未命名)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+
+<script src="/js/insight.js"></script>
+
+
+</div>
+        </div>
+    </div>
+    <div id="main-nav-mobile" class="header-sub header-inner">
+        <table class="menu outer">
+            <tr>
+                
+                    <td><a class="main-nav-link" href="/">首页</a></td>
+                
+                    <td><a class="main-nav-link" href="/archives">归档</a></td>
+                
+                    <td><a class="main-nav-link" href="/categories">分类</a></td>
+                
+                    <td><a class="main-nav-link" href="/tags">标签</a></td>
+                
+                    <td><a class="main-nav-link" href="/about">关于</a></td>
+                
+                <td>
+                    
+    <div class="search-form">
+        <input type="text" class="ins-search-input search-form-input" placeholder="搜索">
+    </div>
+
+                </td>
+            </tr>
+        </table>
+    </div>
+</header>
+
+        <div class="outer">
+            
+                
+
+<aside id="profile">
+    <div class="inner profile-inner">
+        <div class="base-info profile-block">
+            <img id="avatar" src="https://www.gravatar.com/avatar/e30ee2d02a4632e35575fec3944497df?s=128">
+            <h2 id="name">Ryoma</h2>
+            <h3 id="title">毕己一生，依依东望。</h3>
+            <span id="location"><i class="fa fa-map-marker"></i>Jinan, China</span>
+            <a id="follow" target="_blank" href="https://github.com/ryomahan/" rel="external nofollow noopener noreferrer">关注我</a>
+        </div>
+        <div class="article-info profile-block">
+            <div class="article-info-block">
+                25
+                <span>文章</span>
+            </div>
+            <div class="article-info-block">
+                12
+                <span>标签</span>
+            </div>
+        </div>
+        
+        <div class="profile-block social-links">
+            <table>
+                <tr>
+                    
+                    
+                    <td>
+                        <a href="https://blog.blanc.site" target="_blank" title="wordpress" class="tooltip">
+                            <i class="fa fa-wordpress"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://twitter.com/ryomahan1996" target="_blank" title="twitter" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-twitter"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://weibo.com/xiaobaidh" target="_blank" title="weibo" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-weibo"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="https://github.com/ryomahan" target="_blank" title="github" class="tooltip" rel="external nofollow noopener noreferrer">
+                            <i class="fa fa-github"></i>
+                        </a>
+                    </td>
+                    
+                    <td>
+                        <a href="/atom.xml" target="_blank" title="rss" class="tooltip">
+                            <i class="fa fa-rss"></i>
+                        </a>
+                    </td>
+                    
+                </tr>
+            </table>
+        </div>
+        
+    </div>
+
+    
+        <div class="widget-wrap widget-list">
+            <h3 class="widget-title"><span>友情链接</span></h3>
+            <div class="widget">
+                <ul>
+                    
+                        <li>
+                            <a href="https://pythonhunter.org/" target="_blank" rel="external nofollow noopener noreferrer">捕蛇者说</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://laike9m.com/" target="_blank" rel="external nofollow noopener noreferrer">laike9m</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://www.kawabangga.com/" target="_blank" rel="external nofollow noopener noreferrer">卡瓦邦噶</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://manjusaka.itscoder.com/" target="_blank" rel="external nofollow noopener noreferrer">Manjusaka</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.evo.moe/" target="_blank" rel="external nofollow noopener noreferrer">Sparta_EN</a>
+                        </li>
+                    
+                        <li>
+                            <a href="https://blog.blanc.site" target="_blank">一只小白</a>
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    
+</aside>
+
+            
+            
+                <aside id="sidebar">
+   
+        
+    <div class="widget-wrap" id="categories">
+        <h3 class="widget-title">
+            <span>分类</span>
+            &nbsp;
+            <a id="allExpand" href="#">
+                <i class="fa fa-angle-double-down fa-2x"></i>
+            </a>
+        </h3>
+        
+        
+        
+         <ul class="unstyled" id="tree"> 
+                    <li class="directory open">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder-open"></i>
+                            &nbsp;
+                            1-网络笔记
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/e5187cf6.html">同步到腾讯云社区</a></li>  <li class="file"><a href="/archives/4940711f.html">8086 处理器寻址方式</a></li>  <li class="file"><a href="/archives/5c113e93.html">SSH overview</a></li>  <li class="file"><a href="/archives/c57afff6.html">记一次失败的 AI 辅助编程全历程</a></li>  <li class="file"><a href="/archives/d644d904.html">「翻译」如何组织大型 Python 项目</a></li>  <li class="file active"><a href="/archives/ed42c0e4.html">「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            2-软件使用
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Chrome
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/decc86d5.html">「转载」解析谷歌 Chrome 各分支版本</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Django
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/b641d3ac.html">Django 笔记-2-源码理解-urls 篇</a></li>  <li class="file"><a href="/archives/ab18c3c3.html">Django 笔记-3-文档阅读-关于 Django 文档</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Vue
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/793400e.html">解决 Vue CSS 样式重复载入，为 Vue 添加全局 less 或 sass 基础样式库</a></li>  <li class="file"><a href="/archives/341c107a.html">Vue Router 实现动态路由和常见问题解决方案</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            3-计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-理论计算机科学
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            1-数据结构和算法
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/f3c5e08e.html">数据结构笔记1-概论</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            4-编程语言和编译器
+                        </a>
+                         <ul class="unstyled" id="tree"> 
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Python
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/7a294715.html">所谓 WSGI</a></li>  <li class="file"><a href="/archives/ffe3a081.html">Python MRO</a></li>  <li class="file"><a href="/archives/2accc063.html">WeeklyPEP-0-overview</a></li>  <li class="file"><a href="/archives/f5b4f56.html">所谓 ASGI</a></li>  <li class="file"><a href="/archives/5823d5df.html">WeeklyPEP-2-PEP 343-with 语句-overview</a></li>  <li class="file"><a href="/archives/291be77c.html">解剖 Python 类</a></li>  <li class="file"><a href="/archives/c29b4f3b.html">WeeklyPEP-3-PEP 318-函数装饰器-overview</a></li>  <li class="file"><a href="/archives/7eaf0f5f.html">WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            Shell
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/8f9d5c85.html">Shell 获取当前脚本的绝对路径</a></li>  <li class="file"><a href="/archives/dbac95ae.html">实现 echo 不换行输出</a></li>  <li class="file"><a href="/archives/b422aa7d.html">Shell 区分不同 Unix 系统</a></li>  <li class="file"><a href="/archives/3beb222a.html">Shell 基础语法</a></li>  </ul> 
+                    </li> 
+                    
+                    <li class="directory">
+                        <a href="#" data-role="directory">
+                            <i class="fa fa-folder"></i>
+                            &nbsp;
+                            汇编语言
+                        </a>
+                         <ul class="unstyled" id="tree">  <li class="file"><a href="/archives/90a7f914.html">NASM Overview</a></li>  </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+                    </li> 
+                     </ul> 
+    </div>
+    <script>
+        $(document).ready(function() {
+            var iconFolderOpenClass  = 'fa-folder-open';
+            var iconFolderCloseClass = 'fa-folder';
+            var iconAllExpandClass = 'fa-angle-double-down';
+            var iconAllPackClass = 'fa-angle-double-up';
+            // Handle directory-tree expansion:
+            // 左键单独展开目录
+            $(document).on('click', '#categories a[data-role="directory"]', function (event) {
+                event.preventDefault();
+
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var subtree = $(this).siblings('ul');
+                icon.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if (expanded) {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideUp({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderCloseClass);
+                } else {
+                    if (typeof subtree != 'undefined') {
+                        subtree.slideDown({ duration: 100 });
+                    }
+                    icon.addClass(iconFolderOpenClass);
+                }
+            });
+            // 右键展开下属所有目录
+            $('#categories a[data-role="directory"]').bind("contextmenu", function(event){
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconFolderOpenClass);
+                var listNode = $(this).siblings('ul');
+                var subtrees = $.merge(listNode.find('li ul'), listNode);
+                var icons = $.merge(listNode.find('.fa'), icon);
+                icons.removeClass(iconFolderOpenClass).removeClass(iconFolderCloseClass);
+                if(expanded) {
+                    subtrees.slideUp({ duration: 100 });
+                    icons.addClass(iconFolderCloseClass);
+                } else {
+                    subtrees.slideDown({ duration: 100 });
+                    icons.addClass(iconFolderOpenClass);
+                }
+            })
+            // 展开关闭所有目录按钮
+            $(document).on('click', '#allExpand', function (event) {
+                event.preventDefault();
+                
+                var icon = $(this).children('.fa');
+                var expanded = icon.hasClass(iconAllExpandClass);
+                icon.removeClass(iconAllExpandClass).removeClass(iconAllPackClass);
+                if(expanded) {
+                    $('#sidebar .fa.fa-folder').removeClass('fa-folder').addClass('fa-folder-open')
+                    $('#categories li ul').slideDown({ duration: 100 });
+                    icon.addClass(iconAllPackClass);
+                } else {
+                    $('#sidebar .fa.fa-folder-open').removeClass('fa-folder-open').addClass('fa-folder')
+                    $('#categories li ul').slideUp({ duration: 100 });
+                    icon.addClass(iconAllExpandClass);
+                }
+            });  
+        });
+    </script>
+
+    
+        
+  <div class="toc-flag"></div>
+  <div class="toc-wrap">
+      <h3>
+          <span>文章目录</span>
+      </h3>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RAG-基础工作流"><span class="toc-number">2.</span> <span class="toc-text">RAG 基础工作流</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#为什么要创建-Agentic-RAG"><span class="toc-number">3.</span> <span class="toc-text">为什么要创建 Agentic RAG</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#路由式查询引擎-Router-Query-Engine"><span class="toc-number">4.</span> <span class="toc-text">路由式查询引擎 | Router Query Engine</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#项目环境初始化"><span class="toc-number">5.</span> <span class="toc-text">项目环境初始化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#安装依赖"><span class="toc-number">5.1.</span> <span class="toc-text">安装依赖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#下载数据集"><span class="toc-number">5.2.</span> <span class="toc-text">下载数据集</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#加载文档并将其处理成块"><span class="toc-number">6.</span> <span class="toc-text">加载文档并将其处理成块</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#创建文档块"><span class="toc-number">6.1.</span> <span class="toc-text">创建文档块</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#创建所需的-LLM-和-Embedding-模型对象"><span class="toc-number">7.</span> <span class="toc-text">创建所需的 LLM 和 Embedding 模型对象</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#创建索引"><span class="toc-number">7.1.</span> <span class="toc-text">创建索引</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#将向量索引转换为查询引擎"><span class="toc-number">8.</span> <span class="toc-text">将向量索引转换为查询引擎</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#创建查询工具"><span class="toc-number">9.</span> <span class="toc-text">创建查询工具</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#创建路由式查询引擎"><span class="toc-number">10.</span> <span class="toc-text">创建路由式查询引擎</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#测试路由式查询引擎"><span class="toc-number">10.1.</span> <span class="toc-text">测试路由式查询引擎</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#将代码合并"><span class="toc-number">11.</span> <span class="toc-text">将代码合并</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#结语"><span class="toc-number">12.</span> <span class="toc-text">结语</span></a></li></ol>
+  </div>
+
+    
+    <div id="toTop" class="fa fa-angle-up"></div>
+</aside>
+            
+            <section id="main"><article id="post-1-网络笔记/「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+                    <div class="article-meta">
+                        
+    <div class="article-category">
+    	<i class="fa fa-folder"></i>
+        <a class="article-category-link" href="/categories/1-%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/">1-网络笔记</a>
+    </div>
+
+                        
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag">翻译</a>
+    </div>
+
+                        
+    <div class="article-date">
+        <i class="fa fa-calendar"></i>
+        <a href="/archives/ed42c0e4.html">
+            <time datetime="2024-06-14T00:00:00.000Z" itemprop="datePublished">2024-06-14</time>
+        </a>
+    </div>
+
+
+                        
+                            <i class="fa fa-bar-chart"></i>
+                            <span id="busuanzi_container_site_pv"><span id="busuanzi_value_page_pv"></span></span>    
+                        
+                        
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/raw/main/source/_posts/1-网络笔记/「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine.md" target="_blank" rel="external nofollow noopener noreferrer"> Source </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/edit/main/source/_posts/1-网络笔记/「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine.md" target="_blank" rel="external nofollow noopener noreferrer"> Edit </a>
+                            </div>
+                            <div class="article-meta-button">
+                                <a href="https://github.com/ryomahan/wiki/commits/main/source/_posts/1-网络笔记/「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine.md" target="_blank" rel="external nofollow noopener noreferrer"> History </a>
+                            </div>
+                        
+                    </div>
+                
+                
+    
+        <h1 class="article-title" itemprop="name">
+            「翻译」使用 Llama-index 实现的 Agentic RAG-Router Query Engine
+        </h1>
+    
+
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+        
+        
+            <!-- 内容失效提醒 -->
+            
+    <!-- 如果文章创建超过一年或最后一次更新时间超过一个月(默认)则提示文章过期 -->
+    
+        <div class="aging">
+            <i class="fa fa-exclamation-circle aging-icon" aria-hidden="true"></i>
+            <span class="aging-content">请注意：本文编写于 <span class="aging-content-date">2024-06-14</span>，其中某些信息可能已经失去时效性。</span>
+        </div>
+    
+
+            <blockquote>
+<p>原文：<a href="https://medium.com/aimonks/agentic-rag-with-llama-index-router-query-engine-01-381e83a418af" target="_blank" rel="external nofollow noopener noreferrer">Agentic RAG With Llama-index | Router Query Engine #01</a></p>
+<p>作者：Prince Krampah</p>
+<p>翻译：<a href="https://github.com/ryomahan" target="_blank" rel="external nofollow noopener noreferrer">RyomaHan | 小白</a></p>
+<p>提示：本文有对应的 <a href="https://www.youtube.com/watch?v=fnDYXE7BFto" target="_blank" rel="external nofollow noopener noreferrer">YouTube 视频</a>，本文中的我代指原作者</p>
+</blockquote>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>你是否也厌倦了我在博文中经常提到的老式 RAG(Retrieval Augmented Generation | 检索增强生成) 系统？反正我是对此感到厌倦了。但我们可以做一些有趣的事情，让它更上一层楼。接下来就跟我一起将 agents 概念引入传统的 RAG 工作流，重新构建自己的 Agentic RAG 系统吧。</p>
+<p>去年大模型领域最流行的关键词就是 RAG 了，而今年，一代新人换旧人，agents 已经取代 RAG 成为大模型领域的新宠。你大可不必为错过 RAG 的风口而沮丧，因为将 agents 引入 RAG 系统后会有更好的效果，所以现在开始学习也不晚。</p>
+<p>在本文中，我会介绍<strong>如何使用 <a href="https://www.llamaindex.ai/" target="_blank" rel="external nofollow noopener noreferrer">Llama-index</a> 实现基本的 Agentic RAG 应用</strong>。我将在接下来的几周发布一系列（共四篇）有关 Agentic RAG 架构的文章，本文是这个系列的第一篇。</p>
+<h2 id="RAG-基础工作流"><a href="#RAG-基础工作流" class="headerlink" title="RAG 基础工作流"></a>RAG 基础工作流</h2><p>在开始新篇章前，让我们快速回顾一下传统的 RAG 架构的组织形式和工作原理。这部分知识在后续过程也会用到，那些对 RAG 没有任何经验的初学者务必仔细学习。</p>
+<p><img src="https://img.blanc.site/wiki/img/202406140456782.png" alt="传统的 RAG 架构的组织形式和工作原理"></p>
+<p>在上面简单的 RAG 架构图中，我们至少需要理解以下概念：</p>
+<ol>
+<li>文档（Documents）：用于增强 LLM 理解特定领域的上下文。可以是 PDF 或者任何文本文档，对于多模态的 LLM 来说甚至可以是图片；</li>
+<li>块（Chunks）/ 节点（nodes）：将较大的文档通过合适的算法分割成尺寸合适的块（或节点）；</li>
+<li>特征映射（Embedings）：在将文档分割成块后，我们需要为每个块创建与之对应的特征映射（一般以向量的形式存储）。当系统收到来自用户的查询时，RAG 系统会通过相似性搜索找到与查询内容相关性最高的文档块。这些被检索出来的文档块会与用户查询内容一起发送给 LLM，检索出来的文档块会充当此次 LLM 调用的上下文。最终，LLM 会根据以上内容生成响应。</li>
+</ol>
+<p>以上就是典型的传统 RAG 系统的组织形式和工作原理。</p>
+<h2 id="为什么要创建-Agentic-RAG"><a href="#为什么要创建-Agentic-RAG" class="headerlink" title="为什么要创建 Agentic RAG"></a>为什么要创建 Agentic RAG</h2><p>通过上一章节我们了解了传统 RAG 的实现，这种实现方案适用于少量文档的简单 QA 任务，不适合复杂的 QA 任务和对较大文档集的总结。</p>
+<p>而这恰好是 agents 的强势领域，将 agents 与 RAG 结合能够将传统 RAG 系统提升到一个全新的水平。通过 Agentic RAG 系统，可以轻松地执行更复杂的任务，例如文档集摘要、复杂 QA 以及其他复杂任务。Agentic RAG 还能使 RAG 系统具有工具调用的能力，并且这些工具可以是自定义函数。</p>
+<p>在本系列文章中我将讨论以下内容：</p>
+<ol>
+<li>路由式查询引擎（Router Query Engines）：这是最简单的 Agentic RAG 实现方式，它提供了添加逻辑声明的能力。这种能力可以帮助 LLM <strong>根据需要执行的任务以及提供的工具确定通过何种路径能够达到最终目的</strong>；</li>
+<li>工具调用（Tool Calling）：在这篇文章中，我将介绍如何将自己定义的工具（方法）添加到 Agentic RAG 架构中。我会为 agents 实现一些接口，以便从我们提供的工具中选择合适的工具并通过 LLM 生成调用这些工具（这里我们默认工具是自定义的 Python 函数）所需要的参数；</li>
+<li>具有多步推理能力的 Agentic RAG；</li>
+<li>在文档集中具有多步推理能力的 Agentic RAG。</li>
+</ol>
+<h2 id="路由式查询引擎-Router-Query-Engine"><a href="#路由式查询引擎-Router-Query-Engine" class="headerlink" title="路由式查询引擎 | Router Query Engine"></a>路由式查询引擎 | Router Query Engine</h2><p>这是 Llama-index 中最简单的 Agentic RAG 实现方案。在这种方案中，我们只需要创建一个路由式查询引擎。<strong>它能够在 LLM 帮助下，（从提供的工具和查询引擎列表中）确定具体使用什么工具或查询引擎来解决用户查询的</strong>。</p>
+<p>下图是本文要实现的路由式查询引擎的基本结构：</p>
+<p><img src="https://img.blanc.site/wiki/img/202406140456803.png" alt="本文要实现的路由式查询引擎的基本结构"></p>
+<h2 id="项目环境初始化"><a href="#项目环境初始化" class="headerlink" title="项目环境初始化"></a>项目环境初始化</h2><p>创建一个名为 <code>agentic_rag</code> 的目录作为本系列文章的项目目录，再在 <code>agentic_rag</code> 内部创建一个名为 <code>basics</code> 的目录作为本文代码实践的工作目录。创建完成后进入 <code>basics</code> 目录中进行环境初始化：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> /root/to/agentic_rag/basics</span></span><br><span class="line">poetry init</span><br></pre></td></tr></table></figure>
+
+<p>在正式开始前，你需要先准备好你的 OpenAI API 密钥，如果你还没有密钥，可以从 <a href="https://platform.openai.com/api-keys" target="_blank" rel="external nofollow noopener noreferrer">此处</a> 获取。准备好密钥后，将其添加到你的 <code>.env</code> 文件中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># &#x2F;root&#x2F;to&#x2F;agentic_rag&#x2F;basics&#x2F;.env</span><br><span class="line">OPENAI_API_KEY&#x3D;sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br></pre></td></tr></table></figure>
+
+<p><strong>译者注：也可以使用其他平台的 LLM 接口，你可以在 <a href="https://docs.llamaindex.ai/en/latest/api_reference/llms/" target="_blank" rel="external nofollow noopener noreferrer">此链接</a> 下确认 Llama-index 是否支持你期望的平台。</strong></p>
+<p><strong>译者注：如果没有能力购买平台提供的 LLM 能力，也可以使用 <a href="https://ollama.com/" target="_blank" rel="external nofollow noopener noreferrer">Ollama</a> 在本地运行指定模型，并参考 <a href="https://docs.llamaindex.ai/en/latest/api_reference/llms/ollama/" target="_blank" rel="external nofollow noopener noreferrer">文档</a> 在 Llama-index 中调用模型能力。</strong></p>
+<p><strong>译者注：如果使用了不同平台的接口需要将后文中提到的 OpenAI 相关的接口替换成你所使用的平台的接口。</strong></p>
+<p><img src="https://img.blanc.site/wiki/img/202406140456816.png" alt="代码截图-1"></p>
+<p><img src="https://img.blanc.site/wiki/img/202406140456830.png" alt="代码截图-2"></p>
+<h3 id="安装依赖"><a href="#安装依赖" class="headerlink" title="安装依赖"></a>安装依赖</h3><p>我们会在本项目中使用到 Llama-index 以及一些其他的依赖库，你可以通过如下命令进行安装：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> /root/to/agentic_rag/basics</span></span><br><span class="line">poetry add python-dotenv ipykernel llama-index nest_asyncio</span><br></pre></td></tr></table></figure>
+
+<h3 id="下载数据集"><a href="#下载数据集" class="headerlink" title="下载数据集"></a>下载数据集</h3><p>我们需要一个 PDF 文件用于后续代码实践，你可以点击 <a href="https://medium.com/aimonks/agentic-rag-with-llama-index-router-query-engine-01-381e83a418af#:~:text=this%20PDF%20from-,here,-.%20Again%2C%20feel%20free" target="_blank" rel="external nofollow noopener noreferrer">此链接</a> 下载我所使用的 PDF。当然你也可以使用你手中的任何一个 PDF 文件（<strong>译者注：对于初学者来说最好是一个纯文本的 PDF 文件</strong>）。将它保存到 <code>/path/to/agentic_rag/basic/datasets</code> 目录下。</p>
+<p><img src="https://img.blanc.site/wiki/img/202406140456843.png" alt="代码截图-3"></p>
+<h2 id="加载文档并将其处理成块"><a href="#加载文档并将其处理成块" class="headerlink" title="加载文档并将其处理成块"></a>加载文档并将其处理成块</h2><p><strong>译者注：原文作者是使用 <code>.ipynb</code> 格式来编写并运行代码的，如果你不熟悉这个文件格式可以使用正常的 <code>.py</code> 文件。</strong></p>
+<p>现在我们已经将代码运行的基础环境准备好了，然我们先通过 <code>python-dotenv</code> 库加载环境变量：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> dotenv</span><br><span class="line">%load_ext dotenv</span><br><span class="line">%dotenv</span><br></pre></td></tr></table></figure>
+
+<p>随后我们需要引入 <code>nest_asyncio</code> 库，因为 Llama-index 在后台使用大量 asyncio 功能：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> nest_asyncio</span><br><span class="line">nest_asyncio.apply()</span><br></pre></td></tr></table></figure>
+
+<p>现在，然我们加载准备好的 PDF 文档：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SimpleDirectoryReader  </span><br><span class="line">  </span><br><span class="line"><span class="comment"># load lora_paper.pdf documents  </span></span><br><span class="line">documents = SimpleDirectoryReader(input_files=[<span class="string">"./datasets/lora_paper.pdf"</span>]).load_data()</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建文档块"><a href="#创建文档块" class="headerlink" title="创建文档块"></a>创建文档块</h3><p>成功加载文档后，我们需要将其分解成合适大小的块：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core.node_parser <span class="keyword">import</span> SentenceSplitter  </span><br><span class="line">  </span><br><span class="line"><span class="comment"># chunk_size of 1024 is a good default value  </span></span><br><span class="line">splitter = SentenceSplitter(chunk_size=<span class="number">1024</span>)  </span><br><span class="line"><span class="comment"># Create nodes from documents  </span></span><br><span class="line">nodes = splitter.get_nodes_from_documents(documents)</span><br></pre></td></tr></table></figure>
+
+<p>可以使用以下方法获取有关每个块的详细信息：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">node_metadata = nodes[<span class="number">1</span>].get_content(metadata_mode=<span class="literal">True</span>)  </span><br><span class="line">print(node_metadata)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img.blanc.site/wiki/img/202406140456857.png" alt="代码截图-4"></p>
+<h2 id="创建所需的-LLM-和-Embedding-模型对象"><a href="#创建所需的-LLM-和-Embedding-模型对象" class="headerlink" title="创建所需的 LLM 和 Embedding 模型对象"></a>创建所需的 LLM 和 Embedding 模型对象</h2><p><strong>译者注：这里你需要将用到的模型类替换为你所使用的平台所对应的类，有些类需要添加额外的第三方依赖，详情请查看 Llama-index 文档。</strong></p>
+<p>在本次代码实践中，我将使用 OpenAI 的 <code>gpt-3.5-turbo</code> 模型作为 LLM 模型，使用 OpenAI 的 <code>text-embedding-ada-002</code> 模型作为 Embedding 模型。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> Settings  </span><br><span class="line"><span class="keyword">from</span> llama_index.llms.openai <span class="keyword">import</span> OpenAI  </span><br><span class="line"><span class="keyword">from</span> llama_index.embeddings.openai <span class="keyword">import</span> OpenAIEmbedding  </span><br><span class="line"></span><br><span class="line"><span class="comment"># LLM model  </span></span><br><span class="line">Settings.llm = OpenAI(model=<span class="string">"gpt-3.5-turbo"</span>)  </span><br><span class="line"><span class="comment"># embedding model  </span></span><br><span class="line">Settings.embed_model = OpenAIEmbedding(model=<span class="string">"text-embedding-ada-002"</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建索引"><a href="#创建索引" class="headerlink" title="创建索引"></a>创建索引</h3><p>正如前文基本结构图片所示，在本次代码实践中，我们将使用两个主要的索引：</p>
+<ol>
+<li>摘要索引（Summary Index）：根据 Llama-index <a href="https://docs.llamaindex.ai/en/stable/api_reference/indices/summary/" target="_blank" rel="external nofollow noopener noreferrer">对应文档</a> 所示，摘要索引是一种简单的数据结构，其中节点按顺序存储。在索引构建过程中，文档文本被分块、转换为节点并存储在列表中。在查询期间，摘要索引使用一些可选的过滤器参数迭代节点，并综合所有节点的答案。</li>
+<li>向量索引（Vector Index）：一个通过 Embedding 创建的常规索引存储，可以执行相似性搜索，以获得与搜索条件最相似的 <code>n</code> 个的索引。</li>
+</ol>
+<p>可以使用下面的代码来创建这两个索引：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SummaryIndex, VectorStoreIndex  </span><br><span class="line">  </span><br><span class="line"><span class="comment"># summary index  </span></span><br><span class="line">summary_index = SummaryIndex(nodes)  </span><br><span class="line"><span class="comment"># vector store index  </span></span><br><span class="line">vector_index = VectorStoreIndex(nodes)</span><br></pre></td></tr></table></figure>
+
+<h2 id="将向量索引转换为查询引擎"><a href="#将向量索引转换为查询引擎" class="headerlink" title="将向量索引转换为查询引擎"></a>将向量索引转换为查询引擎</h2><p>在创建并存储向量索引后，我们需要继续创建查询引擎，后续会将它们转换为 agnets 使用的工具（又名查询工具）。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># summary query engine  </span></span><br><span class="line">summary_query_engine = summary_index.as_query_engine(  </span><br><span class="line">	response_mode=<span class="string">"tree_summarize"</span>,  </span><br><span class="line">	use_async=<span class="literal">True</span>,  </span><br><span class="line">)  </span><br><span class="line">  </span><br><span class="line"><span class="comment"># vector query engine  </span></span><br><span class="line">vector_query_engine = vector_index.as_query_engine()</span><br></pre></td></tr></table></figure>
+
+<p>在上面的例子中，我们创建了两个不同的查询引擎。后续我们会将它们都挂载到路由式查询引擎下，然后路由式查询引擎会根据用户的查询内容决定具体使用哪个查询引擎。</p>
+<p><img src="https://img.blanc.site/wiki/img/202406140456872.png" alt="路由式查询引擎功能示意"></p>
+<p>在上面的代码中，我们指定了 <code>use_async</code> 参数以加快查询速度，这是我们必须使用 <code>nest_asyncio</code> 库的原因之一。</p>
+<p><strong>译者注：我刚去看 nest_asyncio 的代码库，发现被 archive 了，我还以为是 Python 官方支持了，后面在阅读 <a href="https://github.com/python/cpython/issues/66435#issuecomment-2003904906" target="_blank" rel="external nofollow noopener noreferrer">相关 issue</a> 的时候才发现原来是代码库的作者年初去世了，RIP.</strong></p>
+<h2 id="创建查询工具"><a href="#创建查询工具" class="headerlink" title="创建查询工具"></a>创建查询工具</h2><p>查询工具是一个带有元数据（例如存储当前查询工具可以用来做什么）的查询引擎。这有助于路由式查询引擎能够根据传入的用户查询来决定具体使用哪个查询引擎。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core.tools <span class="keyword">import</span> QueryEngineTool  </span><br><span class="line">  </span><br><span class="line">  </span><br><span class="line">summary_tool = QueryEngineTool.from_defaults(  </span><br><span class="line">	query_engine=summary_query_engine,  </span><br><span class="line">	description=(  </span><br><span class="line">		<span class="string">"Useful for summarization questions related to the Lora paper."</span>  </span><br><span class="line">	),  </span><br><span class="line">)  </span><br><span class="line">  </span><br><span class="line">vector_tool = QueryEngineTool.from_defaults(  </span><br><span class="line">	query_engine=vector_query_engine,  </span><br><span class="line">	description=(  </span><br><span class="line">		<span class="string">"Useful for retrieving specific context from the the Lora paper."</span>  </span><br><span class="line">	),</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建路由式查询引擎"><a href="#创建路由式查询引擎" class="headerlink" title="创建路由式查询引擎"></a>创建路由式查询引擎</h2><p>最后，我们需要创建最终用于查询的路由式查询引擎。它能够帮我们聚合上文所创建的所有查询工具，即 <code>summary_tool</code> 和 <code>vector_tool</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core.query_engine.router_query_engine <span class="keyword">import</span> RouterQueryEngine  </span><br><span class="line"><span class="keyword">from</span> llama_index.core.selectors <span class="keyword">import</span> LLMSingleSelector  </span><br><span class="line">  </span><br><span class="line">  </span><br><span class="line">query_engine = RouterQueryEngine(  </span><br><span class="line">	selector=LLMSingleSelector.from_defaults(),  </span><br><span class="line">	query_engine_tools=[  </span><br><span class="line">		summary_tool,  </span><br><span class="line">		vector_tool,  </span><br><span class="line">	],  </span><br><span class="line">	verbose=<span class="literal">True</span>  </span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><strong>LLMSingleSelector</strong>：是一个使用 LLM 从选项列表中选择出单个选项的选择器。你可以在 <a href="https://docs.llamaindex.ai/en/stable/module_guides/querying/router/#defining-a-selector" target="_blank" rel="external nofollow noopener noreferrer">这个链接</a> 中查看更多信息。</p>
+<h3 id="测试路由式查询引擎"><a href="#测试路由式查询引擎" class="headerlink" title="测试路由式查询引擎"></a>测试路由式查询引擎</h3><p><strong>译者注：在执行如下代码是记得把问题换成与你使用的 PDF 相关的问题。</strong></p>
+<p>可以通过如下代码测试我们创建的路由式查询引擎：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">response = query_engine.query(<span class="string">"What is the summary of the document?"</span>)  </span><br><span class="line">print(str(response))</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img.blanc.site/wiki/img/202406140456902.png" alt="代码截图-5"></p>
+<p>以上是论文的摘要，总结了我们传递给查询引擎的 Lora 论文的所有上下文。</p>
+<p>由于我们使用的摘要索引是将所有块存储在顺序列表中，因此在生成摘要时会访问所有块并从中生成一个总摘要，然后再以此生成最终摘要。</p>
+<p>可以通过检查响应中 <code>source_nodes</code> 列表的长度来确认这一点，<code>source_nodes</code> 属性是这次响应中用到的所有块的列表。</p>
+<p><img src="https://img.blanc.site/wiki/img/202406140456926.png" alt="代码截图-6"></p>
+<p>可以看到最终的结果 38 与我们前面创建的块的数量相同，这意味着所有的块都用于本次摘要生成。</p>
+<p>再提问一个不涉及总结的问题：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">response = query_engine.query(<span class="string">"What is the long from of Lora?"</span>)  </span><br><span class="line">print(str(response))</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img.blanc.site/wiki/img/202406140456941.png" alt="代码截图-7"></p>
+<p>这次回答使用了向量索引，尽管响应内容不是很准确。</p>
+<h2 id="将代码合并"><a href="#将代码合并" class="headerlink" title="将代码合并"></a>将代码合并</h2><p>现在你已经大致理解了这套 Agentic RAG 工作流，让我们将其抽象成函数方便后续调用：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> llama_index.core.query_engine.router_query_engine <span class="keyword">import</span> RouterQueryEngine  </span><br><span class="line"><span class="keyword">from</span> llama_index.core.selectors <span class="keyword">import</span> LLMSingleSelector  </span><br><span class="line"><span class="keyword">from</span> llama_index.core.tools <span class="keyword">import</span> QueryEngineTool  </span><br><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SummaryIndex, VectorStoreIndex  </span><br><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> Settings  </span><br><span class="line"><span class="keyword">from</span> llama_index.llms.openai <span class="keyword">import</span> OpenAI  </span><br><span class="line"><span class="keyword">from</span> llama_index.embeddings.openai <span class="keyword">import</span> OpenAIEmbedding  </span><br><span class="line"><span class="keyword">from</span> llama_index.core.node_parser <span class="keyword">import</span> SentenceSplitter  </span><br><span class="line"><span class="keyword">from</span> llama_index.core <span class="keyword">import</span> SimpleDirectoryReader</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">create_router_query_engine</span><span class="params">(  </span></span></span><br><span class="line"><span class="function"><span class="params">	document_fp: str,  </span></span></span><br><span class="line"><span class="function"><span class="params">	verbose: bool = True,  </span></span></span><br><span class="line"><span class="function"><span class="params">)</span> -&gt; RouterQueryEngine:</span>  </span><br><span class="line">	<span class="comment"># load lora_paper.pdf documents  </span></span><br><span class="line">	documents = SimpleDirectoryReader(input_files=[document_fp]).load_data()  </span><br><span class="line">  </span><br><span class="line">	<span class="comment"># chunk_size of 1024 is a good default value  </span></span><br><span class="line">	splitter = SentenceSplitter(chunk_size=<span class="number">1024</span>)  </span><br><span class="line">	<span class="comment"># Create nodes from documents  </span></span><br><span class="line">	nodes = splitter.get_nodes_from_documents(documents)  </span><br><span class="line">  </span><br><span class="line">	<span class="comment"># LLM model  </span></span><br><span class="line">	Settings.llm = OpenAI(model=<span class="string">"gpt-3.5-turbo"</span>)  </span><br><span class="line">	<span class="comment"># embedding model  </span></span><br><span class="line">	Settings.embed_model = OpenAIEmbedding(model=<span class="string">"text-embedding-ada-002"</span>)  </span><br><span class="line">	  </span><br><span class="line">	<span class="comment"># summary index  </span></span><br><span class="line">	summary_index = SummaryIndex(nodes)  </span><br><span class="line">	<span class="comment"># vector store index  </span></span><br><span class="line">	vector_index = VectorStoreIndex(nodes)  </span><br><span class="line">  </span><br><span class="line">	<span class="comment"># summary query engine  </span></span><br><span class="line">	summary_query_engine = summary_index.as_query_engine(  </span><br><span class="line">		response_mode=<span class="string">"tree_summarize"</span>,  </span><br><span class="line">		use_async=<span class="literal">True</span>,  </span><br><span class="line">	)  </span><br><span class="line">  </span><br><span class="line">	<span class="comment"># vector query engine  </span></span><br><span class="line">	vector_query_engine = vector_index.as_query_engine()  </span><br><span class="line">	  </span><br><span class="line">	summary_tool = QueryEngineTool.from_defaults(  </span><br><span class="line">		query_engine=summary_query_engine,  </span><br><span class="line">		description=(  </span><br><span class="line">			<span class="string">"Useful for summarization questions related to the Lora paper."</span>  </span><br><span class="line">		),  </span><br><span class="line">	)  </span><br><span class="line">  </span><br><span class="line">	vector_tool = QueryEngineTool.from_defaults(  </span><br><span class="line">		query_engine=vector_query_engine,  </span><br><span class="line">		description=(  </span><br><span class="line">			<span class="string">"Useful for retrieving specific context from the the Lora paper."</span>  </span><br><span class="line">		),  </span><br><span class="line">	)  </span><br><span class="line">  </span><br><span class="line">  </span><br><span class="line">	query_engine = RouterQueryEngine(  </span><br><span class="line">		selector=LLMSingleSelector.from_defaults(),  </span><br><span class="line">		query_engine_tools=[  </span><br><span class="line">			summary_tool,  </span><br><span class="line">			vector_tool,  </span><br><span class="line">		],  </span><br><span class="line">		verbose=verbose  </span><br><span class="line">	)  </span><br><span class="line">  </span><br><span class="line">	  </span><br><span class="line">	<span class="keyword">return</span> query_engine</span><br></pre></td></tr></table></figure>
+
+<p>然后我们就可以通过如下方法便捷的调用次函数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">query_engine = <span class="keyword">await</span> create_router_query_engine(<span class="string">"./datasets/lora_paper.pdf"</span>)  </span><br><span class="line">response = query_engine.query(<span class="string">"What is the summary of the document?"</span>)  </span><br><span class="line">print(str(response))</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img.blanc.site/wiki/img/202406140456956.png" alt="代码截图-7"></p>
+<p>我们可以在当前目录下创建一个 <code>utils.py</code> 文件，用于存放刚刚抽象出来的函数：</p>
+<p><img src="https://img.blanc.site/wiki/img/202406140456972.png" alt="代码截图-8"></p>
+<p>之后我们就可以通过如下代码便捷的调用此函数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> utils <span class="keyword">import</span> create_router_query_engine  </span><br><span class="line">  </span><br><span class="line">query_engine = <span class="keyword">await</span> create_router_query_engine(<span class="string">"./datasets/lora_paper.pdf"</span>)  </span><br><span class="line">response = query_engine.query(<span class="string">"What is the summary of the document?"</span>)  </span><br><span class="line">print(str(response))</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img.blanc.site/wiki/img/202406140456988.png" alt="代码截图-9"></p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>恭喜你走到这一步。以上就是本文的全部内容了，在下一篇文章中，我将介绍如何使用工具调用（也称函数调用）来进一步加强我们的 RAG 系统。</p>
+
+        
+        <footer class="article-footer">
+        </footer>
+    </div>
+</div></article>
+
+
+    
+<nav id="article-nav">
+    
+    
+        <a href="/archives/7eaf0f5f.html" id="article-nav-older" class="article-nav-link-wrap">
+            <strong class="article-nav-caption">下一篇</strong>
+            <div class="article-nav-title">WeeklyPEP-8-PEP 492-使用 async 和 await 语法的协程-overview</div>
+        </a>
+    
+</nav>
+
+
+
+
+
+    
+    
+        <section id="comments"> <div id="vcomments"></div>
+<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+<script>
+    new Valine({
+        el: '#vcomments',
+        appId: 'sz7ny95XiYWkxht3H3YDs2GX-gzGzoHsz',
+        appKey: 'T8JJugDkbqtFLONIIzcPWW76',
+        placeholder: '不要吝啬赞美的语句ヾﾉ≧∀≦)o!',
+        avatar: 'mp',
+        meta: ['nick','mail','link'],
+        pageSize: 10,
+        visitor: true,
+        notify: true,
+        verify: true
+    })
+    let info = document.querySelectorAll('#vcomments>.info')[0]
+    if (info) { info.style.display = 'none' }
+</script> </section>
+    
+
+
+
+
+<!-- baidu url auto push script -->
+<script type="text/javascript">
+    !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=window.location.href,o=document.referrer;if(!e.test(r)){var n="//api.share.baidu.com/s.gif";o?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var t=new Image;t.src=n}}(window);
+</script>     
+</section>
+        </div>
+        <footer id="footer">
+    <div class="outer">
+        <div id="footer-info" class="inner">
+            ryomahan &copy; 2024 
+            <a rel="external nofollow noopener noreferrer" href="http://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/80x15.png"></a>
+            <br> Powered by <a href="http://hexo.io/" target="_blank" rel="external nofollow noopener noreferrer">Hexo</a>. Comment By <a href="https://valine.js.org/" target="_blank" rel="external nofollow noopener noreferrer">valine</a>. Theme - <a href="https://github.com/zthxxx/hexo-theme-Wikitten" target="_blank" rel="external nofollow noopener noreferrer">wikitten</a>
+            
+                <br>
+                <span id="busuanzi_container_site_pv"><i class="fa fa-eye"></i> <span id="busuanzi_value_site_pv"></span></span>
+                &nbsp;|&nbsp;
+                <span id="busuanzi_container_site_pv"><i class="fa fa-user"></i> <span id="busuanzi_value_site_uv"></span></span>
+            
+        </div>
+    </div>
+</footer>
+
+        
+    
+        
+<script src="/libs/lightgallery/js/lightgallery.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-thumbnail.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-pager.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-autoplay.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-fullscreen.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-zoom.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-hash.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-share.min.js"></script>
+
+        
+<script src="/libs/lightgallery/js/lg-video.min.js"></script>
+
+    
+    
+        
+<script src="/libs/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+    
+    
+        <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true,
+            TeX: {
+                equationNumbers: {
+                  autoNumber: 'AMS'
+                }
+            }
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+
+
+
+<!-- Custom Scripts -->
+
+<script src="/js/main.js"></script>
+
+
+    </div>
+</body>
